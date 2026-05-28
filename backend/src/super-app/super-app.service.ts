@@ -39,8 +39,7 @@ export class SuperAppService {
   async createRide(data: any) {
     const distance = data.distance ?? 5;
     const surgeMultiplier = data.surgeMultiplier ?? 1;
-    const baseFare = 80;
-    const fare = Math.round((baseFare + distance * 35) * surgeMultiplier);
+    const { baseFare, fare } = this.estimateRideFare(distance, surgeMultiplier);
     const ride = await this.prisma.trip.create({
       data: {
         ...data,
@@ -53,6 +52,10 @@ export class SuperAppService {
     });
     await this.audit('RIDE_CREATED', 'Trip', ride.id, data.customerId, ride);
     return ride;
+  }
+
+  getRideEstimate(distance = 5, surgeMultiplier = 1) {
+    return this.estimateRideFare(distance, surgeMultiplier);
   }
 
   listRides(userId?: string, page = 1, limit = 25) {
@@ -395,5 +398,14 @@ export class SuperAppService {
         orderId: order.id,
       },
     );
+  }
+
+  private estimateRideFare(distance = 5, surgeMultiplier = 1) {
+    const safeDistance = Number.isFinite(Number(distance)) ? Number(distance) : 5;
+    const safeSurge = Number.isFinite(Number(surgeMultiplier)) ? Number(surgeMultiplier) : 1;
+    const baseFare = 80;
+    const perKm = 35;
+    const fare = Math.round((baseFare + safeDistance * perKm) * safeSurge);
+    return { baseFare, perKm, distance: safeDistance, surgeMultiplier: safeSurge, fare, currency: 'AFN' };
   }
 }

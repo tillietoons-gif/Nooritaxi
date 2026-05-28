@@ -61,6 +61,12 @@ export class SuperAppController {
     return this.superApp.createRide(body);
   }
 
+  @Get('rides/estimate')
+  @UseGuards(JwtAuthGuard)
+  estimateRide(@Query('distance') distance?: string, @Query('surgeMultiplier') surgeMultiplier?: string) {
+    return this.superApp.getRideEstimate(Number(distance ?? 5), Number(surgeMultiplier ?? 1));
+  }
+
   @Get('rides')
   listRides(@Query('userId') userId?: string, @Query('page') page?: string, @Query('limit') limit?: string) {
     return this.superApp.listRides(userId, Number(page ?? 1), Number(limit ?? 25));

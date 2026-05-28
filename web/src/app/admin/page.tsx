@@ -11,15 +11,21 @@ import { authedFetch } from "@/lib/auth"
 
 export default function AdminPage() {
   const [overview, setOverview] = useState<Record<string, number> | null>(null)
+  const [openTickets, setOpenTickets] = useState<Array<{ id: string; category?: string; priority?: string }>>([])
   const [error, setError] = useState("")
 
   useEffect(() => {
-    authedFetch("/admin/overview")
-      .then(async (response) => {
+    Promise.all([
+      authedFetch("/admin/overview").then(async (response) => {
         if (!response.ok) throw new Error("Unable to load admin overview")
         return response.json()
+      }),
+      authedFetch("/support/tickets?status=OPEN").then((response) => response.ok ? response.json() : []),
+    ])
+      .then(([overviewData, tickets]) => {
+        setOverview(overviewData)
+        setOpenTickets(tickets)
       })
-      .then(setOverview)
       .catch((err) => setError(err.message))
   }, [])
 
@@ -29,11 +35,18 @@ export default function AdminPage() {
     { label: "Orders", value: overview?.orders ?? 0, icon: Store },
     { label: "Deliveries", value: overview?.deliveries ?? 0, icon: Wallet },
   ]
+  const supportCount = (category: string) => openTickets.filter((ticket) => ticket.category?.toLowerCase().includes(category)).length
+  const highPriorityCount = openTickets.filter((ticket) => ["HIGH", "URGENT"].includes(ticket.priority ?? "")).length
   const queues = [
-    { label: "Ride safety checks", value: "12", tone: "High" },
-    { label: "Delivery disputes", value: "7", tone: "Normal" },
-    { label: "Driver verifications", value: "34", tone: "Normal" },
-    { label: "Support chats waiting", value: "19", tone: "High" },
+    { label: "Ride safety checks", value: supportCount("ride"), tone: highPriorityCount > 0 ? "High" : "Normal" },
+    { label: "Delivery disputes", value: supportCount("delivery"), tone: "Normal" },
+    { label: "Driver verifications", value: supportCount("driver"), tone: "Normal" },
+    { label: "Support chats waiting", value: openTickets.length, tone: highPriorityCount > 0 ? "High" : "Normal" },
+  ]
+  const marketplace = [
+    { label: "Rides", value: overview?.rides ?? 0, icon: Car },
+    { label: "Food orders", value: overview?.orders ?? 0, icon: Store },
+    { label: "Parcel delivery", value: overview?.deliveries ?? 0, icon: Package },
   ]
 
   return (
@@ -72,13 +85,13 @@ export default function AdminPage() {
               <CardTitle>Live Marketplace</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-3 md:grid-cols-3">
-              {["Rides", "Food orders", "Parcel delivery"].map((item, index) => (
-                <div key={item} className="rounded-lg border p-4">
+              {marketplace.map((item) => (
+                <div key={item.label} className="rounded-lg border p-4">
                   <div className="flex items-center justify-between">
-                    <span className="font-medium">{item}</span>
-                    {index === 0 ? <Car className="h-4 w-4 text-primary" /> : index === 1 ? <Store className="h-4 w-4 text-primary" /> : <Package className="h-4 w-4 text-primary" />}
+                    <span className="font-medium">{item.label}</span>
+                    <item.icon className="h-4 w-4 text-primary" />
                   </div>
-                  <p className="mt-4 text-3xl font-bold">{[128, 76, 42][index]}</p>
+                  <p className="mt-4 text-3xl font-bold">{item.value.toLocaleString()}</p>
                   <p className="text-sm text-muted-foreground">active right now</p>
                 </div>
               ))}

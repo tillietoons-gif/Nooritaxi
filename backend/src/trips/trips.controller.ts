@@ -1,11 +1,9 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { TripsService } from './trips.service';
-import { UseGuards } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
-import { UpdateTripStatusDto } from './dto';
 
 @Controller('trips')
 @UseGuards(JwtAuthGuard)
@@ -15,19 +13,24 @@ export class TripsController {
   @Post()
   @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.RIDER)
-  create(@Body() body: any) {
-    return this.tripsService.create(body);
+  createRide(@Body() body: any) {
+    return this.tripsService.createRide(body);
   }
 
-  @Get('user/:userId')
-  findByUser(@Param('userId') userId: string) {
-    return this.tripsService.findByUserId(userId);
+  @Get('estimate')
+  estimateRide(@Query('distance') distance?: string, @Query('lat') lat?: string, @Query('lng') lng?: string) {
+    return this.tripsService.getRideEstimate(Number(distance ?? 5), lat ? Number(lat) : undefined, lng ? Number(lng) : undefined);
   }
 
-  @Patch(':id/status')
+  @Get()
+  listRides(@Query('userId') userId?: string, @Query('page') page?: string, @Query('limit') limit?: string) {
+    return this.tripsService.listRides(userId, Number(page ?? 1), Number(limit ?? 25));
+  }
+
+  @Patch(':id')
   @UseGuards(RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.DRIVER, UserRole.SUPPORT)
-  updateStatus(@Param('id') id: string, @Body() body: UpdateTripStatusDto) {
-    return this.tripsService.updateStatus(id, body.status);
+  @Roles(UserRole.ADMIN, UserRole.DRIVER)
+  updateRide(@Param('id') id: string, @Body() body: any) {
+    return this.tripsService.updateRide(id, body);
   }
 }

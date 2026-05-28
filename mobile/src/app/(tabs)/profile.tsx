@@ -25,11 +25,18 @@ export default function ProfileScreen() {
   );
 
   const menuItems = [
-    { icon: <Shield size={22} color="#006947" />, title: 'Safety Center', subtitle: 'Manage emergency contacts and trip codes' },
-    { icon: <Bell size={22} color="#006947" />, title: 'Notifications', subtitle: `${notificationCount} recent alerts` },
-    { icon: <Globe size={22} color="#006947" />, title: 'Language', subtitle: 'English, Dari, Pashto' },
-    { icon: <HelpCircle size={22} color="#006947" />, title: 'Help & Support', subtitle: '24/7 Assistance' },
+    { id: 'safety', icon: <Shield size={22} color="#006947" />, title: 'Safety Center', subtitle: 'Manage emergency contacts and trip codes' },
+    { id: 'notifications', icon: <Bell size={22} color="#006947" />, title: 'Notifications', subtitle: `${notificationCount} recent alerts` },
+    { id: 'language', icon: <Globe size={22} color="#006947" />, title: 'Language', subtitle: 'English, Dari, Pashto' },
+    { id: 'help', icon: <HelpCircle size={22} color="#006947" />, title: 'Help & Support', subtitle: '24/7 Assistance' },
+    ...(user?.role === 'DRIVER' ? [{ id: 'kyc', icon: <User size={22} color="#006947" />, title: 'Driver Verification', subtitle: 'Upload required documents' }] : []),
   ];
+
+  function handleMenuPress(id: string) {
+    if (id === 'kyc') {
+      router.push('/driver-kyc');
+    }
+  }
 
   async function logout() {
     await clearSession();
@@ -52,7 +59,7 @@ export default function ProfileScreen() {
 
         <View className="space-y-3">
           {menuItems.map((item) => (
-            <TouchableOpacity key={item.title} className="flex-row items-center justify-between p-4 bg-card rounded-2xl border border-muted/10">
+            <TouchableOpacity key={item.id} onPress={() => handleMenuPress(item.id)} className="flex-row items-center justify-between p-4 bg-card rounded-2xl border border-muted/10">
               <View className="flex-row items-center gap-4">
                 <View className="p-2 bg-primary/5 rounded-lg">
                   {item.icon}

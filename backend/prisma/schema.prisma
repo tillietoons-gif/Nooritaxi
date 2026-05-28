@@ -169,6 +169,20 @@ enum ReviewTargetType {
   DELIVERY
 }
 
+enum DocumentType {
+  ID_CARD
+  DRIVERS_LICENSE
+  VEHICLE_REGISTRATION
+  INSURANCE
+  BACKGROUND_CHECK
+}
+
+enum DocumentStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
 model User {
   id                   String              @id @default(cuid())
   phone                String              @unique
@@ -207,6 +221,7 @@ model User {
   supportMessages      SupportMessage[]
   auditLogs            AuditLog[]
   refreshTokens        RefreshToken[]
+  verifiedDocuments    DriverDocument[]    @relation("DocumentVerifier")
 
   @@index([role, status])
   @@index([createdAt])
@@ -247,6 +262,7 @@ model Driver {
 
   user                User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   vehicles            Vehicle[]
+  documents           DriverDocument[]
 
   @@index([status, tier])
   @@index([currentLat, currentLng])
@@ -273,6 +289,23 @@ model Vehicle {
 
   @@index([driverId, isActive])
   @@index([type])
+}
+
+model DriverDocument {
+  id         String         @id @default(cuid())
+  driverId   String
+  type       DocumentType
+  url        String
+  status     DocumentStatus @default(PENDING)
+  verifiedAt DateTime?
+  verifiedBy String?
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  driver     Driver         @relation(fields: [driverId], references: [userId], onDelete: Cascade)
+  admin      User?          @relation("DocumentVerifier", fields: [verifiedBy], references: [id])
+
+  @@index([driverId, status])
 }
 
 model Trip {

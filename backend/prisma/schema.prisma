@@ -206,6 +206,7 @@ model User {
   pushDevices          PushDevice[]
   supportMessages      SupportMessage[]
   auditLogs            AuditLog[]
+  refreshTokens        RefreshToken[]
 
   @@index([role, status])
   @@index([createdAt])
@@ -630,6 +631,30 @@ model AuditLog {
   @@index([actorId, createdAt])
   @@index([entityType, entityId])
   @@index([action, createdAt])
+}
+
+model PhoneOtp {
+  id        String   @id @default(cuid())
+  phone     String
+  codeHash  String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([phone, usedAt])
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, revokedAt])
 }
 
 model SurgeZone {

@@ -2,7 +2,7 @@ import { IsEmail, IsEnum, IsOptional, IsPhoneNumber, IsString, MinLength } from 
 import { UserRole } from '@prisma/client';
 
 export class LoginDto {
-  @IsString()
+  @IsPhoneNumber()
   phone: string;
 
   @IsString()
@@ -13,7 +13,7 @@ export class RegisterDto {
   @IsString()
   name: string;
 
-  @IsString()
+  @IsPhoneNumber()
   phone: string;
 
   @IsOptional()
@@ -39,4 +39,22 @@ export class VerifyPhoneDto {
 
   @IsString()
   code: string;
+}
+
+export class SendOtpDto {
+  @IsPhoneNumber()
+  phone: string;
+}
+
+export class RefreshDto {
+  @IsString()
+  userId: string;
+
+  @IsString()
+  refreshToken: string;
+}
+
+export class LogoutDto {
+  @IsString()
+  refreshToken: string;
 }

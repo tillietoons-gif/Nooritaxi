@@ -1,23 +1,14 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 import { SuperAppService } from './super-app.service';
 import {
-  AddMenuItemDto,
   AddVehicleDto,
-  CreateDeliveryDto,
   CreateDriverDto,
-  CreateOrderDto,
   CreatePromotionDto,
-  CreateRestaurantDto,
-  CreateReviewDto,
-  CreateRideDto,
   CreateSupportTicketDto,
-  UpdateDeliveryDto,
-  UpdateOrderDto,
-  UpdateRideDto,
 } from './dto';
 
 @Controller()
@@ -52,87 +43,6 @@ export class SuperAppController {
   @UseGuards(JwtAuthGuard)
   upsertRider(@Param('userId') userId: string, @Body() body: any) {
     return this.superApp.upsertRiderProfile(userId, body);
-  }
-
-  @Post('rides')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.RIDER)
-  createRide(@Body() body: CreateRideDto) {
-    return this.superApp.createRide(body);
-  }
-
-  @Get('rides/estimate')
-  @UseGuards(JwtAuthGuard)
-  estimateRide(@Query('distance') distance?: string, @Query('surgeMultiplier') surgeMultiplier?: string) {
-    return this.superApp.getRideEstimate(Number(distance ?? 5), Number(surgeMultiplier ?? 1));
-  }
-
-  @Get('rides')
-  listRides(@Query('userId') userId?: string, @Query('page') page?: string, @Query('limit') limit?: string) {
-    return this.superApp.listRides(userId, Number(page ?? 1), Number(limit ?? 25));
-  }
-
-  @Patch('rides/:id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.DRIVER)
-  updateRide(@Param('id') id: string, @Body() body: UpdateRideDto) {
-    return this.superApp.updateRide(id, body);
-  }
-
-  @Post('restaurants')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.MERCHANT)
-  createRestaurant(@Body() body: CreateRestaurantDto) {
-    return this.superApp.createRestaurant(body);
-  }
-
-  @Get('restaurants')
-  listRestaurants(@Query('q') query?: string, @Query('page') page?: string, @Query('limit') limit?: string) {
-    return this.superApp.listRestaurants(query, Number(page ?? 1), Number(limit ?? 25));
-  }
-
-  @Post('restaurants/:restaurantId/menu-items')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.MERCHANT)
-  addMenuItem(@Param('restaurantId') restaurantId: string, @Body() body: AddMenuItemDto) {
-    return this.superApp.addMenuItem(restaurantId, body);
-  }
-
-  @Post('orders')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.RIDER)
-  createOrder(@Body() body: CreateOrderDto) {
-    return this.superApp.createOrder(body);
-  }
-
-  @Get('orders')
-  listOrders(@Query('userId') userId?: string, @Query('restaurantId') restaurantId?: string, @Query('page') page?: string, @Query('limit') limit?: string) {
-    return this.superApp.listOrders(userId, restaurantId, Number(page ?? 1), Number(limit ?? 25));
-  }
-
-  @Patch('orders/:id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.MERCHANT, UserRole.SUPPORT)
-  updateOrder(@Param('id') id: string, @Body() body: UpdateOrderDto) {
-    return this.superApp.updateOrder(id, body);
-  }
-
-  @Post('deliveries')
-  @UseGuards(JwtAuthGuard)
-  createDelivery(@Body() body: CreateDeliveryDto) {
-    return this.superApp.createDelivery(body);
-  }
-
-  @Get('deliveries')
-  listDeliveries(@Query('userId') userId?: string, @Query('page') page?: string, @Query('limit') limit?: string) {
-    return this.superApp.listDeliveries(userId, Number(page ?? 1), Number(limit ?? 25));
-  }
-
-  @Patch('deliveries/:id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.DRIVER, UserRole.SUPPORT)
-  updateDelivery(@Param('id') id: string, @Body() body: UpdateDeliveryDto) {
-    return this.superApp.updateDelivery(id, body);
   }
 
   @Post('promotions')
@@ -193,12 +103,6 @@ export class SuperAppController {
   @UseGuards(JwtAuthGuard)
   addSupportMessage(@Param('ticketId') ticketId: string, @Body() body: any) {
     return this.superApp.addSupportMessage(ticketId, body);
-  }
-
-  @Post('reviews')
-  @UseGuards(JwtAuthGuard)
-  createReview(@Body() body: CreateReviewDto) {
-    return this.superApp.createReview(body);
   }
 
   @Get('search')

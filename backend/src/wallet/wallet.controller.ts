@@ -7,11 +7,15 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 import { DebitDto, DepositDto } from './dto';
+import { PaymentsService } from '../payments/payments.service';
 
 @Controller('wallet')
 @UseGuards(JwtAuthGuard)
 export class WalletController {
-  constructor(private walletService: WalletService) {}
+  constructor(
+    private walletService: WalletService,
+    private paymentsService: PaymentsService,
+  ) {}
 
   @Get(':userId/transactions')
   getTransactions(
@@ -49,5 +53,27 @@ export class WalletController {
   @Roles(UserRole.ADMIN, UserRole.SUPPORT)
   debit(@Param('userId') userId: string, @Body() body: DebitDto) {
     return this.walletService.transfer(userId, body.amount, body.description, body.idempotencyKey);
+  }
+
+  @Post(':userId/topup/initiate')
+  initiateTopup(@Param('userId') userId: string, @Body() body: { amount: number; currency?: string; provider?: 'HESABPAY' | 'STRIPE' | 'M_PESA' }, @CurrentUser() user: any) {
+    if (user?.id !== userId && user?.role !== UserRole.ADMIN) {
+      throw new ForbiddenException('Cannot top up another user wallet');
+    }
+    return this.paymentsService.createPaymentIntent(userId, body.amount, body.currency ?? 'AFN', body.provider);
+  }
+
+  @Post(':userId/topup/verify')
+  async verifyTopup(@Param('userId') userId: string, @Body() body: { transactionId: string; provider: string; amount: number; currency?: string }, @CurrentUser() user: any) {
+    if (user?.id !== userId && user?.role !== UserRole.ADMIN) {
+      throw new ForbiddenException('Cannot verify top up for another user wallet');
+    }
+    const isValid = await this.paymentsService.verifyPayment(body.transactionId, body.provider);
+    if (!isValid) throw new ForbiddenException('Payment verification failed');
+    
+    return this.walletService.deposit(userId, body.amount, 'CUSTOMER', body.currency ?? 'AFN', body.transactionId, {
+      description: `Wallet top-up via ${body.provider}`,
+      transactionType: 'DEPOSIT',
+    });
   }
 }

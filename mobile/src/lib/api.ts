@@ -67,6 +67,24 @@ export type NotificationItem = {
   createdAt: string;
 };
 
+export type Restaurant = {
+  id: string;
+  name: string;
+  description?: string;
+  cuisineTypes: string[];
+  ratingAverage: number;
+  deliveryRadius?: number;
+  imageUrl?: string;
+};
+
+export type MenuItem = {
+  id: string;
+  name: string;
+  description?: string;
+  price: string;
+  imageUrl?: string;
+};
+
 export function setAuthToken(token: string | null) {
   authToken = token;
 }
@@ -184,4 +202,22 @@ export async function bookRide(payload: RidePayload) {
 export async function getNotifications(userId: string) {
   const response = await apiFetch(`/notifications/${encodeURIComponent(userId)}`);
   return readJson<NotificationItem[]>(response, 'Unable to load notifications');
+}
+
+export async function getRestaurants() {
+  const response = await apiFetch('/food/restaurants');
+  return readJson<Restaurant[]>(response, 'Unable to load restaurants');
+}
+
+export async function getRestaurantMenu(restaurantId: string) {
+  const response = await apiFetch(`/food/restaurants/${encodeURIComponent(restaurantId)}/menu`);
+  return readJson<MenuItem[]>(response, 'Unable to load menu');
+}
+
+export async function uploadKycDocument(driverId: string, type: string, url: string) {
+  const response = await apiFetch(`/users/${encodeURIComponent(driverId)}/documents`, {
+    method: 'POST',
+    body: JSON.stringify({ type, url }),
+  });
+  return readJson<any>(response, 'Unable to upload KYC document');
 }

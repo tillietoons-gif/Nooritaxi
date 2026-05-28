@@ -19,7 +19,19 @@ export class AuthService {
   }
   async register(data: any) {
     const hashedPassword = await bcrypt.hash(data.password, 10);
-    const user = await this.usersService.create({ ...data, password: hashedPassword });
+    const user = await this.usersService.create({
+      ...data,
+      password: hashedPassword,
+      referralCode: data.referralCode ?? this.createReferralCode(data.phone),
+      status: data.status ?? 'ACTIVE',
+    });
     return this.login(user);
+  }
+  async refresh(user: any) {
+    return this.login(user);
+  }
+  private createReferralCode(seed: string) {
+    const suffix = seed.replace(/\D/g, '').slice(-5) || Math.random().toString(36).slice(2, 7).toUpperCase();
+    return `NOORI${suffix}`;
   }
 }

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { ShieldCheck, Menu, Globe } from "lucide-react"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { useState } from "react"
+import { ThemeToggle } from "@/components/theme-toggle"
 export function Header() {
   const [isOpen, setIsOpen] = useState(false)
   const navigation = [
@@ -27,6 +28,7 @@ export function Header() {
         <div className="flex items-center space-x-4">
           <div className="hidden items-center space-x-2 md:flex">
              <Button variant="ghost" size="sm" className="gap-2"><Globe className="h-4 w-4" />EN</Button>
+            <ThemeToggle />
             <Button variant="ghost" size="sm">Log In</Button>
             <Button size="sm">Sign Up</Button>
           </div>

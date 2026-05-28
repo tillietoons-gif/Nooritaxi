@@ -11,6 +11,23 @@ import { RolesGuard } from '../auth/roles.guard';
 export class WalletController {
   constructor(private walletService: WalletService) {}
 
+  @Get(':userId/transactions')
+  getTransactions(
+    @Param('userId') userId: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('type') type?: string,
+    @Query('currency') currency?: string,
+  ) {
+    return this.walletService.listTransactions(
+      userId,
+      Number(page ?? 1),
+      Number(limit ?? 25),
+      type,
+      currency ?? 'AFN',
+    );
+  }
+
   @Get(':userId')
   getBalance(@Param('userId') userId: string, @Query('type') type?: string, @Query('currency') currency?: string) {
     return this.walletService.getBalance(userId, type, currency);
@@ -20,13 +37,15 @@ export class WalletController {
   @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.SUPPORT)
   deposit(@Param('userId') userId: string, @Body() body: any) {
-    return this.walletService.deposit(userId, Number(body.amount), body.type, body.currency);
+    return this.walletService.deposit(userId, Number(body.amount), body.type, body.currency, body.idempotencyKey, {
+      description: body.description,
+    });
   }
 
   @Post(':userId/debit')
   @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.SUPPORT)
   debit(@Param('userId') userId: string, @Body() body: any) {
-    return this.walletService.transfer(userId, Number(body.amount), body.description);
+    return this.walletService.transfer(userId, Number(body.amount), body.description, body.idempotencyKey);
   }
 }

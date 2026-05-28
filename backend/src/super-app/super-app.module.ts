@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
 import { PrismaModule } from '../prisma/prisma.module';
 import { PushModule } from '../push/push.module';
+import { WalletModule } from '../wallet/wallet.module';
 import { SuperAppController } from './super-app.controller';
 import { SuperAppService } from './super-app.service';
 
 @Module({
-  imports: [PrismaModule, PushModule],
+  imports: [PrismaModule, PushModule, WalletModule],
   controllers: [SuperAppController],
   providers: [SuperAppService],
 })

@@ -1,10 +1,16 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { Order, PaymentMethod, Trip } from '@prisma/client';
 import { PrismaService } from '../prisma.service';
 import { PushService } from '../push/push.service';
+import { WalletService } from '../wallet/wallet.service';
 
 @Injectable()
 export class SuperAppService {
-  constructor(private prisma: PrismaService, private push: PushService) {}
+  constructor(
+    private prisma: PrismaService,
+    private push: PushService,
+    private wallet: WalletService,
+  ) {}
 
   createDriverProfile(data: any) {
     return this.prisma.driver.create({ data, include: { user: true, vehicles: true } });
@@ -60,8 +66,17 @@ export class SuperAppService {
   }
 
   async updateRide(id: string, data: any) {
-    const before = await this.prisma.trip.findUnique({ where: { id } });
-    const ride = await this.prisma.trip.update({ where: { id }, data });
+    const { ride, before } = await this.prisma.$transaction(async (tx) => {
+      const before = await tx.trip.findUnique({ where: { id } });
+      const ride = await tx.trip.update({ where: { id }, data });
+
+      if (before && before.status !== 'COMPLETED' && ride.status === 'COMPLETED') {
+        await this.settleCompletedRide(ride, tx);
+      }
+
+      return { ride, before };
+    });
+
     await this.audit('RIDE_UPDATED', 'Trip', id, data.actorId, ride, before);
     return ride;
   }
@@ -140,8 +155,21 @@ export class SuperAppService {
   }
 
   async updateOrder(id: string, data: any) {
-    const before = await this.prisma.order.findUnique({ where: { id } });
-    const order = await this.prisma.order.update({ where: { id }, data, include: { delivery: true, items: true } });
+    const { order, before } = await this.prisma.$transaction(async (tx) => {
+      const before = await tx.order.findUnique({ where: { id } });
+      const order = await tx.order.update({
+        where: { id },
+        data,
+        include: { delivery: true, items: true, restaurant: true },
+      });
+
+      if (before && before.status !== 'DELIVERED' && order.status === 'DELIVERED') {
+        await this.settleDeliveredOrder(order, tx);
+      }
+
+      return { order, before };
+    });
+
     await this.audit('ORDER_UPDATED', 'Order', id, data.actorId, order, before);
     return order;
   }
@@ -296,5 +324,76 @@ export class SuperAppService {
         after: after ?? undefined,
       },
     });
+  }
+
+  private async settleCompletedRide(ride: Trip, tx: any) {
+    if (ride.paymentMethod !== PaymentMethod.WALLET) return;
+    if (!ride.driverId) throw new BadRequestException('Cannot settle wallet ride without an assigned driver');
+
+    const amount = Number(ride.fare ?? 0);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      throw new BadRequestException('Cannot settle wallet ride without a positive fare');
+    }
+
+    await this.wallet.transfer(
+      ride.customerId,
+      amount,
+      `Ride payment for ${ride.id}`,
+      `ride:${ride.id}:wallet-payment`,
+      {
+        tx,
+        transactionType: 'RIDE_PAYMENT',
+        tripId: ride.id,
+      },
+    );
+
+    await this.wallet.deposit(
+      ride.driverId,
+      amount,
+      'DRIVER',
+      'AFN',
+      `ride:${ride.id}:driver-payout`,
+      {
+        tx,
+        transactionType: 'DRIVER_PAYOUT',
+        description: `Driver payout for ride ${ride.id}`,
+        tripId: ride.id,
+      },
+    );
+  }
+
+  private async settleDeliveredOrder(order: Order & { restaurant: { ownerId: string } }, tx: any) {
+    if (order.paymentMethod !== PaymentMethod.WALLET) return;
+
+    const amount = Number(order.total ?? 0);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      throw new BadRequestException('Cannot settle wallet order without a positive total');
+    }
+
+    await this.wallet.transfer(
+      order.riderId,
+      amount,
+      `Order payment for ${order.id}`,
+      `order:${order.id}:wallet-payment`,
+      {
+        tx,
+        transactionType: 'ORDER_PAYMENT',
+        orderId: order.id,
+      },
+    );
+
+    await this.wallet.deposit(
+      order.restaurant.ownerId,
+      amount,
+      'MERCHANT',
+      'AFN',
+      `order:${order.id}:merchant-payout`,
+      {
+        tx,
+        transactionType: 'MERCHANT_PAYOUT',
+        description: `Merchant payout for order ${order.id}`,
+        orderId: order.id,
+      },
+    );
   }
 }

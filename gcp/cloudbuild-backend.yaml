@@ -40,7 +40,7 @@ steps:
       - --set-secrets
       - DATABASE_URL=noori-database-url:latest,JWT_SECRET=noori-jwt-secret:latest
       - --set-env-vars
-      - NODE_ENV=production,CORS_ORIGIN=http://localhost:3000
+      - NODE_ENV=production,CORS_ORIGIN=http://localhost:3000,PUSH_PROVIDER=firebase,FIREBASE_PROJECT_ID=academic-pillar-483819-f1
       - --allow-unauthenticated
 
 images:

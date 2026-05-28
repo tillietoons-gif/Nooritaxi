@@ -1,7 +1,8 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { Order, PaymentMethod, Trip } from '@prisma/client';
+import { Driver, DriverStatus, Order, PaymentMethod, Trip, TripStatus } from '@prisma/client';
 import { PrismaService } from '../prisma.service';
 import { PushService } from '../push/push.service';
+import { assertTripStatusTransition, tripStatusTimestampData } from '../trips/trip-status-machine';
 import { WalletService } from '../wallet/wallet.service';
 
 @Injectable()
@@ -40,16 +41,61 @@ export class SuperAppService {
     const distance = data.distance ?? 5;
     const surgeMultiplier = data.surgeMultiplier ?? 1;
     const { baseFare, fare } = this.estimateRideFare(distance, surgeMultiplier);
-    const ride = await this.prisma.trip.create({
-      data: {
-        ...data,
-        distance,
-        baseFare,
-        fare,
-        surgeMultiplier,
-        safetyCode: data.safetyCode ?? Math.floor(1000 + Math.random() * 9000).toString(),
-      },
+    const { ride, matchedDriverTokens } = await this.prisma.$transaction(async (tx) => {
+      const createdRide = await tx.trip.create({
+        data: {
+          ...data,
+          distance,
+          baseFare,
+          fare,
+          surgeMultiplier,
+          safetyCode: data.safetyCode ?? Math.floor(1000 + Math.random() * 9000).toString(),
+        },
+      });
+
+      const matchedDriver = data.driverId
+        ? null
+        : await this.findNearestOnlineDriver(data.pickupLat, data.pickupLng, tx);
+      const assignedDriverUserId = data.driverId ?? matchedDriver?.userId;
+      const assignedVehicleId = data.vehicleId ?? matchedDriver?.vehicles[0]?.id;
+
+      if (!assignedDriverUserId) return { ride: createdRide, matchedDriverTokens: [] };
+
+      const updatedRide = await tx.trip.update({
+        where: { id: createdRide.id },
+        data: {
+          driverId: assignedDriverUserId,
+          vehicleId: assignedVehicleId,
+          status: TripStatus.ACCEPTED,
+          acceptedAt: new Date(),
+        },
+      });
+
+      await tx.driver.updateMany({
+        where: { userId: assignedDriverUserId },
+        data: { status: DriverStatus.BUSY },
+      });
+
+      const devices = await tx.pushDevice.findMany({
+        where: { userId: assignedDriverUserId, isActive: true },
+        select: { token: true },
+      });
+
+      return {
+        ride: updatedRide,
+        matchedDriverTokens: devices.map((device) => device.token),
+      };
     });
+
+    if (matchedDriverTokens.length) {
+      await this.push.sendToTokens(
+        matchedDriverTokens,
+        'New ride request',
+        `${ride.pickupLocation} to ${ride.dropoffLocation}`,
+        { type: 'RIDE_REQUEST', tripId: ride.id },
+      );
+    }
+
     await this.audit('RIDE_CREATED', 'Trip', ride.id, data.customerId, ride);
     return ride;
   }
@@ -71,10 +117,29 @@ export class SuperAppService {
   async updateRide(id: string, data: any) {
     const { ride, before } = await this.prisma.$transaction(async (tx) => {
       const before = await tx.trip.findUnique({ where: { id } });
-      const ride = await tx.trip.update({ where: { id }, data });
+      const { actorId, ...rideData } = data;
+
+      if (before && rideData.status) {
+        assertTripStatusTransition(before.status, rideData.status);
+        if (before.status !== rideData.status) {
+          Object.assign(rideData, tripStatusTimestampData(rideData.status));
+        }
+      }
+
+      const ride = await tx.trip.update({ where: { id }, data: rideData });
 
       if (before && before.status !== 'COMPLETED' && ride.status === 'COMPLETED') {
         await this.settleCompletedRide(ride, tx);
+      }
+
+      if (before && before.status !== ride.status && this.isTerminalTripStatus(ride.status) && ride.driverId) {
+        await tx.driver.updateMany({
+          where: { userId: ride.driverId },
+          data: {
+            status: DriverStatus.ONLINE,
+            ...(ride.status === TripStatus.COMPLETED ? { completedTrips: { increment: 1 } } : {}),
+          },
+        });
       }
 
       return { ride, before };
@@ -407,5 +472,51 @@ export class SuperAppService {
     const perKm = 35;
     const fare = Math.round((baseFare + safeDistance * perKm) * safeSurge);
     return { baseFare, perKm, distance: safeDistance, surgeMultiplier: safeSurge, fare, currency: 'AFN' };
+  }
+
+  private async findNearestOnlineDriver(pickupLat?: number, pickupLng?: number, tx: any = this.prisma) {
+    const drivers = await tx.driver.findMany({
+      where: { status: 'ONLINE' },
+      include: { vehicles: { where: { isActive: true }, take: 1 } },
+      orderBy: { ratingAverage: 'desc' },
+      take: 25,
+    });
+
+    return drivers
+      .map((driver: Driver & { vehicles: { id: string }[] }) => ({
+        driver,
+        distance:
+          pickupLat != null && pickupLng != null && driver.currentLat != null && driver.currentLng != null
+            ? this.distanceKm(pickupLat, pickupLng, driver.currentLat, driver.currentLng)
+            : null,
+      }))
+      .sort((a, b) => {
+        if (a.distance != null && b.distance != null) return a.distance - b.distance;
+        if (a.distance != null) return -1;
+        if (b.distance != null) return 1;
+        return b.driver.ratingAverage - a.driver.ratingAverage;
+      })[0]?.driver;
+  }
+
+  private distanceKm(fromLat: number, fromLng: number, toLat: number, toLng: number) {
+    const earthRadiusKm = 6371;
+    const dLat = this.toRadians(toLat - fromLat);
+    const dLng = this.toRadians(toLng - fromLng);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(this.toRadians(fromLat)) *
+        Math.cos(this.toRadians(toLat)) *
+        Math.sin(dLng / 2) *
+        Math.sin(dLng / 2);
+
+    return earthRadiusKm * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+
+  private toRadians(value: number) {
+    return (value * Math.PI) / 180;
+  }
+
+  private isTerminalTripStatus(status: TripStatus) {
+    return status === TripStatus.COMPLETED || status === TripStatus.CANCELLED;
   }
 }

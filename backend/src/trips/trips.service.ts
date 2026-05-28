@@ -1,6 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
-import { Trip, TripStatus } from '@prisma/client';
+import { DriverStatus, Trip, TripStatus } from '@prisma/client';
+import { assertTripStatusTransition, tripStatusTimestampData } from './trip-status-machine';
 
 type GeoJsonPolygon = {
   type: 'Polygon';
@@ -17,7 +18,34 @@ export class TripsService {
   async findByUserId(userId: string): Promise<Trip[]> {
     return this.prisma.trip.findMany({ where: { OR: [{ customerId: userId }, { driverId: userId }] }, include: { customer: true, driver: true } });
   }
-  async updateStatus(id: string, status: TripStatus): Promise<Trip> { return this.prisma.trip.update({ where: { id }, data: { status } }); }
+  async updateStatus(id: string, status: TripStatus): Promise<Trip> {
+    const before = await this.prisma.trip.findUnique({ where: { id } });
+    if (!before) throw new NotFoundException('Trip not found');
+
+    assertTripStatusTransition(before.status, status);
+
+    return this.prisma.$transaction(async (tx) => {
+      const trip = await tx.trip.update({
+        where: { id },
+        data: {
+          status,
+          ...(before.status !== status ? tripStatusTimestampData(status) : {}),
+        },
+      });
+
+      if (before.status !== status && this.isTerminalStatus(status) && trip.driverId) {
+        await tx.driver.updateMany({
+          where: { userId: trip.driverId },
+          data: {
+            status: DriverStatus.ONLINE,
+            ...(status === TripStatus.COMPLETED ? { completedTrips: { increment: 1 } } : {}),
+          },
+        });
+      }
+
+      return trip;
+    });
+  }
   async getSurgeMultiplier(lat?: number, lng?: number) {
     if (lat == null || lng == null) return 1;
     const activeZones = await this.prisma.surgeZone.findMany({
@@ -62,5 +90,9 @@ export class TripsService {
     }
 
     return isInside;
+  }
+
+  private isTerminalStatus(status: TripStatus) {
+    return status === TripStatus.COMPLETED || status === TripStatus.CANCELLED;
   }
 }

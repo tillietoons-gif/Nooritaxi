@@ -1,8 +1,9 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, SafeAreaView, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, SafeAreaView, ActivityIndicator, Alert, Image } from 'react-native';
 import { router } from 'expo-router';
 import { UploadCloud, CheckCircle, ShieldAlert, ArrowLeft } from 'lucide-react-native';
 import { uploadKycDocument, getStoredUser } from '../lib/api';
+import * as ImagePicker from 'expo-image-picker';
 
 export default function DriverKycScreen() {
   const [loading, setLoading] = React.useState(false);
@@ -19,12 +20,36 @@ export default function DriverKycScreen() {
         router.replace('/(auth)/login');
         return;
       }
-      
-      // Mocking file selection and upload process
-      // In a real app, use expo-document-picker or expo-image-picker
-      const mockUrl = `https://storage.example.com/mock_${type.toLowerCase()}_${Date.now()}.pdf`;
-      
-      await uploadKycDocument(user.id, type, mockUrl);
+
+      // Request permission
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        setStatus('ERROR');
+        setMessage('Permission to access media library is required.');
+        setLoading(false);
+        return;
+      }
+
+      // Pick image or document
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        quality: 0.8,
+      });
+
+      if (result.canceled || !result.assets || !result.assets[0]?.uri) {
+        setLoading(false);
+        return;
+      }
+
+      // In a real app, upload the file to your storage and get a public URL
+      // For demo, use the local uri as a placeholder
+      const fileUri = result.assets[0].uri;
+      // TODO: Replace with real upload logic to get a public URL
+      // For now, just show a warning
+      Alert.alert('Demo', 'In production, upload the file to your backend or cloud storage and use the returned URL.');
+
+      await uploadKycDocument(user.id, type, fileUri);
       setStatus('SUCCESS');
       setMessage(`${type.replace('_', ' ')} uploaded successfully and is pending verification.`);
     } catch (err) {

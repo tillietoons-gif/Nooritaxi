@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, SafeAreaView } from 'react-native';
+import { View, Text, TouchableOpacity, SafeAreaView, Alert } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { User, Shield, Bell, HelpCircle, LogOut, ChevronRight, Globe } from 'lucide-react-native';
 import { AuthUser, clearSession, getNotifications, getStoredUser } from '../../lib/api';
@@ -33,8 +33,24 @@ export default function ProfileScreen() {
   ];
 
   function handleMenuPress(id: string) {
-    if (id === 'kyc') {
-      router.push('/driver-kyc');
+    switch (id) {
+      case 'kyc':
+        router.push('/driver-kyc');
+        break;
+      case 'safety':
+        Alert.alert('Coming Soon', 'Safety Center will be available soon.');
+        break;
+      case 'notifications':
+        Alert.alert('Coming Soon', 'Notifications screen will be available soon.');
+        break;
+      case 'language':
+        Alert.alert('Coming Soon', 'Language selection will be available soon.');
+        break;
+      case 'help':
+        Alert.alert('Coming Soon', 'Help & Support will be available soon.');
+        break;
+      default:
+        break;
     }
   }
 

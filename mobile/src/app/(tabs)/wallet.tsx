@@ -1,15 +1,16 @@
 import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, SafeAreaView } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, TextInput } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { Wallet, Plus, ArrowUpRight, ArrowDownRight, CreditCard } from 'lucide-react-native';
 import { getStoredUser, getTransactions, getWalletBalance, topUpWallet, WalletTransaction } from '../../lib/api';
 
-export default function WalletScreen() {
   const [balance, setBalance] = React.useState('0');
   const [transactions, setTransactions] = React.useState<WalletTransaction[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [message, setMessage] = React.useState('');
   const [userId, setUserId] = React.useState('');
+  const [topUpAmount, setTopUpAmount] = React.useState('');
+  const [inputError, setInputError] = React.useState('');
 
   const loadWallet = React.useCallback(async () => {
     setLoading(true);
@@ -41,12 +42,19 @@ export default function WalletScreen() {
   );
 
   async function topUp() {
-    if (!userId) return;
+    setInputError('');
     setMessage('');
+    if (!userId) return;
+    const amount = Number(topUpAmount);
+    if (!topUpAmount || isNaN(amount) || amount <= 0) {
+      setInputError('Enter a valid amount (AFN > 0)');
+      return;
+    }
     try {
-      await topUpWallet(userId, 500);
+      await topUpWallet(userId, amount);
       await loadWallet();
-      setMessage('Added AFN 500');
+      setMessage(`Added AFN ${amount}`);
+      setTopUpAmount('');
     } catch (err) {
       setMessage((err as Error).message);
     }
@@ -62,7 +70,16 @@ export default function WalletScreen() {
             <Text className="text-white/70 text-sm font-medium mb-1">Available Balance</Text>
             <Text className="text-white text-4xl font-bold">{loading ? '...' : `${balance} AFN`}</Text>
 
-            <View className="flex-row gap-4 mt-8">
+            <View className="flex-row gap-4 mt-8 items-center">
+              <TextInput
+                value={topUpAmount}
+                onChangeText={setTopUpAmount}
+                placeholder="Amount (AFN)"
+                keyboardType="numeric"
+                className="bg-white/20 text-white px-4 py-3 rounded-xl w-32 text-base font-bold mr-2"
+                placeholderTextColor="#e0e7e3"
+                maxLength={8}
+              />
               <TouchableOpacity onPress={topUp} className="bg-white/20 px-6 py-3 rounded-xl flex-row items-center gap-2">
                 <Plus size={20} color="white" />
                 <Text className="text-white font-bold">Top Up</Text>
@@ -71,6 +88,7 @@ export default function WalletScreen() {
                 <CreditCard size={20} color="white" />
               </TouchableOpacity>
             </View>
+            {inputError ? <Text className="text-warning mt-2">{inputError}</Text> : null}
           </View>
 
           <View className="absolute -top-10 -right-10 w-40 h-40 bg-white/5 rounded-full" />

@@ -1,12 +1,12 @@
-import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, Image } from 'react-native';
+import React, { useRef } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, Image, Alert } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { UtensilsCrossed, Star, Clock, ChevronRight } from 'lucide-react-native';
 import { getRestaurants, Restaurant } from '../../lib/api';
 
-export default function FoodScreen() {
   const [restaurants, setRestaurants] = React.useState<Restaurant[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const scrollRef = useRef<ScrollView>(null);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -34,7 +34,15 @@ export default function FoodScreen() {
           <View className="relative z-10 w-2/3">
             <Text className="text-xl font-bold text-foreground mb-2">Craving something?</Text>
             <Text className="text-muted-foreground text-sm mb-6">Order from top local restaurants and get it delivered fast.</Text>
-            <TouchableOpacity className="bg-primary px-6 py-3 rounded-full self-start">
+            <TouchableOpacity
+              className="bg-primary px-6 py-3 rounded-full self-start"
+              onPress={() => {
+                // Scroll to restaurant list
+                setTimeout(() => {
+                  scrollRef.current?.scrollTo({ y: 0, animated: true });
+                }, 100);
+              }}
+            >
               <Text className="text-white font-bold">Order Now</Text>
             </TouchableOpacity>
           </View>
@@ -45,12 +53,12 @@ export default function FoodScreen() {
 
         <View className="flex-row items-center justify-between mb-4">
           <Text className="text-lg font-bold">Featured Restaurants</Text>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => Alert.alert('Coming Soon', 'Full restaurant list coming soon!')}>
             <Text className="text-primary font-bold text-sm">See all</Text>
           </TouchableOpacity>
         </View>
 
-        <ScrollView className="space-y-4">
+        <ScrollView className="space-y-4" ref={scrollRef}>
           {loading ? (
             [1, 2, 3].map((i) => <View key={i} className="h-48 bg-muted/30 rounded-3xl mb-4" />)
           ) : restaurants.length === 0 ? (

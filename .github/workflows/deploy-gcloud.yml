@@ -40,7 +40,7 @@ jobs:
           project_id: ${{ vars.GCP_PROJECT_ID }}
 
       - name: Deploy backend
-        run: gcloud builds submit --project "${{ vars.GCP_PROJECT_ID }}" --config gcp/cloudbuild-backend.yaml .
+        run: gcloud builds submit --suppress-logs --project "${{ vars.GCP_PROJECT_ID }}" --config gcp/cloudbuild-backend.yaml .
 
       - name: Deploy web
-        run: gcloud builds submit --project "${{ vars.GCP_PROJECT_ID }}" --config gcp/cloudbuild-web.yaml .
+        run: gcloud builds submit --suppress-logs --project "${{ vars.GCP_PROJECT_ID }}" --config gcp/cloudbuild-web.yaml .

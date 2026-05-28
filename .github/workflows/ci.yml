@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, feat/noori-super-app-complete-911282070275060773]
   pull_request:
 
 jobs:

@@ -1,0 +1,46 @@
+name: Deploy to Google Cloud
+
+on:
+  push:
+    branches:
+      - main
+      - feat/noori-super-app-complete-911282070275060773
+    paths:
+      - backend/**
+      - web/**
+      - gcp/**
+      - .github/workflows/deploy-gcloud.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: gcloud-deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Build and deploy Cloud Run services
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+
+      - name: Deploy backend
+        run: gcloud builds submit --project "${{ vars.GCP_PROJECT_ID }}" --config gcp/cloudbuild-backend.yaml .
+
+      - name: Deploy web
+        run: gcloud builds submit --project "${{ vars.GCP_PROJECT_ID }}" --config gcp/cloudbuild-web.yaml .

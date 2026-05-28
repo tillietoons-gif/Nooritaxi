@@ -19,6 +19,20 @@ Use Cloud SQL for PostgreSQL or any managed PostgreSQL provider and store the co
 gcloud builds submit --config gcp/cloudbuild-backend.yaml .
 ```
 
+## Automatic Deploys From GitHub
+
+Pushes to `main` or `feat/noori-super-app-complete-911282070275060773` run `.github/workflows/deploy-gcloud.yml`.
+The workflow authenticates with Google Cloud through Workload Identity Federation and deploys both Cloud Run services:
+
+- `noori-backend`
+- `noori-web`
+
+Required GitHub repository variables:
+
+- `GCP_PROJECT_ID`
+- `GCP_WIF_PROVIDER`
+- `GCP_DEPLOY_SERVICE_ACCOUNT`
+
 ## Cloud Run Service Template
 
 `gcp/cloud-run-backend.yaml` is a declarative Cloud Run service template. Replace:

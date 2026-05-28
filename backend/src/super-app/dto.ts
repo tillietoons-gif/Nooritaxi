@@ -35,15 +35,57 @@ export class CreateRideDto {
   @IsString()
   customerId: string;
 
+  @IsOptional()
+  @IsString()
+  driverId?: string;
+
+  @IsOptional()
+  @IsString()
+  vehicleId?: string;
+
   @IsString()
   pickupLocation: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  pickupLat?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  pickupLng?: number;
 
   @IsString()
   dropoffLocation: string;
 
   @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  dropoffLat?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  dropoffLng?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  distance?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  surgeMultiplier?: number;
+
+  @IsOptional()
   @IsEnum(PaymentMethod)
   paymentMethod?: PaymentMethod;
+
+  @IsOptional()
+  @IsString()
+  notes?: string;
 }
 
 export class UpdateRideDto {
@@ -54,6 +96,10 @@ export class UpdateRideDto {
   @IsOptional()
   @IsString()
   driverId?: string;
+
+  @IsOptional()
+  @IsString()
+  actorId?: string;
 }
 
 export class CreateRestaurantDto {
@@ -67,6 +113,24 @@ export class CreateRestaurantDto {
   address: string;
 
   @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsString()
+  phone?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  lat?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  lng?: number;
+
+  @IsOptional()
   @IsArray()
   cuisineTypes?: string[];
 }
@@ -77,11 +141,21 @@ export class AddMenuItemDto {
 
   @IsNumber()
   @Min(0)
+  @Type(() => Number)
   price: number;
 
   @IsOptional()
   @IsString()
   category?: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  preparationMin?: number;
 }
 
 export class OrderItemDto {
@@ -90,9 +164,11 @@ export class OrderItemDto {
 
   @IsNumber()
   @Min(1)
+  @Type(() => Number)
   quantity: number;
 
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   unitPrice?: number;
 }
@@ -108,6 +184,40 @@ export class CreateOrderDto {
   deliveryAddress: string;
 
   @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  deliveryLat?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  deliveryLng?: number;
+
+  @IsOptional()
+  @IsString()
+  notes?: string;
+
+  @IsOptional()
+  @IsEnum(PaymentMethod)
+  paymentMethod?: PaymentMethod;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  subtotal?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  deliveryFee?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  discount?: number;
+
+  @IsOptional()
+  @IsArray()
   @ValidateNested({ each: true })
   @Type(() => OrderItemDto)
   items?: OrderItemDto[];
@@ -117,18 +227,81 @@ export class UpdateOrderDto {
   @IsOptional()
   @IsEnum(OrderStatus)
   status?: OrderStatus;
+
+  @IsOptional()
+  @IsString()
+  actorId?: string;
 }
 
 export class CreateDeliveryDto {
+  @IsOptional()
+  @IsString()
+  orderId?: string;
+
+  @IsOptional()
+  @IsString()
+  senderId?: string;
+
+  @IsOptional()
+  @IsString()
+  driverId?: string;
+
+  @IsOptional()
+  @IsString()
+  vehicleId?: string;
+
+  @IsOptional()
+  @IsString()
+  pickupName?: string;
+
   @IsString()
   pickupAddress: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  pickupLat?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  pickupLng?: number;
+
+  @IsOptional()
+  @IsString()
+  dropoffName?: string;
 
   @IsString()
   dropoffAddress: string;
 
   @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  dropoffLat?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  dropoffLng?: number;
+
+  @IsOptional()
   @IsString()
-  senderId?: string;
+  packageType?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  packageWeightKg?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  fee?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  distance?: number;
 }
 
 export class UpdateDeliveryDto {
@@ -139,6 +312,10 @@ export class UpdateDeliveryDto {
   @IsOptional()
   @IsString()
   driverId?: string;
+
+  @IsOptional()
+  @IsString()
+  actorId?: string;
 }
 
 export class CreatePromotionDto {
@@ -157,6 +334,7 @@ export class CreatePromotionDto {
 
   @IsNumber()
   @Min(0)
+  @Type(() => Number)
   value: number;
 
   @IsString()

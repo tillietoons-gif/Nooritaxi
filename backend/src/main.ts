@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ConfiguredSocketIoAdapter } from './socket-io.adapter';
+import { PrismaExceptionFilter } from './prisma-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -14,7 +15,8 @@ async function bootstrap() {
   });
   app.useWebSocketAdapter(new ConfiguredSocketIoAdapter(app, configService));
   app.setGlobalPrefix('api');
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+  app.useGlobalFilters(new PrismaExceptionFilter());
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
   await app.listen(configService.get<number>('PORT') ?? 3000);
 }
 bootstrap();

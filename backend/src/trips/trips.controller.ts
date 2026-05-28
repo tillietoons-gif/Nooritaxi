@@ -5,6 +5,7 @@ import { UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
+import { UpdateTripStatusDto } from './dto';
 
 @Controller('trips')
 @UseGuards(JwtAuthGuard)
@@ -26,7 +27,7 @@ export class TripsController {
   @Patch(':id/status')
   @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.DRIVER, UserRole.SUPPORT)
-  updateStatus(@Param('id') id: string, @Body('status') status: any) {
-    return this.tripsService.updateStatus(id, status);
+  updateStatus(@Param('id') id: string, @Body() body: UpdateTripStatusDto) {
+    return this.tripsService.updateStatus(id, body.status);
   }
 }

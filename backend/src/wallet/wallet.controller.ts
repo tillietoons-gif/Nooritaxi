@@ -6,6 +6,7 @@ import { CurrentUser } from '../auth/current-user.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
+import { DebitDto, DepositDto } from './dto';
 
 @Controller('wallet')
 @UseGuards(JwtAuthGuard)
@@ -35,10 +36,10 @@ export class WalletController {
   }
 
   @Post(':userId/deposit')
-  deposit(@Param('userId') userId: string, @Body() body: any, @CurrentUser() user: any) {
+  deposit(@Param('userId') userId: string, @Body() body: DepositDto, @CurrentUser() user: any) {
     const canDeposit = user?.id === userId || [UserRole.ADMIN, UserRole.SUPPORT].includes(user?.role);
     if (!canDeposit) throw new ForbiddenException('Cannot top up another user wallet');
-    return this.walletService.deposit(userId, Number(body.amount), body.type, body.currency, body.idempotencyKey, {
+    return this.walletService.deposit(userId, body.amount, body.type, body.currency, body.idempotencyKey, {
       description: body.description,
     });
   }
@@ -46,7 +47,7 @@ export class WalletController {
   @Post(':userId/debit')
   @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.SUPPORT)
-  debit(@Param('userId') userId: string, @Body() body: any) {
-    return this.walletService.transfer(userId, Number(body.amount), body.description, body.idempotencyKey);
+  debit(@Param('userId') userId: string, @Body() body: DebitDto) {
+    return this.walletService.transfer(userId, body.amount, body.description, body.idempotencyKey);
   }
 }

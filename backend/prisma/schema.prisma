@@ -1,0 +1,74 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  CUSTOMER
+  DRIVER
+  MERCHANT
+  ADMIN
+}
+
+enum TripStatus {
+  REQUESTED
+  ACCEPTED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+model User {
+  id            String    @id @default(cuid())
+  phone         String    @unique
+  email         String?   @unique
+  name          String?
+  password      String
+  role          UserRole  @default(CUSTOMER)
+  isVerified    Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  wallet        Wallet?
+  tripsAsCustomer Trip[]  @relation("CustomerTrips")
+  tripsAsDriver   Trip[]  @relation("DriverTrips")
+}
+
+model Wallet {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  balance   Decimal  @default(0) @db.Decimal(12, 2)
+  user      User     @relation(fields: [userId], references: [id])
+  transactions Transaction[]
+}
+
+model Transaction {
+  id          String   @id @default(cuid())
+  walletId    String
+  amount      Decimal  @db.Decimal(12, 2)
+  type        String
+  description String?
+  createdAt   DateTime @default(now())
+  wallet      Wallet   @relation(fields: [walletId], references: [id])
+}
+
+model Trip {
+  id              String     @id @default(cuid())
+  customerId      String
+  driverId        String?
+  pickupLocation  String
+  dropoffLocation String
+  status          TripStatus @default(REQUESTED)
+  fare            Decimal?   @db.Decimal(10, 2)
+  distance        Float?
+  duration        Int?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  customer        User       @relation("CustomerTrips", fields: [customerId], references: [id])
+  driver          User?      @relation("DriverTrips", fields: [driverId], references: [id])
+}

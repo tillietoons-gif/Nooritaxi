@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: noori-backend
+    runtime: node
+    buildCommand: cd backend && npm install && npm run build
+    startCommand: cd backend && npx prisma migrate deploy && node dist/main
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+
+  - type: web
+    name: noori-web
+    runtime: node
+    buildCommand: cd web && npm install && npm run build
+    startCommand: cd web && node .next/standalone/server.js
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: NEXT_PUBLIC_API_URL
+        value: https://noori-backend.onrender.com

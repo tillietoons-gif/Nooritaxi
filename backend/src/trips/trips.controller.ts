@@ -1,11 +1,19 @@
 import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
 import { TripsService } from './trips.service';
+import { UseGuards } from '@nestjs/common';
+import { UserRole } from '@prisma/client';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { Roles } from '../auth/roles.decorator';
+import { RolesGuard } from '../auth/roles.guard';
 
 @Controller('trips')
+@UseGuards(JwtAuthGuard)
 export class TripsController {
   constructor(private tripsService: TripsService) {}
 
   @Post()
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.RIDER)
   create(@Body() body: any) {
     return this.tripsService.create(body);
   }
@@ -16,6 +24,8 @@ export class TripsController {
   }
 
   @Patch(':id/status')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.DRIVER, UserRole.SUPPORT)
   updateStatus(@Param('id') id: string, @Body('status') status: any) {
     return this.tripsService.updateStatus(id, status);
   }

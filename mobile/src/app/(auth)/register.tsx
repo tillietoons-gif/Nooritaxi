@@ -1,9 +1,25 @@
 import React from 'react';
 import { View, Text, TextInput, TouchableOpacity, SafeAreaView, ScrollView } from 'react-native';
-import { ShieldCheck, User, Phone, Mail, Lock } from 'lucide-react-native';
+import { ShieldCheck, User, Phone, Lock } from 'lucide-react-native';
 import { Link } from 'expo-router';
+import { register } from '../../lib/api';
 
 export default function RegisterScreen() {
+  const [name, setName] = React.useState('');
+  const [phone, setPhone] = React.useState('');
+  const [password, setPassword] = React.useState('');
+  const [message, setMessage] = React.useState('');
+
+  async function submit() {
+    setMessage('');
+    try {
+      await register(name, phone, password);
+      setMessage('Account created');
+    } catch (error) {
+      setMessage((error as Error).message);
+    }
+  }
+
   return (
     <SafeAreaView className="flex-1 bg-background">
       <ScrollView className="flex-1 px-8 py-10">
@@ -18,7 +34,7 @@ export default function RegisterScreen() {
             <Text className="text-xs font-bold text-muted-foreground uppercase mb-2 ml-1">Full Name</Text>
             <View className="flex-row items-center bg-muted/30 h-14 px-4 rounded-xl">
                <User size={20} color="#6d7a71" />
-               <TextInput placeholder="Enter your name" className="flex-1 ml-3 text-base" />
+               <TextInput value={name} onChangeText={setName} placeholder="Enter your name" className="flex-1 ml-3 text-base" />
             </View>
           </View>
 
@@ -26,7 +42,7 @@ export default function RegisterScreen() {
             <Text className="text-xs font-bold text-muted-foreground uppercase mb-2 ml-1">Phone Number</Text>
             <View className="flex-row items-center bg-muted/30 h-14 px-4 rounded-xl">
                <Phone size={20} color="#6d7a71" />
-               <TextInput placeholder="+93 7xx xxx xxx" className="flex-1 ml-3 text-base" keyboardType="phone-pad" />
+               <TextInput value={phone} onChangeText={setPhone} placeholder="+93 7xx xxx xxx" className="flex-1 ml-3 text-base" keyboardType="phone-pad" />
             </View>
           </View>
 
@@ -34,11 +50,13 @@ export default function RegisterScreen() {
             <Text className="text-xs font-bold text-muted-foreground uppercase mb-2 ml-1">Password</Text>
             <View className="flex-row items-center bg-muted/30 h-14 px-4 rounded-xl">
                <Lock size={20} color="#6d7a71" />
-               <TextInput placeholder="Create a secure password" size={20} secureTextEntry className="flex-1 ml-3 text-base" />
+               <TextInput value={password} onChangeText={setPassword} placeholder="Create a secure password" secureTextEntry className="flex-1 ml-3 text-base" />
             </View>
           </View>
 
-          <TouchableOpacity className="bg-primary h-14 rounded-xl items-center justify-center shadow-lg shadow-primary/20 mt-6">
+          {message ? <Text className="text-center text-sm text-muted-foreground">{message}</Text> : null}
+
+          <TouchableOpacity onPress={submit} className="bg-primary h-14 rounded-xl items-center justify-center shadow-lg shadow-primary/20 mt-6">
             <Text className="text-white text-lg font-bold">Sign Up</Text>
           </TouchableOpacity>
         </View>

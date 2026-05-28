@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 @Injectable()
 export class WalletService {
@@ -10,6 +10,7 @@ export class WalletService {
     });
   }
   async deposit(userId: string, amount: number, type = 'CUSTOMER', currency = 'AFN') {
+    if (!Number.isFinite(amount) || amount <= 0) throw new BadRequestException('Deposit amount must be positive');
     return this.prisma.$transaction(async (tx) => {
       const wallet = await tx.wallet.upsert({
         where: { userId_type_currency: { userId, type: type as any, currency } },
@@ -21,8 +22,11 @@ export class WalletService {
     });
   }
   async transfer(userId: string, amount: number, description = 'Wallet debit') {
+    if (!Number.isFinite(amount) || amount <= 0) throw new BadRequestException('Debit amount must be positive');
     return this.prisma.$transaction(async (tx) => {
       const wallet = await tx.wallet.findFirstOrThrow({ where: { userId, type: 'CUSTOMER', currency: 'AFN' } });
+      if (wallet.isFrozen) throw new BadRequestException('Wallet is frozen');
+      if (Number(wallet.balance) < amount) throw new BadRequestException('Insufficient wallet balance');
       const updated = await tx.wallet.update({ where: { id: wallet.id }, data: { balance: { decrement: amount } } });
       await tx.transaction.create({ data: { walletId: wallet.id, amount: -amount, type: 'ADJUSTMENT', description } });
       return updated;

@@ -3,7 +3,8 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { AuthGate } from "@/components/auth-gate"
+import { UserMenu } from "@/components/user-menu"
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const sidebarItems = [
     { name: "Overview", icon: <LayoutDashboard className="h-5 w-5" />, href: "/dashboard" },
@@ -12,6 +13,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { name: "Wallet", icon: <Wallet className="h-5 w-5" />, href: "/dashboard/wallet" },
   ]
   return (
+    <AuthGate>
     <div className="flex min-h-screen bg-muted/30">
       <aside className="hidden lg:flex w-64 flex-col fixed inset-y-0 border-r bg-card">
         <div className="p-6"><Link href="/" className="flex items-center space-x-2"><ShieldCheck className="h-8 w-8 text-primary" /><span className="text-xl font-bold text-primary">NooriTaxi</span></Link></div>
@@ -20,7 +22,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </nav>
         <div className="p-4 mt-auto">
           <Separator className="mb-4" />
-          <div className="flex items-center gap-3 px-3"><Avatar><AvatarFallback>AK</AvatarFallback></Avatar><div className="flex flex-col"><span className="text-sm font-semibold">Ahmad Khan</span><span className="text-xs text-muted-foreground">Partner #12345</span></div></div>
+          <UserMenu />
         </div>
       </aside>
       <div className="flex-1 lg:pl-64">
@@ -31,5 +33,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <main className="p-4 lg:p-8 max-w-7xl mx-auto">{children}</main>
       </div>
     </div>
+    </AuthGate>
   )
 }

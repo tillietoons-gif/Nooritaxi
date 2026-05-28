@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
+import { PushService } from '../push/push.service';
 
 @Injectable()
 export class SuperAppService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private push: PushService) {}
 
   createDriverProfile(data: any) {
     return this.prisma.driver.create({ data, include: { user: true, vehicles: true } });
@@ -29,32 +30,54 @@ export class SuperAppService {
     return this.prisma.vehicle.findMany({ where: driverId ? { driverId } : {}, include: { driver: { include: { user: true } } } });
   }
 
-  createRide(data: any) {
-    return this.prisma.trip.create({ data });
+  async createRide(data: any) {
+    const distance = data.distance ?? 5;
+    const surgeMultiplier = data.surgeMultiplier ?? 1;
+    const baseFare = 80;
+    const fare = Math.round((baseFare + distance * 35) * surgeMultiplier);
+    const ride = await this.prisma.trip.create({
+      data: {
+        ...data,
+        distance,
+        baseFare,
+        fare,
+        surgeMultiplier,
+        safetyCode: data.safetyCode ?? Math.floor(1000 + Math.random() * 9000).toString(),
+      },
+    });
+    await this.audit('RIDE_CREATED', 'Trip', ride.id, data.customerId, ride);
+    return ride;
   }
 
-  listRides(userId?: string) {
+  listRides(userId?: string, page = 1, limit = 25) {
     return this.prisma.trip.findMany({
       where: userId ? { OR: [{ customerId: userId }, { driverId: userId }] } : {},
       include: { customer: true, driver: true, vehicle: true },
+      skip: (page - 1) * limit,
+      take: limit,
       orderBy: { createdAt: 'desc' },
     });
   }
 
-  updateRide(id: string, data: any) {
-    return this.prisma.trip.update({ where: { id }, data });
+  async updateRide(id: string, data: any) {
+    const before = await this.prisma.trip.findUnique({ where: { id } });
+    const ride = await this.prisma.trip.update({ where: { id }, data });
+    await this.audit('RIDE_UPDATED', 'Trip', id, data.actorId, ride, before);
+    return ride;
   }
 
   createRestaurant(data: any) {
     return this.prisma.restaurant.create({ data });
   }
 
-  listRestaurants(query?: string) {
+  listRestaurants(query?: string, page = 1, limit = 25) {
     return this.prisma.restaurant.findMany({
       where: query
         ? { OR: [{ name: { contains: query, mode: 'insensitive' } }, { cuisineTypes: { has: query } }] }
         : {},
       include: { menuItems: true },
+      skip: (page - 1) * limit,
+      take: limit,
       orderBy: [{ status: 'asc' }, { ratingAverage: 'desc' }],
     });
   }
@@ -63,7 +86,18 @@ export class SuperAppService {
     return this.prisma.menuItem.create({ data: { ...data, restaurantId } });
   }
 
-  createOrder(data: any) {
+  async createOrder(data: any) {
+    const menuItems = data.items?.length
+      ? await this.prisma.menuItem.findMany({ where: { id: { in: data.items.map((item: any) => item.menuItemId) } } })
+      : [];
+    const subtotal = data.items?.reduce((sum: number, item: any) => {
+      const menuItem = menuItems.find((entry) => entry.id === item.menuItemId);
+      return sum + Number(item.unitPrice ?? menuItem?.price ?? 0) * (item.quantity ?? 1);
+    }, 0) ?? Number(data.subtotal ?? 0);
+    const deliveryFee = Number(data.deliveryFee ?? (subtotal > 1500 ? 0 : 80));
+    const discount = Number(data.discount ?? 0);
+    const total = Math.max(subtotal + deliveryFee - discount, 0);
+
     return this.prisma.order.create({
       data: {
         riderId: data.riderId,
@@ -72,52 +106,79 @@ export class SuperAppService {
         deliveryLat: data.deliveryLat,
         deliveryLng: data.deliveryLng,
         notes: data.notes,
-        subtotal: data.subtotal ?? 0,
-        deliveryFee: data.deliveryFee ?? 0,
-        discount: data.discount ?? 0,
-        total: data.total ?? 0,
+        subtotal,
+        deliveryFee,
+        discount,
+        total,
         paymentMethod: data.paymentMethod ?? 'CASH',
         items: data.items?.length
           ? {
               create: data.items.map((item: any) => ({
                 menuItemId: item.menuItemId,
                 quantity: item.quantity ?? 1,
-                unitPrice: item.unitPrice,
+                unitPrice: item.unitPrice ?? menuItems.find((entry) => entry.id === item.menuItemId)?.price ?? 0,
                 notes: item.notes,
               })),
             }
           : undefined,
       },
       include: { items: true, restaurant: true },
+    }).then(async (order) => {
+      await this.audit('ORDER_CREATED', 'Order', order.id, data.riderId, order);
+      return order;
     });
   }
 
-  listOrders(userId?: string, restaurantId?: string) {
+  listOrders(userId?: string, restaurantId?: string, page = 1, limit = 25) {
     return this.prisma.order.findMany({
       where: { ...(userId ? { riderId: userId } : {}), ...(restaurantId ? { restaurantId } : {}) },
       include: { items: { include: { menuItem: true } }, restaurant: true, delivery: true },
+      skip: (page - 1) * limit,
+      take: limit,
       orderBy: { createdAt: 'desc' },
     });
   }
 
-  updateOrder(id: string, data: any) {
-    return this.prisma.order.update({ where: { id }, data, include: { delivery: true, items: true } });
+  async updateOrder(id: string, data: any) {
+    const before = await this.prisma.order.findUnique({ where: { id } });
+    const order = await this.prisma.order.update({ where: { id }, data, include: { delivery: true, items: true } });
+    await this.audit('ORDER_UPDATED', 'Order', id, data.actorId, order, before);
+    return order;
   }
 
-  createDelivery(data: any) {
-    return this.prisma.delivery.create({ data, include: { order: true, driver: true, vehicle: true } });
+  async createDelivery(data: any) {
+    const driver = data.driverId
+      ? null
+      : await this.prisma.driver.findFirst({ where: { status: 'ONLINE' }, include: { vehicles: { where: { isActive: true }, take: 1 } }, orderBy: { ratingAverage: 'desc' } });
+    const delivery = await this.prisma.delivery.create({
+      data: {
+        ...data,
+        driverId: data.driverId ?? driver?.userId,
+        vehicleId: data.vehicleId ?? driver?.vehicles[0]?.id,
+        fee: data.fee ?? 100,
+        status: data.driverId || driver ? 'ASSIGNED' : 'REQUESTED',
+      },
+      include: { order: true, driver: true, vehicle: true },
+    });
+    await this.audit('DELIVERY_CREATED', 'Delivery', delivery.id, data.senderId, delivery);
+    return delivery;
   }
 
-  listDeliveries(userId?: string) {
+  listDeliveries(userId?: string, page = 1, limit = 25) {
     return this.prisma.delivery.findMany({
       where: userId ? { OR: [{ senderId: userId }, { driverId: userId }] } : {},
       include: { order: true, sender: true, driver: true, vehicle: true },
+      skip: (page - 1) * limit,
+      take: limit,
       orderBy: { createdAt: 'desc' },
     });
   }
 
-  updateDelivery(id: string, data: any) {
-    return this.prisma.delivery.update({ where: { id }, data });
+  async updateDelivery(id: string, data: any) {
+    const before = await this.prisma.delivery.findUnique({ where: { id } });
+    const delivery = await this.prisma.delivery.update({ where: { id }, data });
+    await this.audit('DELIVERY_UPDATED', 'Delivery', id, data.actorId, delivery, before);
+    return delivery;
   }
 
   createPromotion(data: any) {
@@ -143,8 +204,16 @@ export class SuperAppService {
     });
   }
 
-  createNotification(data: any) {
-    return this.prisma.notification.create({ data });
+  async createNotification(data: any) {
+    const notification = await this.prisma.notification.create({ data });
+    const devices = await this.prisma.pushDevice.findMany({ where: { userId: data.userId, isActive: true } });
+    const pushResult = await this.push.sendToTokens(
+      devices.map((device) => device.token),
+      data.title,
+      data.body,
+      data.data,
+    );
+    return { notification, push: pushResult };
   }
 
   listNotifications(userId: string) {
@@ -214,5 +283,18 @@ export class SuperAppService {
       deliveries,
       openTickets,
     }));
+  }
+
+  private async audit(action: string, entityType: string, entityId?: string, actorId?: string, after?: any, before?: any) {
+    await this.prisma.auditLog.create({
+      data: {
+        action,
+        entityType,
+        entityId,
+        actorId,
+        before: before ?? undefined,
+        after: after ?? undefined,
+      },
+    });
   }
 }

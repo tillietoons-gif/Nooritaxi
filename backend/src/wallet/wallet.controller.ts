@@ -1,7 +1,13 @@
 import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { WalletService } from './wallet.service';
+import { UseGuards } from '@nestjs/common';
+import { UserRole } from '@prisma/client';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { Roles } from '../auth/roles.decorator';
+import { RolesGuard } from '../auth/roles.guard';
 
 @Controller('wallet')
+@UseGuards(JwtAuthGuard)
 export class WalletController {
   constructor(private walletService: WalletService) {}
 
@@ -11,11 +17,15 @@ export class WalletController {
   }
 
   @Post(':userId/deposit')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPPORT)
   deposit(@Param('userId') userId: string, @Body() body: any) {
     return this.walletService.deposit(userId, Number(body.amount), body.type, body.currency);
   }
 
   @Post(':userId/debit')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPPORT)
   debit(@Param('userId') userId: string, @Body() body: any) {
     return this.walletService.transfer(userId, Number(body.amount), body.description);
   }

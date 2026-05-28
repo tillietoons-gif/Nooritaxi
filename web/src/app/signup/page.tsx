@@ -7,8 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { BodyMd } from "@/components/ui/typography"
-
-const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001/api"
+import { apiUrl, saveSession } from "@/lib/auth"
 
 export default function SignupPage() {
   const [name, setName] = useState("")
@@ -35,7 +34,7 @@ export default function SignupPage() {
         return
       }
 
-      window.localStorage.setItem("noori_token", data.access_token)
+      saveSession(data.access_token, data.user)
       window.location.href = "/dashboard"
     } catch {
       setMessage("Unable to reach the server")

@@ -1,15 +1,33 @@
+"use client"
+
+import { useEffect, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { BodyMd, HeadingMd } from "@/components/ui/typography"
 import { Bell, Car, Headphones, Package, ShieldCheck, Store, Users, Wallet } from "lucide-react"
+import { AuthGate } from "@/components/auth-gate"
+import { authedFetch } from "@/lib/auth"
 
 export default function AdminPage() {
+  const [overview, setOverview] = useState<Record<string, number> | null>(null)
+  const [error, setError] = useState("")
+
+  useEffect(() => {
+    authedFetch("/admin/overview")
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Unable to load admin overview")
+        return response.json()
+      })
+      .then(setOverview)
+      .catch((err) => setError(err.message))
+  }, [])
+
   const metrics = [
-    { label: "Active riders", value: "18,420", icon: Users },
-    { label: "Online drivers", value: "642", icon: Car },
-    { label: "Open restaurants", value: "214", icon: Store },
-    { label: "Wallet volume", value: "4.8M AFN", icon: Wallet },
+    { label: "Users", value: overview?.users ?? 0, icon: Users },
+    { label: "Drivers", value: overview?.drivers ?? 0, icon: Car },
+    { label: "Orders", value: overview?.orders ?? 0, icon: Store },
+    { label: "Deliveries", value: overview?.deliveries ?? 0, icon: Wallet },
   ]
   const queues = [
     { label: "Ride safety checks", value: "12", tone: "High" },
@@ -19,6 +37,7 @@ export default function AdminPage() {
   ]
 
   return (
+    <AuthGate roles={["ADMIN", "SUPPORT"]}>
     <main className="min-h-screen bg-background px-4 py-6 md:px-8">
       <div className="mx-auto max-w-7xl space-y-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -38,13 +57,14 @@ export default function AdminPage() {
               <CardContent className="flex items-center justify-between p-5">
                 <div>
                   <p className="text-sm text-muted-foreground">{metric.label}</p>
-                  <p className="mt-1 text-2xl font-bold">{metric.value}</p>
+                  <p className="mt-1 text-2xl font-bold">{metric.value.toLocaleString()}</p>
                 </div>
                 <metric.icon className="h-6 w-6 text-primary" />
               </CardContent>
             </Card>
           ))}
         </div>
+        {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
         <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
           <Card>
@@ -98,5 +118,6 @@ export default function AdminPage() {
         </Card>
       </div>
     </main>
+    </AuthGate>
   )
 }

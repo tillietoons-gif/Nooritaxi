@@ -40,7 +40,7 @@ type Activity = {
 }
 
 export default function DashboardPage() {
-  const [user, setUser] = useState<AuthUser | null>(null)
+  const [user] = useState<AuthUser | null>(() => getStoredUser())
   const [counts, setCounts] = useState({ rides: 0, deliveries: 0, restaurants: 0 })
   const [walletBalance, setWalletBalance] = useState<string>("0")
   const [rides, setRides] = useState<Ride[]>([])
@@ -48,10 +48,6 @@ export default function DashboardPage() {
   const [driverLocation, setDriverLocation] = useState<{ lat: number; lng: number; timestamp?: string } | null>(null)
   const [error, setError] = useState("")
   const { socket, connected } = useSocket(Boolean(user?.id))
-
-  useEffect(() => {
-    setUser(getStoredUser())
-  }, [])
 
   useEffect(() => {
     if (!user?.id) return

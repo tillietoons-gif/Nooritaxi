@@ -25,12 +25,14 @@ export function useSocket(enabled = true) {
 
     nextSocket.on("connect", () => setConnected(true))
     nextSocket.on("disconnect", () => setConnected(false))
-    setSocket(nextSocket)
+    queueMicrotask(() => setSocket(nextSocket))
 
     return () => {
       nextSocket.disconnect()
-      setSocket(null)
-      setConnected(false)
+      queueMicrotask(() => {
+        setSocket(null)
+        setConnected(false)
+      })
     }
   }, [enabled])
 

@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { HeadingLg, HeadingMd, BodyLg, BodyMd } from "@/components/ui/typography"
-import { Car, Package, Utensils, Shield, CheckCircle2, Star, Smartphone, ArrowRight } from "lucide-react"
+import { Car, Package, Utensils, Smartphone, ArrowRight } from "lucide-react"
 export default function LandingPage() {
   const services = [
     { title: "NooriTaxi", description: "Reliable rides at the tap of a button. Safe, tracked, and verified.", icon: <Car className="h-10 w-10 text-primary" />, tag: "Mobility" },

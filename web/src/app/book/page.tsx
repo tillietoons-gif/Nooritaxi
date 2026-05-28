@@ -18,7 +18,7 @@ type Estimate = {
 }
 
 export default function BookingPage() {
-  const [user, setUser] = useState<AuthUser | null>(null)
+  const [user] = useState<AuthUser | null>(() => getStoredUser())
   const [pickupLocation, setPickupLocation] = useState("")
   const [dropoffLocation, setDropoffLocation] = useState("")
   const [estimate, setEstimate] = useState<Estimate | null>(null)
@@ -28,12 +28,7 @@ export default function BookingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
-    setUser(getStoredUser())
-  }, [])
-
-  useEffect(() => {
     if (!user?.id || !pickupLocation || !dropoffLocation) {
-      setEstimate(null)
       return
     }
 
@@ -49,6 +44,16 @@ export default function BookingPage() {
 
     return () => window.clearTimeout(timeout)
   }, [user?.id, pickupLocation, dropoffLocation])
+
+  function updatePickupLocation(value: string) {
+    setPickupLocation(value)
+    if (!value.trim()) setEstimate(null)
+  }
+
+  function updateDropoffLocation(value: string) {
+    setDropoffLocation(value)
+    if (!value.trim()) setEstimate(null)
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -98,8 +103,8 @@ export default function BookingPage() {
               <Card className="border-none shadow-sm"><CardContent className="p-6 space-y-6">
                   <HeadingMd>Book a Ride</HeadingMd>
                   <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="relative"><MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" /><Input value={pickupLocation} onChange={(event) => setPickupLocation(event.target.value)} placeholder="Pickup" className="pl-10 h-12 bg-muted/30 border-none" /></div>
-                    <div className="relative"><Navigation className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-accent-foreground" /><Input value={dropoffLocation} onChange={(event) => setDropoffLocation(event.target.value)} placeholder="Destination" className="pl-10 h-12 bg-muted/30 border-none" /></div>
+                    <div className="relative"><MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" /><Input value={pickupLocation} onChange={(event) => updatePickupLocation(event.target.value)} placeholder="Pickup" className="pl-10 h-12 bg-muted/30 border-none" /></div>
+                    <div className="relative"><Navigation className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-accent-foreground" /><Input value={dropoffLocation} onChange={(event) => updateDropoffLocation(event.target.value)} placeholder="Destination" className="pl-10 h-12 bg-muted/30 border-none" /></div>
                     <div className="rounded-lg border bg-background p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2"><Car className="h-4 w-4 text-primary" /><span className="text-sm font-medium">Fare estimate</span></div>

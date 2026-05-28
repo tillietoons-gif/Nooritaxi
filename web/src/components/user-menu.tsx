@@ -7,10 +7,9 @@ import { Button } from "@/components/ui/button"
 import { clearSession, fetchMe, getStoredUser, type AuthUser } from "@/lib/auth"
 
 export function UserMenu() {
-  const [user, setUser] = useState<AuthUser | null>(null)
+  const [user, setUser] = useState<AuthUser | null>(() => getStoredUser())
 
   useEffect(() => {
-    setUser(getStoredUser())
     fetchMe().then(setUser)
   }, [])
 

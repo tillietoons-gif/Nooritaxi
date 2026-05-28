@@ -10,6 +10,11 @@ import { WalletModule } from './wallet/wallet.module';
 import { TrackingGateway } from './tracking.gateway';
 import { SuperAppModule } from './super-app/super-app.module';
 import { WsJwtGuard } from './auth/ws-jwt.guard';
+import { FoodModule } from './food/food.module';
+import { LogisticsModule } from './logistics/logistics.module';
+import { ReviewsModule } from './reviews/reviews.module';
+import { DispatchModule } from './dispatch/dispatch.module';
+import { PaymentsModule } from './payments/payments.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -20,6 +25,11 @@ import { WsJwtGuard } from './auth/ws-jwt.guard';
     TripsModule,
     WalletModule,
     SuperAppModule,
+    FoodModule,
+    LogisticsModule,
+    ReviewsModule,
+    DispatchModule,
+    PaymentsModule,
   ],
   providers: [
     TrackingGateway,

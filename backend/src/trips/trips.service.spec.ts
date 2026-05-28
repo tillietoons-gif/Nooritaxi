@@ -1,6 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { TripsService } from './trips.service';
 import { PrismaService } from '../prisma.service';
+import { PushService } from '../push/push.service';
+import { WalletService } from '../wallet/wallet.service';
+import { DispatchService } from '../dispatch/dispatch.service';
+
 describe('TripsService', () => {
   let service: TripsService;
   let prisma: { surgeZone: { findMany: jest.Mock } };
@@ -9,7 +13,13 @@ describe('TripsService', () => {
     prisma = { surgeZone: { findMany: jest.fn() } };
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [TripsService, { provide: PrismaService, useValue: prisma }],
+      providers: [
+        TripsService, 
+        { provide: PrismaService, useValue: prisma },
+        { provide: PushService, useValue: { send: jest.fn() } },
+        { provide: WalletService, useValue: {} },
+        { provide: DispatchService, useValue: {} },
+      ],
     }).compile();
 
     service = module.get<TripsService>(TripsService);

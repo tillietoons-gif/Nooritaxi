@@ -88,12 +88,39 @@ async function main() {
 
   await prisma.surgeZone.upsert({
     where: { id: 'demo-central-kabul-peak' },
-    update: { multiplier: 1.2, isActive: true, activeUntil: new Date(Date.now() + 1000 * 60 * 60 * 6) },
+    update: {
+      polygon: {
+        type: 'Polygon',
+        coordinates: [
+          [
+            [69.145, 34.49],
+            [69.245, 34.49],
+            [69.245, 34.56],
+            [69.145, 34.56],
+            [69.145, 34.49],
+          ],
+        ],
+      },
+      multiplier: 1.2,
+      isActive: true,
+      activeUntil: new Date(Date.now() + 1000 * 60 * 60 * 6),
+    },
     create: {
       id: 'demo-central-kabul-peak',
       name: 'Central Kabul Peak',
       city: 'Kabul',
-      polygon: { type: 'Polygon', coordinates: [] },
+      polygon: {
+        type: 'Polygon',
+        coordinates: [
+          [
+            [69.145, 34.49],
+            [69.245, 34.49],
+            [69.245, 34.56],
+            [69.145, 34.56],
+            [69.145, 34.49],
+          ],
+        ],
+      },
       multiplier: 1.2,
       reason: 'Peak demand',
       activeFrom: new Date(),

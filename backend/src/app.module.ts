@@ -7,8 +7,9 @@ import { TripsModule } from './trips/trips.module';
 import { WalletModule } from './wallet/wallet.module';
 import { TrackingGateway } from './tracking.gateway';
 import { SuperAppModule } from './super-app/super-app.module';
+import { WsJwtGuard } from './auth/ws-jwt.guard';
 @Module({
   imports: [ConfigModule.forRoot({ isGlobal: true }), PrismaModule, AuthModule, UsersModule, TripsModule, WalletModule, SuperAppModule],
-  providers: [TrackingGateway],
+  providers: [TrackingGateway, WsJwtGuard],
 })
 export class AppModule {}

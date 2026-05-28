@@ -1,0 +1,55 @@
+import React from 'react';
+import { View, Text, TextInput, TouchableOpacity, SafeAreaView, ScrollView } from 'react-native';
+import { ShieldCheck, User, Phone, Mail, Lock } from 'lucide-react-native';
+import { Link } from 'expo-router';
+
+export default function RegisterScreen() {
+  return (
+    <SafeAreaView className="flex-1 bg-background">
+      <ScrollView className="flex-1 px-8 py-10">
+        <View className="items-center mb-10">
+          <ShieldCheck size={48} color="#006947" />
+          <Text className="text-2xl font-bold text-primary mt-4">Create Account</Text>
+          <Text className="text-muted-foreground text-center mt-2 px-4">Join thousands of people moving smarter in Afghanistan.</Text>
+        </View>
+
+        <View className="space-y-5">
+          <View>
+            <Text className="text-xs font-bold text-muted-foreground uppercase mb-2 ml-1">Full Name</Text>
+            <View className="flex-row items-center bg-muted/30 h-14 px-4 rounded-xl">
+               <User size={20} color="#6d7a71" />
+               <TextInput placeholder="Enter your name" className="flex-1 ml-3 text-base" />
+            </View>
+          </View>
+
+          <View>
+            <Text className="text-xs font-bold text-muted-foreground uppercase mb-2 ml-1">Phone Number</Text>
+            <View className="flex-row items-center bg-muted/30 h-14 px-4 rounded-xl">
+               <Phone size={20} color="#6d7a71" />
+               <TextInput placeholder="+93 7xx xxx xxx" className="flex-1 ml-3 text-base" keyboardType="phone-pad" />
+            </View>
+          </View>
+
+          <View>
+            <Text className="text-xs font-bold text-muted-foreground uppercase mb-2 ml-1">Password</Text>
+            <View className="flex-row items-center bg-muted/30 h-14 px-4 rounded-xl">
+               <Lock size={20} color="#6d7a71" />
+               <TextInput placeholder="Create a secure password" size={20} secureTextEntry className="flex-1 ml-3 text-base" />
+            </View>
+          </View>
+
+          <TouchableOpacity className="bg-primary h-14 rounded-xl items-center justify-center shadow-lg shadow-primary/20 mt-6">
+            <Text className="text-white text-lg font-bold">Sign Up</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View className="flex-row justify-center mt-8 gap-1 mb-10">
+          <Text className="text-muted-foreground">Already have an account?</Text>
+          <Link href="/(auth)/login">
+            <Text className="text-primary font-bold">Log In</Text>
+          </Link>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}

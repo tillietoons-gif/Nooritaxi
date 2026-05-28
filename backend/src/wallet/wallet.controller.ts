@@ -1,7 +1,8 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, ForbiddenException, Get, Param, Post, Query } from '@nestjs/common';
 import { WalletService } from './wallet.service';
 import { UseGuards } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
+import { CurrentUser } from '../auth/current-user.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
@@ -34,9 +35,9 @@ export class WalletController {
   }
 
   @Post(':userId/deposit')
-  @UseGuards(RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.SUPPORT)
-  deposit(@Param('userId') userId: string, @Body() body: any) {
+  deposit(@Param('userId') userId: string, @Body() body: any, @CurrentUser() user: any) {
+    const canDeposit = user?.id === userId || [UserRole.ADMIN, UserRole.SUPPORT].includes(user?.role);
+    if (!canDeposit) throw new ForbiddenException('Cannot top up another user wallet');
     return this.walletService.deposit(userId, Number(body.amount), body.type, body.currency, body.idempotencyKey, {
       description: body.description,
     });

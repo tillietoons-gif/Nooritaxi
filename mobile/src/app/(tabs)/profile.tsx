@@ -1,14 +1,40 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, SafeAreaView, Switch } from 'react-native';
+import { View, Text, TouchableOpacity, SafeAreaView } from 'react-native';
+import { router, useFocusEffect } from 'expo-router';
 import { User, Shield, Bell, HelpCircle, LogOut, ChevronRight, Globe } from 'lucide-react-native';
+import { AuthUser, clearSession, getNotifications, getStoredUser } from '../../lib/api';
 
 export default function ProfileScreen() {
+  const [user, setUser] = React.useState<AuthUser | null>(null);
+  const [notificationCount, setNotificationCount] = React.useState(0);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      async function load() {
+        const stored = await getStoredUser();
+        if (!stored) {
+          router.replace('/(auth)/login');
+          return;
+        }
+        setUser(stored);
+        const notifications = await getNotifications(stored.id).catch(() => []);
+        setNotificationCount(notifications.length);
+      }
+      load();
+    }, []),
+  );
+
   const menuItems = [
-    { icon: <Shield size={22} color="#006947" />, title: 'Safety Center', subtitle: 'Manage your emergency contacts' },
-    { icon: <Bell size={22} color="#006947" />, title: 'Notifications', subtitle: 'Trip alerts and promotions' },
+    { icon: <Shield size={22} color="#006947" />, title: 'Safety Center', subtitle: 'Manage emergency contacts and trip codes' },
+    { icon: <Bell size={22} color="#006947" />, title: 'Notifications', subtitle: `${notificationCount} recent alerts` },
     { icon: <Globe size={22} color="#006947" />, title: 'Language', subtitle: 'English, Dari, Pashto' },
     { icon: <HelpCircle size={22} color="#006947" />, title: 'Help & Support', subtitle: '24/7 Assistance' },
   ];
+
+  async function logout() {
+    await clearSession();
+    router.replace('/(auth)/login');
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-background">
@@ -18,8 +44,9 @@ export default function ProfileScreen() {
             <User size={40} color="#006947" />
           </View>
           <View>
-            <Text className="text-2xl font-bold">Ahmad Khan</Text>
-            <Text className="text-muted-foreground">+93 7xx xxx xxx</Text>
+            <Text className="text-2xl font-bold">{user?.name ?? 'Noori user'}</Text>
+            <Text className="text-muted-foreground">{user?.phone ?? 'Not signed in'}</Text>
+            <Text className="text-xs text-primary font-bold mt-1">{user?.role ?? 'RIDER'}</Text>
           </View>
         </View>
 
@@ -40,7 +67,7 @@ export default function ProfileScreen() {
           ))}
         </View>
 
-        <TouchableOpacity className="flex-row items-center gap-3 p-5 mt-10 bg-destructive/5 rounded-2xl border border-destructive/10">
+        <TouchableOpacity onPress={logout} className="flex-row items-center gap-3 p-5 mt-10 bg-destructive/5 rounded-2xl border border-destructive/10">
           <LogOut size={20} color="#ba1a1a" />
           <Text className="text-destructive font-bold">Log Out</Text>
         </TouchableOpacity>

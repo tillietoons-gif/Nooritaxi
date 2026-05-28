@@ -1,21 +1,25 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, SafeAreaView, ScrollView } from 'react-native';
 import { ShieldCheck, Phone, Lock } from 'lucide-react-native';
-import { Link } from 'expo-router';
+import { Link, router } from 'expo-router';
 import { login } from '../../lib/api';
 
 export default function LoginScreen() {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
 
   async function submit() {
     setMessage('');
+    setLoading(true);
     try {
       await login(phone, password);
-      setMessage('Logged in');
+      router.replace('/(tabs)/trips');
     } catch (error) {
       setMessage((error as Error).message);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -47,8 +51,8 @@ export default function LoginScreen() {
 
           {message ? <Text className="text-center text-sm text-muted-foreground">{message}</Text> : null}
 
-          <TouchableOpacity onPress={submit} className="bg-primary h-14 rounded-xl items-center justify-center shadow-lg shadow-primary/20 mt-6">
-            <Text className="text-white text-lg font-bold">Log In</Text>
+          <TouchableOpacity onPress={submit} disabled={loading} className="bg-primary h-14 rounded-xl items-center justify-center shadow-lg shadow-primary/20 mt-6">
+            <Text className="text-white text-lg font-bold">{loading ? 'Logging in...' : 'Log In'}</Text>
           </TouchableOpacity>
         </View>
 

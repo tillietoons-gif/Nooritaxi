@@ -1,20 +1,120 @@
-const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'https://noori-backend-750921372930.asia-south1.run.app/api';
+import * as SecureStore from 'expo-secure-store';
+
+export const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'https://noori-backend-750921372930.asia-south1.run.app/api';
+export const SOCKET_URL = process.env.EXPO_PUBLIC_SOCKET_URL ?? API_URL.replace(/\/api\/?$/, '');
+
+const TOKEN_KEY = 'noori_token';
+const USER_KEY = 'noori_user';
 
 let authToken: string | null = null;
+
+export type AuthUser = {
+  id: string;
+  phone: string;
+  email?: string | null;
+  name?: string | null;
+  role: 'RIDER' | 'DRIVER' | 'MERCHANT' | 'SUPPORT' | 'ADMIN';
+};
+
+export type AuthResponse = {
+  access_token: string;
+  user: AuthUser;
+};
+
+export type Trip = {
+  id: string;
+  pickupLocation: string;
+  dropoffLocation: string;
+  status: string;
+  fare?: number | string | null;
+  safetyCode?: string | null;
+  requestedAt?: string;
+  createdAt?: string;
+};
+
+export type WalletBalance = {
+  id: string;
+  balance: number | string;
+  currency: string;
+};
+
+export type WalletTransaction = {
+  id: string;
+  amount: number | string;
+  type: string;
+  description?: string | null;
+  createdAt: string;
+};
+
+export type RidePayload = {
+  customerId: string;
+  pickupLocation: string;
+  dropoffLocation: string;
+  paymentMethod?: 'CASH' | 'WALLET';
+};
+
+export type RideEstimate = {
+  fare: number;
+  currency: string;
+  distance: number;
+  surgeMultiplier: number;
+};
+
+export type NotificationItem = {
+  id: string;
+  title: string;
+  body: string;
+  createdAt: string;
+};
 
 export function setAuthToken(token: string | null) {
   authToken = token;
 }
 
+export async function getAuthToken() {
+  if (authToken) return authToken;
+  authToken = await SecureStore.getItemAsync(TOKEN_KEY);
+  return authToken;
+}
+
+export async function getStoredUser() {
+  const raw = await SecureStore.getItemAsync(USER_KEY);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as AuthUser;
+  } catch {
+    return null;
+  }
+}
+
+export async function saveSession(token: string, user: AuthUser) {
+  authToken = token;
+  await SecureStore.setItemAsync(TOKEN_KEY, token);
+  await SecureStore.setItemAsync(USER_KEY, JSON.stringify(user));
+}
+
+export async function clearSession() {
+  authToken = null;
+  await SecureStore.deleteItemAsync(TOKEN_KEY);
+  await SecureStore.deleteItemAsync(USER_KEY);
+}
+
 export async function apiFetch(path: string, init: RequestInit = {}) {
+  const token = await getAuthToken();
   return fetch(`${API_URL}${path}`, {
     ...init,
     headers: {
       'Content-Type': 'application/json',
       ...(init.headers ?? {}),
-      ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
   });
+}
+
+async function readJson<T>(response: Response, fallback: string): Promise<T> {
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.message ?? fallback);
+  return data as T;
 }
 
 export async function login(phone: string, password: string) {
@@ -22,9 +122,8 @@ export async function login(phone: string, password: string) {
     method: 'POST',
     body: JSON.stringify({ phone, password }),
   });
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.message ?? 'Login failed');
-  setAuthToken(data.access_token);
+  const data = await readJson<AuthResponse>(response, 'Login failed');
+  await saveSession(data.access_token, data.user);
   return data;
 }
 
@@ -33,8 +132,56 @@ export async function register(name: string, phone: string, password: string) {
     method: 'POST',
     body: JSON.stringify({ name, phone, password, role: 'RIDER' }),
   });
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.message ?? 'Registration failed');
-  setAuthToken(data.access_token);
+  const data = await readJson<AuthResponse>(response, 'Registration failed');
+  await saveSession(data.access_token, data.user);
   return data;
+}
+
+export async function getTrips(userId: string) {
+  const response = await apiFetch(`/rides?userId=${encodeURIComponent(userId)}&limit=25`);
+  return readJson<Trip[]>(response, 'Unable to load trips');
+}
+
+export async function getWalletBalance(userId: string) {
+  const response = await apiFetch(`/wallet/${encodeURIComponent(userId)}?type=CUSTOMER&currency=AFN`);
+  if (response.status === 404) return null;
+  return readJson<WalletBalance | null>(response, 'Unable to load wallet');
+}
+
+export async function getTransactions(userId: string) {
+  const response = await apiFetch(`/wallet/${encodeURIComponent(userId)}/transactions?page=1&limit=25`);
+  const data = await readJson<{ items: WalletTransaction[] }>(response, 'Unable to load transactions');
+  return data.items;
+}
+
+export async function topUpWallet(userId: string, amount: number) {
+  const response = await apiFetch(`/wallet/${encodeURIComponent(userId)}/deposit`, {
+    method: 'POST',
+    body: JSON.stringify({
+      amount,
+      type: 'CUSTOMER',
+      currency: 'AFN',
+      description: 'Mobile wallet top up',
+      idempotencyKey: `mobile-topup:${userId}:${Date.now()}`,
+    }),
+  });
+  return readJson<WalletBalance>(response, 'Unable to top up wallet');
+}
+
+export async function getRideEstimate(distance = 5) {
+  const response = await apiFetch(`/rides/estimate?distance=${distance}`);
+  return readJson<RideEstimate>(response, 'Unable to estimate fare');
+}
+
+export async function bookRide(payload: RidePayload) {
+  const response = await apiFetch('/rides', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+  return readJson<Trip>(response, 'Unable to book ride');
+}
+
+export async function getNotifications(userId: string) {
+  const response = await apiFetch(`/notifications/${encodeURIComponent(userId)}`);
+  return readJson<NotificationItem[]>(response, 'Unable to load notifications');
 }

@@ -3,6 +3,7 @@ import { Footer } from "@/components/layout/footer"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import Link from "next/link"
 import { HeadingLg, HeadingMd, BodyLg, BodyMd } from "@/components/ui/typography"
 import { Car, Package, Utensils, Shield, CheckCircle2, Star, Smartphone, ArrowRight } from "lucide-react"
 export default function LandingPage() {
@@ -23,8 +24,8 @@ export default function LandingPage() {
                 <HeadingLg className="text-5xl lg:text-6xl text-primary leading-[1.1]">Clarity, Guidance, and <span className="text-accent-foreground">Safety</span> in Every Journey.</HeadingLg>
                 <BodyLg className="text-muted-foreground max-w-lg">Noori is your trusted companion for daily transit, logistics, and delivery in Afghanistan. Built for extreme utility and maximum trust.</BodyLg>
                 <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                  <Button size="xl" className="group">Book a Ride<ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" /></Button>
-                  <Button variant="outline" size="xl">Become a Partner</Button>
+                  <Button size="xl" className="group" asChild><Link href="/book">Book a Ride<ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" /></Link></Button>
+                  <Button variant="outline" size="xl" asChild><Link href="/partners">Become a Partner</Link></Button>
                 </div>
               </div>
               <div className="lg:w-1/2 relative">

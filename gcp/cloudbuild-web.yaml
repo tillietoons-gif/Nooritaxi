@@ -1,17 +1,24 @@
 substitutions:
   _REGION: asia-south1
   _REPOSITORY: noori
-  _SERVICE: noori-backend
+  _SERVICE: noori-web
+  _BACKEND_URL: https://noori-backend-750921372930.asia-south1.run.app
 
 steps:
   - name: gcr.io/cloud-builders/docker
     args:
       - build
+      - --build-arg
+      - NEXT_PUBLIC_API_URL=${_BACKEND_URL}/api
+      - --build-arg
+      - NEXT_PUBLIC_SOCKET_URL=${_BACKEND_URL}
+      - --build-arg
+      - NEXT_PUBLIC_FIREBASE_VAPID_KEY=
       - -t
       - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:$BUILD_ID
       - -t
       - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:latest
-      - ./backend
+      - ./web
 
   - name: gcr.io/cloud-builders/docker
     args:
@@ -36,11 +43,9 @@ steps:
       - --platform
       - managed
       - --port
-      - "3001"
-      - --set-secrets
-      - DATABASE_URL=noori-database-url:latest,JWT_SECRET=noori-jwt-secret:latest
+      - "3000"
       - --set-env-vars
-      - NODE_ENV=production,CORS_ORIGIN=https://noori-web-tdkaiss5uq-el.a.run.app,PUSH_PROVIDER=firebase,FIREBASE_PROJECT_ID=academic-pillar-483819-f1
+      - NEXT_PUBLIC_API_URL=${_BACKEND_URL}/api,NEXT_PUBLIC_SOCKET_URL=${_BACKEND_URL}
       - --allow-unauthenticated
 
 images:

@@ -21,7 +21,7 @@ function shouldRetry(output) {
 
 function runExpoTunnel() {
   return new Promise((resolve) => {
-    const child = spawn(process.execPath, [expoCli, 'start', '--tunnel'], {
+    const child = spawn(process.execPath, [expoCli, 'start', '--tunnel', '--go'], {
       cwd: projectRoot,
       env: createChildEnv(),
       stdio: ['inherit', 'pipe', 'pipe'],

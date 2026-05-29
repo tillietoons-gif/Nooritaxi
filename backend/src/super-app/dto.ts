@@ -1,6 +1,23 @@
-import { IsArray, IsEnum, IsNumber, IsOptional, IsString, Min, ValidateNested } from 'class-validator';
+import {
+  IsArray,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Min,
+  ValidateNested,
+} from 'class-validator';
 import { Type } from 'class-transformer';
-import { DeliveryStatus, OrderStatus, PaymentMethod, PromotionScope, PromotionType, ReviewTargetType, TripStatus, VehicleType } from '@prisma/client';
+import {
+  DeliveryStatus,
+  OrderStatus,
+  PaymentMethod,
+  PromotionScope,
+  PromotionType,
+  ReviewTargetType,
+  TripStatus,
+  VehicleType,
+} from '@prisma/client';
 
 export class CreateDriverDto {
   @IsString()

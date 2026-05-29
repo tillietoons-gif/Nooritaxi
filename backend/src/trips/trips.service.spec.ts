@@ -14,7 +14,7 @@ describe('TripsService', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        TripsService, 
+        TripsService,
         { provide: PrismaService, useValue: prisma },
         { provide: PushService, useValue: { send: jest.fn() } },
         { provide: WalletService, useValue: {} },
@@ -25,7 +25,9 @@ describe('TripsService', () => {
     service = module.get<TripsService>(TripsService);
   });
 
-  it('should be defined', () => { expect(service).toBeDefined(); });
+  it('should be defined', () => {
+    expect(service).toBeDefined();
+  });
 
   it('returns the active surge multiplier only when pickup is inside the zone polygon', async () => {
     prisma.surgeZone.findMany.mockResolvedValue([

@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -66,7 +74,10 @@ export class SuperAppController {
   @Post('loyalty/:userId/points')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.SUPPORT)
-  addLoyaltyPoints(@Param('userId') userId: string, @Body('points') points: number) {
+  addLoyaltyPoints(
+    @Param('userId') userId: string,
+    @Body('points') points: number,
+  ) {
     return this.superApp.upsertLoyalty(userId, Number(points));
   }
 
@@ -102,7 +113,11 @@ export class SuperAppController {
     @Query('page') page?: string,
     @Query('limit') limit?: string,
   ) {
-    return this.superApp.listSupportTickets(status, Number(page ?? 1), Number(limit ?? 25));
+    return this.superApp.listSupportTickets(
+      status,
+      Number(page ?? 1),
+      Number(limit ?? 25),
+    );
   }
 
   @Post('support/tickets/:ticketId/messages')

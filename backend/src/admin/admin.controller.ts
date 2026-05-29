@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Patch, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -39,7 +47,9 @@ export class AdminController {
     @Query('from') from?: string,
     @Query('to') to?: string,
   ) {
-    return this.admin.listTrips(this.parseListArgs(status, q, page, limit, from, to));
+    return this.admin.listTrips(
+      this.parseListArgs(status, q, page, limit, from, to),
+    );
   }
 
   @Get('trips/:id')
@@ -56,7 +66,9 @@ export class AdminController {
     @Query('from') from?: string,
     @Query('to') to?: string,
   ) {
-    return this.admin.listOrders(this.parseListArgs(status, q, page, limit, from, to));
+    return this.admin.listOrders(
+      this.parseListArgs(status, q, page, limit, from, to),
+    );
   }
 
   @Get('deliveries')
@@ -68,7 +80,9 @@ export class AdminController {
     @Query('from') from?: string,
     @Query('to') to?: string,
   ) {
-    return this.admin.listDeliveries(this.parseListArgs(status, q, page, limit, from, to));
+    return this.admin.listDeliveries(
+      this.parseListArgs(status, q, page, limit, from, to),
+    );
   }
 
   @Get('drivers')
@@ -89,23 +103,38 @@ export class AdminController {
     @Query('limit') limit?: string,
     @Query('role') role?: string,
   ) {
-    return this.admin.listUsers({ ...this.parseListArgs(status, q, page, limit), role });
+    return this.admin.listUsers({
+      ...this.parseListArgs(status, q, page, limit),
+      role,
+    });
   }
 
   // ---- Action endpoints ----
 
   @Patch('trips/:id/status')
-  updateTripStatus(@Param('id') id: string, @Body('status') status: string, @CurrentUser() actor: any) {
+  updateTripStatus(
+    @Param('id') id: string,
+    @Body('status') status: string,
+    @CurrentUser() actor: any,
+  ) {
     return this.admin.updateTripStatus(id, status, actor?.userId);
   }
 
   @Patch('orders/:id/status')
-  updateOrderStatus(@Param('id') id: string, @Body('status') status: string, @CurrentUser() actor: any) {
+  updateOrderStatus(
+    @Param('id') id: string,
+    @Body('status') status: string,
+    @CurrentUser() actor: any,
+  ) {
     return this.admin.updateOrderStatus(id, status, actor?.userId);
   }
 
   @Patch('users/:id/status')
-  updateUserStatus(@Param('id') id: string, @Body('status') status: string, @CurrentUser() actor: any) {
+  updateUserStatus(
+    @Param('id') id: string,
+    @Body('status') status: string,
+    @CurrentUser() actor: any,
+  ) {
     return this.admin.updateUserStatus(id, status, actor?.userId);
   }
 
@@ -121,7 +150,12 @@ export class AdminController {
     @Body('status') status: string,
     @CurrentUser() actor: any,
   ) {
-    return this.admin.updateDocumentStatus(driverId, docId, status, actor?.userId);
+    return this.admin.updateDocumentStatus(
+      driverId,
+      docId,
+      status,
+      actor?.userId,
+    );
   }
 
   @Get('sos')

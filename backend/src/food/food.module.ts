@@ -7,6 +7,6 @@ import { DispatchModule } from '../dispatch/dispatch.module';
 @Module({
   imports: [WalletModule, DispatchModule],
   controllers: [FoodController],
-  providers: [FoodService]
+  providers: [FoodService],
 })
 export class FoodModule {}

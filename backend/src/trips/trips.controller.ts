@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { TripsService } from './trips.service';
 import { UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -18,13 +27,29 @@ export class TripsController {
   }
 
   @Get('estimate')
-  estimateRide(@Query('distance') distance?: string, @Query('lat') lat?: string, @Query('lng') lng?: string) {
-    return this.tripsService.getRideEstimate(Number(distance ?? 5), lat ? Number(lat) : undefined, lng ? Number(lng) : undefined);
+  estimateRide(
+    @Query('distance') distance?: string,
+    @Query('lat') lat?: string,
+    @Query('lng') lng?: string,
+  ) {
+    return this.tripsService.getRideEstimate(
+      Number(distance ?? 5),
+      lat ? Number(lat) : undefined,
+      lng ? Number(lng) : undefined,
+    );
   }
 
   @Get()
-  listRides(@Query('userId') userId?: string, @Query('page') page?: string, @Query('limit') limit?: string) {
-    return this.tripsService.listRides(userId, Number(page ?? 1), Number(limit ?? 25));
+  listRides(
+    @Query('userId') userId?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.tripsService.listRides(
+      userId,
+      Number(page ?? 1),
+      Number(limit ?? 25),
+    );
   }
 
   @Patch(':id')

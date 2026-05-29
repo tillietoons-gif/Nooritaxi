@@ -1,6 +1,12 @@
 import { randomUUID } from 'crypto';
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { Prisma, Transaction, TransactionType, Wallet, WalletType } from '@prisma/client';
+import {
+  Prisma,
+  Transaction,
+  TransactionType,
+  Wallet,
+  WalletType,
+} from '@prisma/client';
 import { PrismaService } from '../prisma.service';
 
 type WalletTx = Prisma.TransactionClient;
@@ -26,7 +32,13 @@ export class WalletService {
     });
   }
 
-  async listTransactions(userId: string, page = 1, limit = 25, type?: string, currency = 'AFN') {
+  async listTransactions(
+    userId: string,
+    page = 1,
+    limit = 25,
+    type?: string,
+    currency = 'AFN',
+  ) {
     const safePage = Math.max(Number(page) || 1, 1);
     const safeLimit = Math.min(Math.max(Number(limit) || 25, 1), 100);
     const walletWhere = {
@@ -62,30 +74,46 @@ export class WalletService {
     idempotencyKey?: string,
     options: LedgerOptions = {},
   ) {
-    if (!Number.isFinite(amount) || amount <= 0) throw new BadRequestException('Deposit amount must be positive');
+    if (!Number.isFinite(amount) || amount <= 0)
+      throw new BadRequestException('Deposit amount must be positive');
 
     const execute = async (tx: WalletTx) => {
       const wallet = await tx.wallet.upsert({
-        where: { userId_type_currency: { userId, type: type as any, currency } },
+        where: {
+          userId_type_currency: { userId, type: type as any, currency },
+        },
         update: {},
         create: { userId, type: type as any, currency, balance: 0 },
       });
 
-      const transaction = await this.upsertPendingTransaction(tx, wallet.id, amount, {
-        ...options,
-        idempotencyKey: idempotencyKey ?? options.idempotencyKey,
-        transactionType: options.transactionType ?? 'DEPOSIT',
-        description: options.description ?? 'Funds added',
-      });
+      const transaction = await this.upsertPendingTransaction(
+        tx,
+        wallet.id,
+        amount,
+        {
+          ...options,
+          idempotencyKey: idempotencyKey ?? options.idempotencyKey,
+          transactionType: options.transactionType ?? 'DEPOSIT',
+          description: options.description ?? 'Funds added',
+        },
+      );
 
-      this.assertSameTransactionIntent(transaction, wallet.id, amount, options.transactionType ?? 'DEPOSIT');
+      this.assertSameTransactionIntent(
+        transaction,
+        wallet.id,
+        amount,
+        options.transactionType ?? 'DEPOSIT',
+      );
       if (transaction.status !== 'PENDING') return wallet;
 
       const updated = await tx.wallet.update({
         where: { id: wallet.id },
         data: { balance: { increment: amount } },
       });
-      await tx.transaction.update({ where: { id: transaction.id }, data: { status: 'COMPLETED' } });
+      await tx.transaction.update({
+        where: { id: transaction.id },
+        data: { status: 'COMPLETED' },
+      });
       return updated;
     };
 
@@ -99,28 +127,45 @@ export class WalletService {
     idempotencyKey?: string,
     options: LedgerOptions = {},
   ) {
-    if (!Number.isFinite(amount) || amount <= 0) throw new BadRequestException('Debit amount must be positive');
+    if (!Number.isFinite(amount) || amount <= 0)
+      throw new BadRequestException('Debit amount must be positive');
 
     const execute = async (tx: WalletTx) => {
-      const wallet = await tx.wallet.findFirstOrThrow({ where: { userId, type: 'CUSTOMER', currency: 'AFN' } });
+      const wallet = await tx.wallet.findFirstOrThrow({
+        where: { userId, type: 'CUSTOMER', currency: 'AFN' },
+      });
       if (wallet.isFrozen) throw new BadRequestException('Wallet is frozen');
 
-      const transaction = await this.upsertPendingTransaction(tx, wallet.id, -amount, {
-        ...options,
-        idempotencyKey: idempotencyKey ?? options.idempotencyKey,
-        transactionType: options.transactionType ?? 'ADJUSTMENT',
-        description,
-      });
+      const transaction = await this.upsertPendingTransaction(
+        tx,
+        wallet.id,
+        -amount,
+        {
+          ...options,
+          idempotencyKey: idempotencyKey ?? options.idempotencyKey,
+          transactionType: options.transactionType ?? 'ADJUSTMENT',
+          description,
+        },
+      );
 
-      this.assertSameTransactionIntent(transaction, wallet.id, -amount, options.transactionType ?? 'ADJUSTMENT');
+      this.assertSameTransactionIntent(
+        transaction,
+        wallet.id,
+        -amount,
+        options.transactionType ?? 'ADJUSTMENT',
+      );
       if (transaction.status !== 'PENDING') return wallet;
 
-      if (Number(wallet.balance) < amount) throw new BadRequestException('Insufficient wallet balance');
+      if (Number(wallet.balance) < amount)
+        throw new BadRequestException('Insufficient wallet balance');
       const updated = await tx.wallet.update({
         where: { id: wallet.id },
         data: { balance: { decrement: amount } },
       });
-      await tx.transaction.update({ where: { id: transaction.id }, data: { status: 'COMPLETED' } });
+      await tx.transaction.update({
+        where: { id: transaction.id },
+        data: { status: 'COMPLETED' },
+      });
       return updated;
     };
 
@@ -163,7 +208,9 @@ export class WalletService {
       Number(transaction.amount) !== amount ||
       transaction.type !== type
     ) {
-      throw new BadRequestException('Idempotency key was already used for a different wallet transaction');
+      throw new BadRequestException(
+        'Idempotency key was already used for a different wallet transaction',
+      );
     }
   }
 }

@@ -5,6 +5,7 @@
     "version": "1.0.0",
     "scheme": "nooritaxi",
     "owner": "tillietoonss-organization",
+    "userInterfaceStyle": "automatic",
     "extra": {
       "eas": {
         "projectId": "777cb3bf-d1ea-49aa-b10d-fd2798d8fc0a"

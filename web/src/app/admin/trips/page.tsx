@@ -5,6 +5,7 @@ import { AdminListPage, StatusBadge } from "@/components/admin/admin-list-page"
 import { Button } from "@/components/ui/button"
 import { authedFetch } from "@/lib/auth"
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 
 type Trip = {
   id: string
@@ -28,6 +29,7 @@ const TRIP_STATUSES = [
 ]
 
 export default function AdminTripsPage() {
+  const { t } = useTranslation()
   const [refreshKey, setRefreshKey] = useState(0)
 
   async function cancelTrip(id: string) {
@@ -99,7 +101,7 @@ export default function AdminTripsPage() {
             render: (r) =>
               r.status !== "CANCELLED" && r.status !== "COMPLETED" ? (
                 <Button variant="destructive" size="sm" onClick={() => cancelTrip(r.id)}>
-                  Cancel
+                  {t('admin.cancel', 'Cancel')}
                 </Button>
               ) : null,
           },

@@ -2,9 +2,11 @@ import React from 'react';
 import { View, Text, TouchableOpacity, SafeAreaView, Alert } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { User, Shield, Bell, HelpCircle, LogOut, ChevronRight, Globe } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { AuthUser, clearSession, getNotifications, getStoredUser } from '../../lib/api';
 
 export default function ProfileScreen() {
+  const { t } = useTranslation();
   const [user, setUser] = React.useState<AuthUser | null>(null);
   const [notificationCount, setNotificationCount] = React.useState(0);
 
@@ -96,7 +98,7 @@ export default function ProfileScreen() {
 
         <TouchableOpacity onPress={logout} className="flex-row items-center gap-3 p-5 mt-10 bg-destructive/5 rounded-2xl border border-destructive/10">
           <LogOut size={20} color="#ba1a1a" />
-          <Text className="text-destructive font-bold">Log Out</Text>
+          <Text className="text-destructive font-bold">{t('profile.logout', 'Log Out')}</Text>
         </TouchableOpacity>
 
         <Text className="text-center text-muted-foreground text-xs mt-10 italic">

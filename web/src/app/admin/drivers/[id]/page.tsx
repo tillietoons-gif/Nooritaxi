@@ -8,6 +8,7 @@ import { authedFetch } from "@/lib/auth"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { StatusBadge } from "@/components/admin/admin-list-page"
+import { useTranslation } from "react-i18next"
 
 type DriverDoc = {
   id: string
@@ -19,6 +20,7 @@ type DriverDoc = {
 }
 
 export default function DriverDetailsPage() {
+  const { t } = useTranslation()
   const { id } = useParams() as { id: string }
   const [docs, setDocs] = useState<DriverDoc[]>([])
   const [loading, setLoading] = useState(true)
@@ -61,11 +63,11 @@ export default function DriverDetailsPage() {
         <div className="mx-auto max-w-4xl space-y-6">
           <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
             <div>
-              <h1 className="text-2xl font-bold">Driver Verification</h1>
-              <p className="text-sm text-muted-foreground">Driver ID: {id}</p>
+              <h1 className="text-2xl font-bold">{t('admin.driver_verification', 'Driver Verification')}</h1>
+              <p className="text-sm text-muted-foreground">{t('admin.driver_id', 'Driver ID: ')}{id}</p>
             </div>
             <Link href="/admin/drivers" className="text-sm text-primary hover:underline">
-              ← Back to Drivers
+              ← {t('admin.back_to_drivers', 'Back to Drivers')}
             </Link>
           </div>
 
@@ -73,13 +75,13 @@ export default function DriverDetailsPage() {
           
           <Card>
             <CardHeader>
-              <CardTitle>KYC Documents</CardTitle>
+              <CardTitle>{t('admin.kyc_documents', 'KYC Documents')}</CardTitle>
             </CardHeader>
             <CardContent>
               {loading ? (
-                <p className="text-muted-foreground text-sm">Loading documents...</p>
+                <p className="text-muted-foreground text-sm">{t('admin.loading_docs', 'Loading documents...')}</p>
               ) : docs.length === 0 ? (
-                <p className="text-muted-foreground text-sm">No documents uploaded.</p>
+                <p className="text-muted-foreground text-sm">{t('admin.no_docs_uploaded', 'No documents uploaded.')}</p>
               ) : (
                 <div className="grid gap-4 sm:grid-cols-2">
                   {docs.map(doc => (
@@ -87,7 +89,7 @@ export default function DriverDetailsPage() {
                       <div className="flex justify-between items-start">
                         <div>
                           <p className="font-bold">{doc.type.replace(/_/g, ' ')}</p>
-                          <p className="text-xs text-muted-foreground">Uploaded: {new Date(doc.createdAt).toLocaleDateString()}</p>
+                          <p className="text-xs text-muted-foreground">{t('admin.uploaded', 'Uploaded: ')}{new Date(doc.createdAt).toLocaleDateString()}</p>
                         </div>
                         <StatusBadge status={doc.status} />
                       </div>
@@ -100,8 +102,8 @@ export default function DriverDetailsPage() {
 
                       {doc.status === "PENDING" && (
                         <div className="flex gap-2 mt-2">
-                          <Button className="flex-1" size="sm" variant="default" onClick={() => updateDocStatus(doc.id, "VERIFIED")}>Approve</Button>
-                          <Button className="flex-1" size="sm" variant="destructive" onClick={() => updateDocStatus(doc.id, "REJECTED")}>Reject</Button>
+                          <Button className="flex-1" size="sm" variant="default" onClick={() => updateDocStatus(doc.id, "VERIFIED")}>{t('admin.approve', 'Approve')}</Button>
+                          <Button className="flex-1" size="sm" variant="destructive" onClick={() => updateDocStatus(doc.id, "REJECTED")}>{t('admin.reject', 'Reject')}</Button>
                         </div>
                       )}
                     </div>

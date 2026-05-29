@@ -5,6 +5,7 @@ import { AdminListPage, StatusBadge } from "@/components/admin/admin-list-page"
 import { Button } from "@/components/ui/button"
 import { authedFetch } from "@/lib/auth"
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 
 type AdminUser = {
   id: string
@@ -19,6 +20,7 @@ type AdminUser = {
 const USER_STATUSES = ["ACTIVE", "PENDING", "SUSPENDED", "DELETED"]
 
 export default function AdminUsersPage() {
+  const { t } = useTranslation()
   const [refreshKey, setRefreshKey] = useState(0)
 
   async function updateUserStatus(id: string, newStatus: string) {
@@ -62,12 +64,12 @@ export default function AdminUsersPage() {
               <div className="flex gap-2">
                 {r.status !== "SUSPENDED" && (
                   <Button variant="destructive" size="sm" onClick={() => updateUserStatus(r.id, "SUSPENDED")}>
-                    Suspend
+                    {t('admin.suspend', 'Suspend')}
                   </Button>
                 )}
                 {r.status === "SUSPENDED" && (
                   <Button variant="default" size="sm" onClick={() => updateUserStatus(r.id, "ACTIVE")}>
-                    Activate
+                    {t('admin.activate', 'Activate')}
                   </Button>
                 )}
               </div>

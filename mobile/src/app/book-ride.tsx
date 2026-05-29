@@ -3,9 +3,11 @@ import { View, Text, TextInput, TouchableOpacity, SafeAreaView, ScrollView } fro
 import { router } from 'expo-router';
 import * as Location from 'expo-location';
 import { Car, MapPin, Navigation, ShieldCheck } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { bookRide, getRideEstimate, getStoredUser, RideEstimate } from '../lib/api';
 
 export default function BookRideScreen() {
+  const { t } = useTranslation();
   const [pickupLocation, setPickupLocation] = React.useState('');
   const [dropoffLocation, setDropoffLocation] = React.useState('');
   const [estimate, setEstimate] = React.useState<RideEstimate | null>(null);
@@ -70,7 +72,7 @@ export default function BookRideScreen() {
   return (
     <SafeAreaView className="flex-1 bg-background">
       <ScrollView className="px-4 py-6">
-        <Text className="text-2xl font-bold text-primary mb-6">Book a Ride</Text>
+        <Text className="text-2xl font-bold text-primary mb-6">{t('book_ride.title', 'Book a Ride')}</Text>
 
         <View className="space-y-4">
           <View className="flex-row items-center bg-muted/30 h-14 px-4 rounded-xl">
@@ -87,20 +89,20 @@ export default function BookRideScreen() {
           <View className="flex-row items-center justify-between">
             <View className="flex-row items-center gap-2">
               <Car size={18} color="#006947" />
-              <Text className="font-bold">Fare preview</Text>
+              <Text className="font-bold">{t('book_ride.fare_preview', 'Fare preview')}</Text>
             </View>
             <Text className="text-xl font-bold text-primary">
               {estimate ? `${estimate.fare.toLocaleString()} ${estimate.currency}` : 'Enter trip'}
             </Text>
           </View>
-          <Text className="text-xs text-muted-foreground mt-2">Estimate uses a 5 km city ride until map distance is available.</Text>
+          <Text className="text-xs text-muted-foreground mt-2">{t('book_ride.estimate_notice', 'Estimate uses a 5 km city ride until map distance is available.')}</Text>
         </View>
 
         {safetyCode ? (
           <View className="bg-primary/10 rounded-2xl p-5 mt-6 flex-row items-center gap-3">
             <ShieldCheck size={24} color="#006947" />
             <View>
-              <Text className="text-primary font-bold">Safety code</Text>
+              <Text className="text-primary font-bold">{t('book_ride.safety_code', 'Safety code')}</Text>
               <Text className="text-2xl font-bold text-primary">{safetyCode}</Text>
             </View>
           </View>

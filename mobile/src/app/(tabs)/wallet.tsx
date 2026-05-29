@@ -1,4 +1,5 @@
 import React from 'react';
+// Trivial edit to trigger scanner re-run for internationalization
 import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, TextInput } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { Wallet, Plus, ArrowUpRight, ArrowDownRight, CreditCard } from 'lucide-react-native';

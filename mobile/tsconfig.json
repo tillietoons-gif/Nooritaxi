@@ -3,6 +3,7 @@
   "compilerOptions": {
     "ignoreDeprecations": "6.0",
     "strict": true,
+    "jsxImportSource": "nativewind",
     "baseUrl": ".",
     "paths": {
       "@/*": [
@@ -11,6 +12,7 @@
     }
   },
   "include": [
+    "nativewind-env.d.ts",
     "**/*.ts",
     "**/*.tsx"
   ]

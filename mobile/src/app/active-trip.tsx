@@ -1,7 +1,6 @@
 import React from 'react';
-import { Alert, Pressable, SafeAreaView, Text, View } from 'react-native';
+import { Alert, Platform, Pressable, SafeAreaView, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import MapView, { Marker } from 'react-native-maps';
 import { io, Socket } from 'socket.io-client';
 import { MapPin, ShieldAlert } from 'lucide-react-native';
 import { getAuthToken, raiseSos, SOCKET_URL } from '../lib/api';
@@ -15,6 +14,12 @@ type DriverLocation = {
 export default function ActiveTripScreen() {
   const router = useRouter();
   const { tripId } = useLocalSearchParams<{ tripId: string }>();
+  const nativeMaps = React.useMemo(
+    () => (Platform.OS === 'web' ? null : require('react-native-maps')),
+    [],
+  );
+  const MapView = nativeMaps?.default;
+  const Marker = nativeMaps?.Marker;
   const [connected, setConnected] = React.useState(false);
   const [location, setLocation] = React.useState<DriverLocation | null>(null);
   const [sosSubmitting, setSosSubmitting] = React.useState(false);
@@ -118,14 +123,24 @@ export default function ActiveTripScreen() {
         </Pressable>
       </View>
 
-      <MapView style={{ flex: 1 }} region={region}>
-        {location ? (
-          <Marker
-            coordinate={{ latitude: location.lat, longitude: location.lng }}
-            title="Driver"
-          />
-        ) : null}
-      </MapView>
+      {MapView ? (
+        <MapView style={{ flex: 1 }} region={region}>
+          {location && Marker ? (
+            <Marker
+              coordinate={{ latitude: location.lat, longitude: location.lng }}
+              title="Driver"
+            />
+          ) : null}
+        </MapView>
+      ) : (
+        <View className="flex-1 items-center justify-center bg-muted/20 px-6">
+          <MapPin size={32} color="#006947" />
+          <Text className="mt-4 text-lg font-semibold text-primary">Map unavailable on web preview</Text>
+          <Text className="mt-2 text-center text-sm text-muted-foreground">
+            Use the mobile app to see the live trip map. Driver coordinates will still update below.
+          </Text>
+        </View>
+      )}
 
       <View className="absolute left-4 right-4 bottom-6 bg-card rounded-2xl p-5 border border-muted/10">
         <View className="flex-row items-center gap-3">

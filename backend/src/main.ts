@@ -4,13 +4,17 @@ import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ConfiguredSocketIoAdapter } from './socket-io.adapter';
 import { PrismaExceptionFilter } from './prisma-exception.filter';
+import { getConfiguredCorsOrigins, isAllowedCorsOrigin } from './cors-origins';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
+  const allowedOrigins = getConfiguredCorsOrigins(configService.get<string>('CORS_ORIGIN'));
 
   app.enableCors({
-    origin: configService.get<string>('CORS_ORIGIN')?.split(',') ?? ['http://localhost:3000'],
+    origin: (origin, callback) => {
+      callback(null, isAllowedCorsOrigin(origin, allowedOrigins));
+    },
     credentials: true,
   });
   app.useWebSocketAdapter(new ConfiguredSocketIoAdapter(app, configService));

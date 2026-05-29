@@ -1,7 +1,7 @@
 import React from 'react';
+import '../global.css';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import '../global.css';
 import { initI18n } from '../lib/i18n';
 
 // Initialize i18n before rendering anything

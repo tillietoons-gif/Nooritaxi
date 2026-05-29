@@ -1,6 +1,7 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native';
 
 import en from '../locales/en.json';
 import fa from '../locales/fa.json';
@@ -15,9 +16,26 @@ export const SUPPORTED_LANGUAGES = [
 
 export type LanguageCode = 'en' | 'fa' | 'ps';
 
+async function getLanguageStorage() {
+  if (Platform.OS === 'web') {
+    return typeof localStorage === 'undefined' ? null : localStorage.getItem(LANGUAGE_KEY);
+  }
+  return SecureStore.getItemAsync(LANGUAGE_KEY);
+}
+
+async function setLanguageStorage(code: LanguageCode) {
+  if (Platform.OS === 'web') {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(LANGUAGE_KEY, code);
+    }
+    return;
+  }
+  await SecureStore.setItemAsync(LANGUAGE_KEY, code);
+}
+
 async function getStoredLanguage(): Promise<LanguageCode> {
   try {
-    const stored = await SecureStore.getItemAsync(LANGUAGE_KEY);
+    const stored = await getLanguageStorage();
     if (stored === 'en' || stored === 'fa' || stored === 'ps') return stored;
   } catch {
     // fall through
@@ -26,7 +44,7 @@ async function getStoredLanguage(): Promise<LanguageCode> {
 }
 
 export async function saveLanguage(code: LanguageCode) {
-  await SecureStore.setItemAsync(LANGUAGE_KEY, code);
+  await setLanguageStorage(code);
   await i18n.changeLanguage(code);
 }
 

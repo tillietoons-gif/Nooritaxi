@@ -1,4 +1,5 @@
 import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native';
 
 export const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'https://noori-backend-750921372930.asia-south1.run.app/api';
 export const SOCKET_URL = process.env.EXPO_PUBLIC_SOCKET_URL ?? API_URL.replace(/\/api\/?$/, '');
@@ -7,6 +8,33 @@ const TOKEN_KEY = 'noori_token';
 const USER_KEY = 'noori_user';
 
 let authToken: string | null = null;
+
+async function getStoredValue(key: string) {
+  if (Platform.OS === 'web') {
+    return typeof localStorage === 'undefined' ? null : localStorage.getItem(key);
+  }
+  return SecureStore.getItemAsync(key);
+}
+
+async function setStoredValue(key: string, value: string) {
+  if (Platform.OS === 'web') {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(key, value);
+    }
+    return;
+  }
+  await SecureStore.setItemAsync(key, value);
+}
+
+async function deleteStoredValue(key: string) {
+  if (Platform.OS === 'web') {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem(key);
+    }
+    return;
+  }
+  await SecureStore.deleteItemAsync(key);
+}
 
 export type AuthUser = {
   id: string;
@@ -92,12 +120,12 @@ export function setAuthToken(token: string | null) {
 
 export async function getAuthToken() {
   if (authToken) return authToken;
-  authToken = await SecureStore.getItemAsync(TOKEN_KEY);
+  authToken = await getStoredValue(TOKEN_KEY);
   return authToken;
 }
 
 export async function getStoredUser() {
-  const raw = await SecureStore.getItemAsync(USER_KEY);
+  const raw = await getStoredValue(USER_KEY);
   if (!raw) return null;
   try {
     return JSON.parse(raw) as AuthUser;
@@ -108,14 +136,14 @@ export async function getStoredUser() {
 
 export async function saveSession(token: string, user: AuthUser) {
   authToken = token;
-  await SecureStore.setItemAsync(TOKEN_KEY, token);
-  await SecureStore.setItemAsync(USER_KEY, JSON.stringify(user));
+  await setStoredValue(TOKEN_KEY, token);
+  await setStoredValue(USER_KEY, JSON.stringify(user));
 }
 
 export async function clearSession() {
   authToken = null;
-  await SecureStore.deleteItemAsync(TOKEN_KEY);
-  await SecureStore.deleteItemAsync(USER_KEY);
+  await deleteStoredValue(TOKEN_KEY);
+  await deleteStoredValue(USER_KEY);
 }
 
 export async function apiFetch(path: string, init: RequestInit = {}) {

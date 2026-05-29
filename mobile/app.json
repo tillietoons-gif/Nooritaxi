@@ -4,12 +4,6 @@
     "slug": "nooritaxi",
     "version": "1.0.0",
     "scheme": "nooritaxi",
-    "icon": "./assets/icon.png",
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
     "owner": "tillietoonss-organization",
     "extra": {
       "eas": {
@@ -17,6 +11,13 @@
       },
       "EXPO_PUBLIC_API_URL": "https://noori-backend-750921372930.asia-south1.run.app/api",
       "EXPO_PUBLIC_SOCKET_URL": "wss://noori-backend-750921372930.asia-south1.run.app"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-status-bar"
+    ],
+    "web": {
+      "bundler": "metro"
     }
   }
 }

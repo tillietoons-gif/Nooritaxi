@@ -33,6 +33,18 @@ export function clearSession() {
   window.localStorage.removeItem("noori_user")
 }
 
+export function getDefaultRouteForRole(role?: AuthUser["role"] | null) {
+  return role === "ADMIN" || role === "SUPPORT" ? "/admin" : "/dashboard"
+}
+
+export function getPostAuthRedirect(user?: Pick<AuthUser, "role"> | null, next?: string | null) {
+  if (next && next.startsWith("/") && !next.startsWith("//")) {
+    return next
+  }
+
+  return getDefaultRouteForRole(user?.role)
+}
+
 export async function fetchMe() {
   const token = getToken()
   if (!token) return null

@@ -1,17 +1,41 @@
-import { ShieldCheck, LayoutDashboard, Car, Package, Wallet, Bell, Search } from "lucide-react"
+"use client"
+
+import { useEffect, useState } from "react"
+import { ShieldCheck, LayoutDashboard, Car, Package, Bell, Search, Store, Users, Activity } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { AuthGate } from "@/components/auth-gate"
 import { UserMenu } from "@/components/user-menu"
+import { fetchMe, getStoredUser, type AuthUser } from "@/lib/auth"
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const sidebarItems = [
-    { name: "Overview", icon: <LayoutDashboard className="h-5 w-5" />, href: "/dashboard" },
-    { name: "Trips", icon: <Car className="h-5 w-5" />, href: "/dashboard/trips" },
-    { name: "Deliveries", icon: <Package className="h-5 w-5" />, href: "/dashboard/deliveries" },
-    { name: "Wallet", icon: <Wallet className="h-5 w-5" />, href: "/dashboard/wallet" },
-  ]
+  const [user, setUser] = useState<AuthUser | null>(() => getStoredUser())
+
+  useEffect(() => {
+    fetchMe().then((currentUser) => {
+      if (currentUser) {
+        setUser(currentUser)
+      }
+    })
+  }, [])
+
+  const isAdminWorkspace = user?.role === "ADMIN" || user?.role === "SUPPORT"
+  const sidebarItems = isAdminWorkspace
+    ? [
+        { name: "Overview", icon: <LayoutDashboard className="h-5 w-5" />, href: "/admin" },
+        { name: "Trips", icon: <Car className="h-5 w-5" />, href: "/admin/trips" },
+        { name: "Orders", icon: <Store className="h-5 w-5" />, href: "/admin/orders" },
+        { name: "Deliveries", icon: <Package className="h-5 w-5" />, href: "/admin/deliveries" },
+        { name: "Users", icon: <Users className="h-5 w-5" />, href: "/admin/users" },
+        { name: "Surge", icon: <Activity className="h-5 w-5" />, href: "/admin/surge" },
+      ]
+    : [
+        { name: "Overview", icon: <LayoutDashboard className="h-5 w-5" />, href: "/dashboard" },
+        { name: "Book", icon: <Car className="h-5 w-5" />, href: "/book" },
+        { name: "Safety", icon: <ShieldCheck className="h-5 w-5" />, href: "/safety" },
+      ]
   return (
     <AuthGate>
     <div className="flex min-h-screen bg-muted/30">

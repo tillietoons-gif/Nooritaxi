@@ -21,6 +21,11 @@ export class FoodController {
     return this.foodService.listRestaurants(query, Number(page ?? 1), Number(limit ?? 25));
   }
 
+  @Get('restaurants/:restaurantId/menu')
+  getRestaurantMenu(@Param('restaurantId') restaurantId: string) {
+    return this.foodService.getRestaurantMenu(restaurantId);
+  }
+
   @Post('restaurants/:restaurantId/menu-items')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.MERCHANT)

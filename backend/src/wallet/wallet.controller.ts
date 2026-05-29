@@ -64,15 +64,21 @@ export class WalletController {
   }
 
   @Post(':userId/topup/verify')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN)
   async verifyTopup(@Param('userId') userId: string, @Body() body: { transactionId: string; provider: string; amount: number; currency?: string }, @CurrentUser() user: any) {
-    if (user?.id !== userId && user?.role !== UserRole.ADMIN) {
-      throw new ForbiddenException('Cannot verify top up for another user wallet');
+    // SECURITY: The PaymentsService.verifyPayment stub returns true unconditionally,
+    // which would let any caller credit a wallet for any transactionId. Until a real
+    // payment integration with provider-signed webhooks lands, this endpoint is
+    // restricted to ADMIN. See payments.service.ts.
+    if (user?.role !== UserRole.ADMIN) {
+      throw new ForbiddenException('Admin-only until real payment verification ships');
     }
     const isValid = await this.paymentsService.verifyPayment(body.transactionId, body.provider);
     if (!isValid) throw new ForbiddenException('Payment verification failed');
-    
+
     return this.walletService.deposit(userId, body.amount, 'CUSTOMER', body.currency ?? 'AFN', body.transactionId, {
-      description: `Wallet top-up via ${body.provider}`,
+      description: `Wallet top-up via ${body.provider} (admin-verified)`,
       transactionType: 'DEPOSIT',
     });
   }

@@ -156,7 +156,7 @@ export async function register(name: string, phone: string, password: string) {
 }
 
 export async function getTrips(userId: string) {
-  const response = await apiFetch(`/rides?userId=${encodeURIComponent(userId)}&limit=25`);
+  const response = await apiFetch(`/trips?userId=${encodeURIComponent(userId)}&limit=25`);
   return readJson<Trip[]>(response, 'Unable to load trips');
 }
 
@@ -187,12 +187,12 @@ export async function topUpWallet(userId: string, amount: number) {
 }
 
 export async function getRideEstimate(distance = 5) {
-  const response = await apiFetch(`/rides/estimate?distance=${distance}`);
+  const response = await apiFetch(`/trips/estimate?distance=${distance}`);
   return readJson<RideEstimate>(response, 'Unable to estimate fare');
 }
 
 export async function bookRide(payload: RidePayload) {
-  const response = await apiFetch('/rides', {
+  const response = await apiFetch('/trips', {
     method: 'POST',
     body: JSON.stringify(payload),
   });
@@ -220,4 +220,67 @@ export async function uploadKycDocument(driverId: string, type: string, url: str
     body: JSON.stringify({ type, url }),
   });
   return readJson<any>(response, 'Unable to upload KYC document');
+}
+
+// ---------- Safety ----------
+
+export type TrustedContact = {
+  id: string;
+  name: string;
+  phone: string;
+  relation?: string | null;
+  notifyOnSos: boolean;
+  notifyOnTrip: boolean;
+};
+
+export type SosResult = {
+  alert: { id: string; status: string; createdAt: string };
+  notifiedContacts: number;
+  shareUrl: string | null;
+};
+
+export async function listTrustedContacts() {
+  const response = await apiFetch('/safety/contacts');
+  return readJson<TrustedContact[]>(response, 'Unable to load trusted contacts');
+}
+
+export async function addTrustedContact(input: {
+  name: string;
+  phone: string;
+  relation?: string;
+  notifyOnSos?: boolean;
+  notifyOnTrip?: boolean;
+}) {
+  const response = await apiFetch('/safety/contacts', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+  return readJson<TrustedContact>(response, 'Unable to add trusted contact');
+}
+
+export async function removeTrustedContact(contactId: string) {
+  const response = await apiFetch(`/safety/contacts/${encodeURIComponent(contactId)}`, {
+    method: 'DELETE',
+  });
+  return readJson<{ id: string; removed: boolean }>(response, 'Unable to remove contact');
+}
+
+export async function raiseSos(input: {
+  tripId?: string;
+  lat?: number;
+  lng?: number;
+  message?: string;
+}) {
+  const response = await apiFetch('/safety/sos', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+  return readJson<SosResult>(response, 'Unable to raise SOS');
+}
+
+export async function resolveSos(alertId: string) {
+  const response = await apiFetch(`/safety/sos/${encodeURIComponent(alertId)}/resolve`, {
+    method: 'PATCH',
+  });
+  return readJson<{ id: string; status: string }>(response, 'Unable to resolve SOS');
 }

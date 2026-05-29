@@ -32,6 +32,13 @@ export class FoodService {
     return this.prisma.menuItem.create({ data: { ...data, restaurantId } });
   }
 
+  getRestaurantMenu(restaurantId: string) {
+    return this.prisma.menuItem.findMany({
+      where: { restaurantId },
+      orderBy: [{ category: 'asc' }, { name: 'asc' }],
+    });
+  }
+
   async createOrder(data: any) {
     const menuItems = data.items?.length
       ? await this.prisma.menuItem.findMany({ where: { id: { in: data.items.map((item: any) => item.menuItemId) } } })

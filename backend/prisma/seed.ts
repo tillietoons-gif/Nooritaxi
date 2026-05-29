@@ -20,7 +20,28 @@ async function upsertUser(phone: string, role: any, name: string, password: stri
 }
 
 async function main() {
-  const admin = await upsertUser('+93000000000', 'ADMIN', 'Noori Admin', 'Admin123!');
+  // SAFETY: refuse to seed against a production DB unless explicitly opted in.
+  if (process.env.NODE_ENV === 'production' && process.env.ALLOW_PROD_SEED !== 'true') {
+    throw new Error(
+      'Refusing to run prisma seed with NODE_ENV=production. ' +
+        'Set ALLOW_PROD_SEED=true to override (NOT recommended).',
+    );
+  }
+
+  const adminPassword = process.env.SEED_ADMIN_PASSWORD;
+  if (!adminPassword) {
+    throw new Error(
+      'SEED_ADMIN_PASSWORD env var must be set before running the seed. ' +
+        'Pick a strong value; the admin user will be created with this password.',
+    );
+  }
+  if (adminPassword.length < 12) {
+    throw new Error('SEED_ADMIN_PASSWORD must be at least 12 characters.');
+  }
+
+  const adminPhone = process.env.SEED_ADMIN_PHONE ?? '+93000000000';
+
+  const admin = await upsertUser(adminPhone, 'ADMIN', 'Noori Admin', adminPassword);
   const rider = await upsertUser('+93700000001', 'RIDER', 'Ahmad Rider', 'Rider123!');
   const driverUser = await upsertUser('+93700000002', 'DRIVER', 'Farid Driver', 'Driver123!');
   const merchant = await upsertUser('+93700000003', 'MERCHANT', 'Kabul Kitchen Owner', 'Merchant123!');

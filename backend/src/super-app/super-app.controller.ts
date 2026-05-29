@@ -95,8 +95,14 @@ export class SuperAppController {
   }
 
   @Get('support/tickets')
-  listSupportTickets(@Query('status') status?: string) {
-    return this.superApp.listSupportTickets(status);
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPPORT)
+  listSupportTickets(
+    @Query('status') status?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.superApp.listSupportTickets(status, Number(page ?? 1), Number(limit ?? 25));
   }
 
   @Post('support/tickets/:ticketId/messages')

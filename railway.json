@@ -5,8 +5,8 @@
     "dockerfilePath": "backend/Dockerfile"
   },
   "deploy": {
-    "startCommand": "node dist/main",
-    "healthcheckPath": "/api",
+    "startCommand": "node dist/src/main",
+    "healthcheckPath": "/api/healthz",
     "restartPolicyType": "ON_FAILURE"
   }
 }

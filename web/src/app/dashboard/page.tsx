@@ -56,10 +56,10 @@ export default function DashboardPage() {
     async function load() {
       setError("")
       const [ridesData, ordersData, deliveries, restaurants, wallet] = await Promise.all([
-        authedFetch(`/rides?userId=${userId}&limit=5`).then((res) => res.ok ? res.json() : []),
-        authedFetch(`/orders?userId=${userId}&limit=5`).then((res) => res.ok ? res.json() : []),
-        authedFetch(`/deliveries?userId=${userId}`).then((res) => res.ok ? res.json() : []),
-        fetch(`${apiUrl}/restaurants`).then((res) => res.ok ? res.json() : []),
+        authedFetch(`/trips?userId=${userId}&limit=5`).then((res) => res.ok ? res.json() : []),
+        authedFetch(`/food/orders?userId=${userId}&limit=5`).then((res) => res.ok ? res.json() : []),
+        authedFetch(`/logistics/deliveries?userId=${userId}`).then((res) => res.ok ? res.json() : []),
+        fetch(`${apiUrl}/food/restaurants`).then((res) => res.ok ? res.json() : []),
         authedFetch(`/wallet/${userId}?type=CUSTOMER&currency=AFN`).then((res) => res.ok ? res.json() : null),
       ])
 

@@ -15,6 +15,10 @@ import { LogisticsModule } from './logistics/logistics.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { DispatchModule } from './dispatch/dispatch.module';
 import { PaymentsModule } from './payments/payments.module';
+import { SafetyModule } from './safety/safety.module';
+import { AdminModule } from './admin/admin.module';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -30,8 +34,11 @@ import { PaymentsModule } from './payments/payments.module';
     ReviewsModule,
     DispatchModule,
     PaymentsModule,
+    SafetyModule,
+    AdminModule,
   ],
   providers: [
+    AppService,
     TrackingGateway,
     WsJwtGuard,
     {
@@ -39,5 +46,6 @@ import { PaymentsModule } from './payments/payments.module';
       useClass: ThrottlerGuard,
     },
   ],
+  controllers: [AppController],
 })
 export class AppModule {}

@@ -86,11 +86,15 @@ export class SuperAppService {
     return this.prisma.supportTicket.create({ data, include: { messages: true } });
   }
 
-  listSupportTickets(status?: any) {
+  listSupportTickets(status?: any, page = 1, limit = 25) {
+    const safePage = Math.max(Number.isFinite(page) ? page : 1, 1);
+    const safeLimit = Math.min(Math.max(Number.isFinite(limit) ? limit : 25, 1), 100);
     return this.prisma.supportTicket.findMany({
       where: status ? { status } : {},
       include: { requester: true, assignee: true, messages: true },
       orderBy: { updatedAt: 'desc' },
+      skip: (safePage - 1) * safeLimit,
+      take: safeLimit,
     });
   }
 
@@ -118,21 +122,43 @@ export class SuperAppService {
   }
 
   adminOverview() {
+    const activeTripStatuses = ['REQUESTED', 'ACCEPTED', 'DRIVER_ARRIVED', 'IN_PROGRESS'] as any;
+    const activeOrderStatuses = ['PLACED', 'ACCEPTED', 'PREPARING', 'READY_FOR_PICKUP', 'OUT_FOR_DELIVERY'] as any;
+    const activeDeliveryStatuses = ['REQUESTED', 'ASSIGNED', 'PICKED_UP', 'IN_TRANSIT'] as any;
+
     return Promise.all([
       this.prisma.user.count(),
       this.prisma.driver.count(),
       this.prisma.trip.count(),
       this.prisma.order.count(),
       this.prisma.delivery.count(),
-      this.prisma.supportTicket.count({ where: { status: { in: ['OPEN', 'PENDING'] } } }),
-    ]).then(([users, drivers, rides, orders, deliveries, openTickets]) => ({
-      users,
-      drivers,
-      rides,
-      orders,
-      deliveries,
-      openTickets,
-    }));
+      this.prisma.supportTicket.count({ where: { status: { in: ['OPEN', 'PENDING'] as any } } }),
+      this.prisma.trip.count({ where: { status: { in: activeTripStatuses } } }),
+      this.prisma.order.count({ where: { status: { in: activeOrderStatuses } } }),
+      this.prisma.delivery.count({ where: { status: { in: activeDeliveryStatuses } } }),
+    ]).then(
+      ([
+        users,
+        drivers,
+        rides,
+        orders,
+        deliveries,
+        openTickets,
+        activeRides,
+        activeOrders,
+        activeDeliveries,
+      ]) => ({
+        users,
+        drivers,
+        rides,
+        orders,
+        deliveries,
+        openTickets,
+        activeRides,
+        activeOrders,
+        activeDeliveries,
+      }),
+    );
   }
 
   private async audit(action: string, entityType: string, entityId?: string, actorId?: string, after?: any, before?: any) {

@@ -222,6 +222,8 @@ model User {
   auditLogs            AuditLog[]
   refreshTokens        RefreshToken[]
   verifiedDocuments    DriverDocument[]    @relation("DocumentVerifier")
+  trustedContacts      TrustedContact[]    @relation("UserTrustedContacts")
+  sosAlerts            SosAlert[]          @relation("UserSosAlerts")
 
   @@index([role, status])
   @@index([createdAt])
@@ -704,4 +706,47 @@ model SurgeZone {
   updatedAt   DateTime @updatedAt
 
   @@index([city, isActive, activeFrom, activeUntil])
+}
+
+model TrustedContact {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  phone     String
+  relation  String?
+  notifyOnSos     Boolean @default(true)
+  notifyOnTrip    Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation("UserTrustedContacts", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, phone])
+  @@index([userId])
+}
+
+enum SosStatus {
+  ACTIVE
+  RESOLVED
+  CANCELLED
+}
+
+model SosAlert {
+  id          String    @id @default(cuid())
+  userId      String
+  tripId      String?
+  status      SosStatus @default(ACTIVE)
+  lat         Float?
+  lng         Float?
+  message     String?
+  resolvedAt  DateTime?
+  resolvedBy  String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user        User      @relation("UserSosAlerts", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status, createdAt])
+  @@index([status, createdAt])
+  @@index([tripId])
 }

@@ -33,7 +33,7 @@ export default function BookingPage() {
     }
 
     const timeout = window.setTimeout(() => {
-      authedFetch("/rides/estimate?distance=5")
+      authedFetch("/trips/estimate?distance=5")
         .then(async (response) => {
           if (!response.ok) throw new Error("Unable to estimate fare")
           return response.json()
@@ -72,7 +72,7 @@ export default function BookingPage() {
 
     setIsSubmitting(true)
     try {
-      const response = await authedFetch("/rides", {
+      const response = await authedFetch("/trips", {
         method: "POST",
         body: JSON.stringify({
           customerId: user.id,

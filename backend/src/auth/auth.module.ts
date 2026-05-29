@@ -16,10 +16,18 @@ import { PrismaModule } from '../prisma/prisma.module';
     PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET'),
-        signOptions: { expiresIn: '7d' },
-      }),
+      useFactory: async (configService: ConfigService) => {
+        const secret = configService.get<string>('JWT_SECRET');
+        if (!secret || secret.length < 16) {
+          throw new Error(
+            'JWT_SECRET must be set to a value of at least 16 characters. Refusing to start.',
+          );
+        }
+        return {
+          secret,
+          signOptions: { expiresIn: '7d' },
+        };
+      },
       inject: [ConfigService],
     }),
   ],

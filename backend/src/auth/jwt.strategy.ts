@@ -10,10 +10,16 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     configService: ConfigService,
     private usersService: UsersService,
   ) {
+    const secret = configService.get<string>('JWT_SECRET');
+    if (!secret || secret.length < 16) {
+      throw new Error(
+        'JWT_SECRET must be set to a value of at least 16 characters. Refusing to start.',
+      );
+    }
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: configService.get<string>('JWT_SECRET') ?? 'dev-secret',
+      secretOrKey: secret,
     });
   }
 

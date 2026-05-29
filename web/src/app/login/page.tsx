@@ -1,7 +1,6 @@
 "use client"
 
 import Link from "next/link"
-import { useSearchParams } from "next/navigation"
 import { useState } from "react"
 import { Car, Lock, Phone } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -11,7 +10,6 @@ import { BodyMd } from "@/components/ui/typography"
 import { apiUrl, getPostAuthRedirect, saveSession } from "@/lib/auth"
 
 export default function LoginPage() {
-  const searchParams = useSearchParams()
   const [phone, setPhone] = useState("")
   const [password, setPassword] = useState("")
   const [message, setMessage] = useState("")
@@ -36,7 +34,8 @@ export default function LoginPage() {
       }
 
       saveSession(data.access_token, data.user)
-      window.location.href = getPostAuthRedirect(data.user, searchParams.get("next"))
+      const next = new URLSearchParams(window.location.search).get("next")
+      window.location.href = getPostAuthRedirect(data.user, next)
     } catch {
       setMessage("Unable to reach the server")
     } finally {

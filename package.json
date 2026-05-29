@@ -1,5 +1,12 @@
 {
   "dependencies": {
-    "expo-image-picker": "^56.0.14"
-  }
+    "expo-dev-client": "~56.0.18",
+    "expo-image-picker": "^56.0.14",
+    "expo": "~56.0.6",
+    "react": "19.2.3",
+    "react-native": "0.85.3"
+  },
+  "name": "Nooritaxi-feat-noori-super-app-complete-911282070275060773",
+  "version": "1.0.0",
+  "scripts": {}
 }

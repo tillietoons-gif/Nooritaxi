@@ -5,6 +5,7 @@
   "scripts": {
     "start": "expo start",
     "start:tunnel": "expo start --tunnel",
+    "start:tunnel:win": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"$env:ANDROID_HOME='C:\\__expo_skip_adb__'; Remove-Item Env:ANDROID_SDK_ROOT -ErrorAction SilentlyContinue; expo start --tunnel\"",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web"

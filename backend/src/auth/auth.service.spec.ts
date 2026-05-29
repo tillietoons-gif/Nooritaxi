@@ -4,6 +4,7 @@ import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma.service';
+import { WalletService } from '../wallet/wallet.service';
 describe('AuthService', () => {
   let service: AuthService;
   beforeEach(async () => {
@@ -14,6 +15,7 @@ describe('AuthService', () => {
         { provide: JwtService, useValue: {} },
         { provide: PrismaService, useValue: {} },
         { provide: ConfigService, useValue: {} },
+        { provide: WalletService, useValue: {} },
       ],
     }).compile();
     service = module.get<AuthService>(AuthService);

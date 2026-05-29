@@ -8,6 +8,7 @@ import { BodyMd, HeadingMd } from "@/components/ui/typography"
 import { Bell, Car, Headphones, Package, ShieldCheck, Store, Users, Wallet } from "lucide-react"
 import { AuthGate } from "@/components/auth-gate"
 import { authedFetch } from "@/lib/auth"
+import Link from "next/link"
 
 export default function AdminPage() {
   const [overview, setOverview] = useState<Record<string, number> | null>(null)
@@ -60,7 +61,9 @@ export default function AdminPage() {
           </div>
           <div className="flex gap-2">
             <Button variant="outline"><Bell className="mr-2 h-4 w-4" />Broadcast</Button>
-            <Button><ShieldCheck className="mr-2 h-4 w-4" />Safety Review</Button>
+            <Link href="/admin/kyc">
+              <Button><ShieldCheck className="mr-2 h-4 w-4" />Safety Review</Button>
+            </Link>
           </div>
         </div>
 
@@ -122,10 +125,12 @@ export default function AdminPage() {
           </CardHeader>
           <CardContent className="grid gap-3 md:grid-cols-3">
             {["Dari queue", "Pashto queue", "Merchant queue"].map((queue) => (
-              <Button key={queue} variant="outline" className="h-16 justify-between">
-                {queue}
-                <Badge>Open</Badge>
-              </Button>
+              <Link key={queue} href="/admin/support" className="flex-1">
+                <Button variant="outline" className="h-16 w-full justify-between">
+                  {queue}
+                  <Badge>Open</Badge>
+                </Button>
+              </Link>
             ))}
           </CardContent>
         </Card>

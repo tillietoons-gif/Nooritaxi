@@ -78,5 +78,24 @@
     "fare_estimate": "د لګښت اټکل",
     "submit": "غوښتنه",
     "submitting": "لیږل کیږي..."
+  },
+  "restaurant": {
+    "loading": "مینو بار کیږي...",
+    "not_found": "رستوران ونه موندل شو",
+    "free_delivery": "وړیا سپارنه",
+    "menu": "مینو",
+    "view_cart": "د پیرودلو کارټ وګورئ"
+  },
+  "checkout": {
+    "total_amount": "ټول مقدار",
+    "payment_method": "د تادیې طریقه",
+    "noori_wallet": "د نوري بټوه",
+    "pay_from_balance": "د موجودۍ څخه سمدستي تادیه",
+    "hesabpay": "حساب پی",
+    "digital_wallet": "ډیجیټل بټوه / بانکي لیږد",
+    "cash": "نغدې پیسې",
+    "pay_physical_cash": "نغدي پیسې ورکړئ",
+    "secure_payment": "خوندي او کوډ شوی تادیه",
+    "pay": "تادیه {{amount}} {{currency}}"
   }
 }

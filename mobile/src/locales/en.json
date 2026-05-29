@@ -78,5 +78,24 @@
     "fare_estimate": "Fare estimate",
     "submit": "Request Pickup",
     "submitting": "Submitting..."
+  },
+  "restaurant": {
+    "loading": "Loading menu...",
+    "not_found": "Restaurant not found",
+    "free_delivery": "Free Delivery",
+    "menu": "Menu",
+    "view_cart": "View Cart"
+  },
+  "checkout": {
+    "total_amount": "Total Amount",
+    "payment_method": "Payment Method",
+    "noori_wallet": "Noori Wallet",
+    "pay_from_balance": "Pay instantly from balance",
+    "hesabpay": "HesabPay",
+    "digital_wallet": "Digital wallet / Bank transfer",
+    "cash": "Cash",
+    "pay_physical_cash": "Pay physical cash",
+    "secure_payment": "Secure, encrypted payment processing",
+    "pay": "Pay {{amount}} {{currency}}"
   }
 }

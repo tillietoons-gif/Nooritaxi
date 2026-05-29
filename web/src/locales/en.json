@@ -1,0 +1,37 @@
+{
+  "surge": {
+    "title": "Dynamic Pricing (Surge)",
+    "description": "Manage multiplier zones for high-demand areas. Surge pricing applies to rides intersecting the zone.",
+    "create": "Create Surge Zone",
+    "zone_name": "Zone Name",
+    "multiplier": "Multiplier (x)",
+    "radius": "Radius (km)",
+    "duration": "Active Duration (hours)",
+    "deploy": "Deploy Zone",
+    "active_zones": "Active & Recent Zones",
+    "loading": "Loading...",
+    "no_zones": "No surge zones configured.",
+    "active": "Active",
+    "inactive": "Inactive",
+    "until": "Until: {{date}}",
+    "deactivate": "Deactivate",
+    "reactivate": "Reactivate"
+  },
+  "admin": {
+    "title": "Noori Operations",
+    "description": "Admin control center for mobility, food, delivery, wallet, safety, and support.",
+    "live_marketplace": "Live Marketplace",
+    "in_progress": "in progress now",
+    "priority_queues": "Priority Queues",
+    "sos_title": "Active SOS Alerts",
+    "sos_triggered": "SOS triggered by",
+    "mark_resolved": "Mark Resolved",
+    "open_support_tickets": "Open Support Tickets",
+    "loading_tickets": "Loading tickets…",
+    "no_tickets": "No open tickets. All clear.",
+    "page": "Page",
+    "previous": "Previous",
+    "next": "Next",
+    "refresh": "Refresh"
+  }
+}

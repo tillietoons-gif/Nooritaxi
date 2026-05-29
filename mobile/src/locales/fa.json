@@ -78,5 +78,24 @@
     "fare_estimate": "تخمین هزینه",
     "submit": "درخواست",
     "submitting": "در حال ارسال..."
+  },
+  "restaurant": {
+    "loading": "در حال بارگذاری منو...",
+    "not_found": "رستوران یافت نشد",
+    "free_delivery": "ارسال رایگان",
+    "menu": "منو",
+    "view_cart": "مشاهده سبد خرید"
+  },
+  "checkout": {
+    "total_amount": "مبلغ کل",
+    "payment_method": "روش پرداخت",
+    "noori_wallet": "کیف پول نوری",
+    "pay_from_balance": "پرداخت فوری از موجودی",
+    "hesabpay": "حساب پی",
+    "digital_wallet": "کیف پول دیجیتال / انتقال بانکی",
+    "cash": "پول نقد",
+    "pay_physical_cash": "پرداخت نقدی",
+    "secure_payment": "پرداخت امن و رمزنگاری شده",
+    "pay": "پرداخت {{amount}} {{currency}}"
   }
 }

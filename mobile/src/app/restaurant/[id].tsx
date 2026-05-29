@@ -2,12 +2,14 @@ import React from 'react';
 import { View, Text, TouchableOpacity, SafeAreaView, ScrollView, Image, Alert } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { Clock, MapPin, Plus, Minus, ShoppingBag } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { getRestaurant, placeOrder, Restaurant, getStoredUser, API_URL } from '../../lib/api';
 
 export default function RestaurantScreen() {
   const { id } = useLocalSearchParams();
+  const { t } = useTranslation();
   const [restaurant, setRestaurant] = React.useState<any>(null);
-  const [cart, setCart] = React.useState<{ [itemId: string]: number }>({});
+  const [cart, setCart] = React.useState<Map<string, number>>(new Map());
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
@@ -28,21 +30,23 @@ export default function RestaurantScreen() {
 
   const updateCart = (itemId: string, delta: number) => {
     setCart(prev => {
-      const current = prev[itemId] || 0;
+      const updated = new Map(prev);
+      const current = updated.get(itemId) || 0;
       const next = Math.max(0, current + delta);
-      const updated = { ...prev };
-      if (next === 0) delete updated[itemId];
-      else updated[itemId] = next;
+      if (next === 0) updated.delete(itemId);
+      else updated.set(itemId, next);
       return updated;
     });
   };
 
   const getCartTotal = () => {
     if (!restaurant?.menu) return 0;
-    return Object.entries(cart).reduce((total, [itemId, qty]) => {
+    let total = 0;
+    for (const [itemId, qty] of cart.entries()) {
       const item = restaurant.menu.find((i: any) => i.id === itemId);
-      return total + (item ? Number(item.price) * qty : 0);
-    }, 0);
+      total += item ? Number(item.price) * qty : 0;
+    }
+    return total;
   };
 
   async function placeOrder() {
@@ -53,7 +57,7 @@ export default function RestaurantScreen() {
         return;
       }
 
-      const items = Object.entries(cart).map(([menuItemId, quantity]) => ({
+      const items = Array.from(cart.entries()).map(([menuItemId, quantity]) => ({
         menuItemId,
         quantity,
       }));
@@ -80,14 +84,14 @@ export default function RestaurantScreen() {
   }
 
   if (loading) {
-    return <SafeAreaView className="flex-1 bg-background justify-center items-center"><Text>Loading menu...</Text></SafeAreaView>;
+    return <SafeAreaView className="flex-1 bg-background justify-center items-center"><Text>{t('restaurant.loading')}</Text></SafeAreaView>;
   }
 
   if (!restaurant) {
-    return <SafeAreaView className="flex-1 bg-background justify-center items-center"><Text>Restaurant not found</Text></SafeAreaView>;
+    return <SafeAreaView className="flex-1 bg-background justify-center items-center"><Text>{t('restaurant.not_found')}</Text></SafeAreaView>;
   }
 
-  const cartItemsCount = Object.values(cart).reduce((a, b) => a + b, 0);
+  const cartItemsCount = Array.from(cart.values()).reduce((a, b) => a + b, 0);
 
   return (
     <SafeAreaView className="flex-1 bg-background">
@@ -111,11 +115,11 @@ export default function RestaurantScreen() {
             </View>
             <View className="flex-row items-center gap-1 bg-muted/30 px-3 py-1.5 rounded-lg">
               <MapPin size={14} color="#6d7a71" />
-              <Text className="text-sm font-medium text-muted-foreground">Free Delivery</Text>
+              <Text className="text-sm font-medium text-muted-foreground">{t('restaurant.free_delivery')}</Text>
             </View>
           </View>
 
-          <Text className="text-xl font-bold mb-4">Menu</Text>
+          <Text className="text-xl font-bold mb-4">{t('restaurant.menu')}</Text>
           {restaurant.menu?.map((item: any) => (
             <View key={item.id} className="flex-row py-4 border-b border-muted/10">
               <View className="flex-1 pr-4">
@@ -128,12 +132,12 @@ export default function RestaurantScreen() {
               )}
               
               <View className="items-center justify-center bg-card rounded-full border border-muted/20 self-center">
-                {cart[item.id] ? (
+                {cart.get(item.id) ? (
                   <View className="flex-row items-center">
                     <TouchableOpacity onPress={() => updateCart(item.id, -1)} className="p-2">
                       <Minus size={18} color="#006947" />
                     </TouchableOpacity>
-                    <Text className="font-bold px-2 w-6 text-center">{cart[item.id]}</Text>
+                    <Text className="font-bold px-2 w-6 text-center">{cart.get(item.id)}</Text>
                     <TouchableOpacity onPress={() => updateCart(item.id, 1)} className="p-2">
                       <Plus size={18} color="#006947" />
                     </TouchableOpacity>
@@ -158,7 +162,7 @@ export default function RestaurantScreen() {
             <View className="bg-white/20 px-3 py-1 rounded-full">
               <Text className="text-white font-bold">{cartItemsCount}</Text>
             </View>
-            <Text className="text-white font-bold text-lg">View Cart</Text>
+            <Text className="text-white font-bold text-lg">{t('restaurant.view_cart')}</Text>
             <Text className="text-white font-bold text-lg">{getCartTotal()} AFN</Text>
           </TouchableOpacity>
         </View>

@@ -77,11 +77,11 @@ export default function CheckoutScreen() {
     <SafeAreaView className="flex-1 bg-background">
       <ScrollView className="px-4 py-6">
         <View className="items-center mb-10 mt-6">
-          <Text className="text-muted-foreground text-base mb-2">Total Amount</Text>
+          <Text className="text-muted-foreground text-base mb-2">{t('checkout.total_amount')}</Text>
           <Text className="text-4xl font-bold text-primary">{amount} {currency}</Text>
         </View>
 
-        <Text className="font-bold text-lg mb-4">Payment Method</Text>
+        <Text className="font-bold text-lg mb-4">{t('checkout.payment_method')}</Text>
 
         <View className="space-y-3">
           <TouchableOpacity 
@@ -92,8 +92,8 @@ export default function CheckoutScreen() {
               <Wallet size={24} color="#006947" />
             </View>
             <View className="flex-1">
-              <Text className="font-bold text-base">Noori Wallet</Text>
-              <Text className="text-xs text-muted-foreground">Pay instantly from balance</Text>
+              <Text className="font-bold text-base">{t('checkout.noori_wallet')}</Text>
+              <Text className="text-xs text-muted-foreground">{t('checkout.pay_from_balance')}</Text>
             </View>
             <View className={`w-6 h-6 rounded-full border-2 items-center justify-center ${method === 'WALLET' ? 'border-primary' : 'border-muted/30'}`}>
               {method === 'WALLET' && <View className="w-3 h-3 rounded-full bg-primary" />}
@@ -108,8 +108,8 @@ export default function CheckoutScreen() {
               <CreditCard size={24} color="#3b82f6" />
             </View>
             <View className="flex-1">
-              <Text className="font-bold text-base">HesabPay</Text>
-              <Text className="text-xs text-muted-foreground">Digital wallet / Bank transfer</Text>
+              <Text className="font-bold text-base">{t('checkout.hesabpay')}</Text>
+              <Text className="text-xs text-muted-foreground">{t('checkout.digital_wallet')}</Text>
             </View>
             <View className={`w-6 h-6 rounded-full border-2 items-center justify-center ${method === 'HESABPAY' ? 'border-primary' : 'border-muted/30'}`}>
               {method === 'HESABPAY' && <View className="w-3 h-3 rounded-full bg-primary" />}
@@ -124,8 +124,8 @@ export default function CheckoutScreen() {
               <Banknote size={24} color="#f97316" />
             </View>
             <View className="flex-1">
-              <Text className="font-bold text-base">Cash</Text>
-              <Text className="text-xs text-muted-foreground">Pay physical cash</Text>
+              <Text className="font-bold text-base">{t('checkout.cash')}</Text>
+              <Text className="text-xs text-muted-foreground">{t('checkout.pay_physical_cash')}</Text>
             </View>
             <View className={`w-6 h-6 rounded-full border-2 items-center justify-center ${method === 'CASH' ? 'border-primary' : 'border-muted/30'}`}>
               {method === 'CASH' && <View className="w-3 h-3 rounded-full bg-primary" />}
@@ -135,7 +135,7 @@ export default function CheckoutScreen() {
 
         <View className="flex-row items-center gap-2 mt-8 justify-center opacity-60">
           <ShieldCheck size={16} color="#6d7a71" />
-          <Text className="text-xs text-center">Secure, encrypted payment processing</Text>
+          <Text className="text-xs text-center">{t('checkout.secure_payment')}</Text>
         </View>
 
         <TouchableOpacity 
@@ -146,7 +146,7 @@ export default function CheckoutScreen() {
           {loading ? (
             <ActivityIndicator color="white" />
           ) : (
-            <Text className="text-white text-lg font-bold">Pay {amount} {currency}</Text>
+            <Text className="text-white text-lg font-bold">{t('checkout.pay', { amount, currency })}</Text>
           )}
         </TouchableOpacity>
       </ScrollView>

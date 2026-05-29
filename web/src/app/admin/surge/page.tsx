@@ -10,6 +10,7 @@ import { BodyMd, HeadingMd } from "@/components/ui/typography"
 import { AuthGate } from "@/components/auth-gate"
 import { authedFetch } from "@/lib/auth"
 import { AlertCircle, Plus, Power, Activity } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 type SurgeZone = {
   id: string
@@ -24,6 +25,7 @@ type SurgeZone = {
 }
 
 export default function SurgePage() {
+  const { t } = useTranslation()
   const [zones, setZones] = useState<SurgeZone[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
@@ -107,10 +109,10 @@ export default function SurgePage() {
           <div>
             <HeadingMd className="text-2xl flex items-center gap-2">
               <Activity className="h-6 w-6 text-primary" />
-              Dynamic Pricing (Surge)
+              {t('surge.title')}
             </HeadingMd>
             <BodyMd className="text-muted-foreground mt-1">
-              Manage multiplier zones for high-demand areas. Surge pricing applies to rides intersecting the zone.
+              {t('surge.description')}
             </BodyMd>
           </div>
 
@@ -124,34 +126,34 @@ export default function SurgePage() {
           <div className="grid gap-6 md:grid-cols-[1fr_1.5fr]">
             <Card className="h-fit">
               <CardHeader>
-                <CardTitle>Create Surge Zone</CardTitle>
+                <CardTitle>{t('surge.create')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <form onSubmit={createZone} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="name">Zone Name</Label>
+                    <Label htmlFor="name">{t('surge.zone_name')}</Label>
                     <Input id="name" value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Downtown Rush" required />
                   </div>
                   
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="multiplier">Multiplier (x)</Label>
+                      <Label htmlFor="multiplier">{t('surge.multiplier')}</Label>
                       <Input id="multiplier" type="number" step="0.1" min="1.1" max="5.0" value={multiplier} onChange={e => setMultiplier(e.target.value)} required />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="radius">Radius (km)</Label>
+                      <Label htmlFor="radius">{t('surge.radius')}</Label>
                       <Input id="radius" type="number" step="0.5" min="0.5" value={radiusKm} onChange={e => setRadiusKm(e.target.value)} required />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="hours">Active Duration (hours)</Label>
+                    <Label htmlFor="hours">{t('surge.duration')}</Label>
                     <Input id="hours" type="number" min="1" max="24" value={hoursActive} onChange={e => setHoursActive(e.target.value)} required />
                   </div>
 
                   <Button type="submit" className="w-full" disabled={loading || !name}>
                     <Plus className="mr-2 h-4 w-4" />
-                    Deploy Zone
+                    {t('surge.deploy')}
                   </Button>
                 </form>
               </CardContent>
@@ -159,13 +161,13 @@ export default function SurgePage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Active & Recent Zones</CardTitle>
+                <CardTitle>{t('surge.active_zones')}</CardTitle>
               </CardHeader>
               <CardContent>
                 {loading && zones.length === 0 ? (
-                  <p className="text-muted-foreground">Loading...</p>
+                  <p className="text-muted-foreground">{t('surge.loading')}</p>
                 ) : zones.length === 0 ? (
-                  <p className="text-muted-foreground">No surge zones configured.</p>
+                  <p className="text-muted-foreground">{t('surge.no_zones')}</p>
                 ) : (
                   <div className="space-y-3">
                     {zones.map((zone) => {
@@ -176,16 +178,16 @@ export default function SurgePage() {
                             <div className="flex items-center gap-2 mb-1">
                               <p className="font-bold">{zone.name}</p>
                               {isCurrentlyActive ? (
-                                <Badge className="bg-primary hover:bg-primary">Active</Badge>
+                                <Badge className="bg-primary hover:bg-primary">{t('surge.active')}</Badge>
                               ) : (
-                                <Badge variant="secondary">Inactive</Badge>
+                                <Badge variant="secondary">{t('surge.inactive')}</Badge>
                               )}
                             </div>
                             <p className="text-sm text-muted-foreground">
-                              {zone.multiplier}x Multiplier · {zone.radiusKm}km radius
+                              {t('surge.multiplier_label', { mult: zone.multiplier, rad: zone.radiusKm })}
                             </p>
                             <p className="text-xs text-muted-foreground mt-1">
-                              Until: {new Date(zone.activeUntil).toLocaleString()}
+                              {t('surge.until', { date: new Date(zone.activeUntil).toLocaleString() })}
                             </p>
                           </div>
                           
@@ -195,7 +197,7 @@ export default function SurgePage() {
                             onClick={() => toggleZone(zone.id, isCurrentlyActive)}
                           >
                             <Power className="mr-2 h-4 w-4" />
-                            {isCurrentlyActive ? 'Deactivate' : 'Reactivate'}
+                            {isCurrentlyActive ? t('surge.deactivate') : t('surge.reactivate')}
                           </Button>
                         </div>
                       )

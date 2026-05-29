@@ -9,6 +9,7 @@ import { Car, Headphones, Package, RefreshCw, ShieldCheck, Store, Users, ArrowRi
 import { AuthGate } from "@/components/auth-gate"
 import Link from "next/link"
 import { authedFetch } from "@/lib/auth"
+import { useTranslation } from "react-i18next"
 
 type Overview = {
   users: number
@@ -59,6 +60,7 @@ async function fetchJson<T>(path: string, fallback: T): Promise<{ data: T; error
 }
 
 export default function AdminPage() {
+  const { t } = useTranslation()
   const [overview, setOverview] = useState<Overview>(EMPTY_OVERVIEW)
   const [openTickets, setOpenTickets] = useState<SupportTicket[]>([])
   const [sosAlerts, setSosAlerts] = useState<any[]>([])
@@ -135,20 +137,20 @@ export default function AdminPage() {
         <div className="mx-auto max-w-7xl space-y-6">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <HeadingMd className="text-2xl">Noori Operations</HeadingMd>
+              <HeadingMd className="text-2xl">{t('admin.title')}</HeadingMd>
               <BodyMd className="text-muted-foreground">
-                Admin control center for mobility, food, delivery, wallet, safety, and support.
+                {t('admin.description')}
               </BodyMd>
             </div>
             <div className="flex gap-2">
               <Button variant="outline" onClick={() => void load(ticketsPage)} disabled={loading}>
                 <RefreshCw className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-                Refresh
+                {t('admin.refresh')}
               </Button>
               <Button variant="outline" asChild>
                 <a href="#open-tickets">
                   <ShieldCheck className="mr-2 h-4 w-4" />
-                  Open tickets ({overview.openTickets})
+                  {t('admin.open_tickets', { count: overview.openTickets })}
                 </a>
               </Button>
             </div>
@@ -183,7 +185,7 @@ export default function AdminPage() {
           <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
             <Card>
               <CardHeader>
-                <CardTitle>Live Marketplace</CardTitle>
+                <CardTitle>{t('admin.live_marketplace')}</CardTitle>
               </CardHeader>
               <CardContent className="grid gap-3 md:grid-cols-3">
                 {marketplace.map((item) => (
@@ -200,7 +202,7 @@ export default function AdminPage() {
                       {loading ? "—" : item.value.toLocaleString()}
                     </p>
                     <p className="text-sm text-muted-foreground flex items-center gap-1">
-                      in progress now <ArrowRight className="h-3 w-3" />
+                      {t('admin.in_progress')} <ArrowRight className="h-3 w-3" />
                     </p>
                   </Link>
                 ))}
@@ -209,7 +211,7 @@ export default function AdminPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Priority Queues</CardTitle>
+                <CardTitle>{t('admin.priority_queues')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 {queues.map((queue) => (
@@ -235,7 +237,7 @@ export default function AdminPage() {
               <CardHeader className="bg-destructive/10 text-destructive">
                 <CardTitle className="flex items-center gap-2">
                   <ShieldCheck className="h-5 w-5" />
-                  Active SOS Alerts
+                  {t('admin.sos_title')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
@@ -243,7 +245,7 @@ export default function AdminPage() {
                   {sosAlerts.map(alert => (
                     <li key={alert.id} className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
                       <div>
-                        <p className="font-bold text-destructive">SOS triggered by {alert.user?.name || alert.user?.phone || 'Unknown'}</p>
+                        <p className="font-bold text-destructive">{t('admin.sos_triggered', { name: alert.user?.name || alert.user?.phone || 'Unknown' })}</p>
                         <p className="text-sm text-muted-foreground mt-1">
                           {alert.tripId ? `Trip ID: ${alert.tripId.slice(-8)}` : 'No active trip'} 
                           {alert.lat && alert.lng ? ` · Location: ${alert.lat.toFixed(4)}, ${alert.lng.toFixed(4)}` : ''}
@@ -251,7 +253,7 @@ export default function AdminPage() {
                         <p className="text-xs mt-2 font-mono">{new Date(alert.createdAt).toLocaleString()}</p>
                       </div>
                       <Button variant="outline" className="border-destructive text-destructive hover:bg-destructive hover:text-white" onClick={() => resolveSos(alert.id)}>
-                        Mark Resolved
+                        {t('admin.mark_resolved')}
                       </Button>
                     </li>
                   ))}
@@ -264,14 +266,14 @@ export default function AdminPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Headphones className="h-5 w-5" />
-                Open Support Tickets
+                {t('admin.open_support_tickets')}
               </CardTitle>
             </CardHeader>
             <CardContent>
               {loading ? (
-                <p className="text-sm text-muted-foreground">Loading tickets…</p>
+                <p className="text-sm text-muted-foreground">{t('admin.loading_tickets')}</p>
               ) : openTickets.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No open tickets. All clear.</p>
+                <p className="text-sm text-muted-foreground">{t('admin.no_tickets')}</p>
               ) : (
                 <>
                   <ul className="divide-y">
@@ -303,7 +305,7 @@ export default function AdminPage() {
                   </ul>
                   <div className="mt-4 flex items-center justify-between">
                     <p className="text-xs text-muted-foreground">
-                      Page {ticketsPage} · showing {openTickets.length} of {overview.openTickets} open
+                      {t('admin.page', { page: ticketsPage, showing: openTickets.length, total: overview.openTickets })}
                     </p>
                     <div className="flex gap-2">
                       <Button
@@ -312,7 +314,7 @@ export default function AdminPage() {
                         disabled={ticketsPage === 1 || loading}
                         onClick={() => setTicketsPage((p) => Math.max(p - 1, 1))}
                       >
-                        Previous
+                        {t('admin.previous')}
                       </Button>
                       <Button
                         size="sm"
@@ -320,7 +322,7 @@ export default function AdminPage() {
                         disabled={openTickets.length < TICKETS_PER_PAGE || loading}
                         onClick={() => setTicketsPage((p) => p + 1)}
                       >
-                        Next
+                        {t('admin.next')}
                       </Button>
                     </div>
                   </div>

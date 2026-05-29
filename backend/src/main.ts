@@ -5,12 +5,14 @@ import { ConfigService } from '@nestjs/config';
 import { ConfiguredSocketIoAdapter } from './socket-io.adapter';
 import { PrismaExceptionFilter } from './prisma-exception.filter';
 import { getConfiguredCorsOrigins, isAllowedCorsOrigin } from './cors-origins';
+import * as helmet from 'helmet';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
   const allowedOrigins = getConfiguredCorsOrigins(configService.get<string>('CORS_ORIGIN'));
 
+  app.use((helmet as any).default?.() || (helmet as any)());
   app.enableCors({
     origin: (origin, callback) => {
       callback(null, isAllowedCorsOrigin(origin, allowedOrigins));

@@ -13,7 +13,9 @@ export class ConfiguredSocketIoAdapter extends IoAdapter {
   }
 
   createIOServer(port: number, options?: ServerOptions) {
-    const allowedOrigins = getConfiguredCorsOrigins(this.configService.get<string>('CORS_ORIGIN'));
+    const allowedOrigins = getConfiguredCorsOrigins(
+      this.configService.get<string>('CORS_ORIGIN'),
+    );
 
     return super.createIOServer(port, {
       ...options,

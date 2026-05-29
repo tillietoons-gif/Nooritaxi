@@ -1,4 +1,9 @@
-import { ArgumentsHost, Catch, ExceptionFilter, HttpStatus } from '@nestjs/common';
+import {
+  ArgumentsHost,
+  Catch,
+  ExceptionFilter,
+  HttpStatus,
+} from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { Response } from 'express';
 
@@ -18,7 +23,9 @@ export class PrismaExceptionFilter implements ExceptionFilter {
   private mapPrismaError(exception: Prisma.PrismaClientKnownRequestError) {
     switch (exception.code) {
       case 'P2002': {
-        const fields = Array.isArray(exception.meta?.target) ? exception.meta.target.join(', ') : 'record';
+        const fields = Array.isArray(exception.meta?.target)
+          ? exception.meta.target.join(', ')
+          : 'record';
         return {
           statusCode: HttpStatus.CONFLICT,
           message: `${fields} already exists`,

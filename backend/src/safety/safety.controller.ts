@@ -14,7 +14,10 @@ import { CurrentUser } from '../auth/current-user.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
-import type { CreateTrustedContactInput, RaiseSosInput } from './safety.service';
+import type {
+  CreateTrustedContactInput,
+  RaiseSosInput,
+} from './safety.service';
 import { SafetyService } from './safety.service';
 
 @Controller()
@@ -31,13 +34,19 @@ export class SafetyController {
 
   @Post('safety/contacts')
   @UseGuards(JwtAuthGuard)
-  addContact(@CurrentUser('id') userId: string, @Body() body: CreateTrustedContactInput) {
+  addContact(
+    @CurrentUser('id') userId: string,
+    @Body() body: CreateTrustedContactInput,
+  ) {
     return this.safety.addContact(userId, body);
   }
 
   @Delete('safety/contacts/:contactId')
   @UseGuards(JwtAuthGuard)
-  removeContact(@CurrentUser('id') userId: string, @Param('contactId') contactId: string) {
+  removeContact(
+    @CurrentUser('id') userId: string,
+    @Param('contactId') contactId: string,
+  ) {
     return this.safety.removeContact(userId, contactId);
   }
 
@@ -56,7 +65,8 @@ export class SafetyController {
     @CurrentUser() user: { id: string; role: UserRole },
   ) {
     if (!user?.id) throw new ForbiddenException('Not authenticated');
-    const isStaff = user.role === UserRole.ADMIN || user.role === UserRole.SUPPORT;
+    const isStaff =
+      user.role === UserRole.ADMIN || user.role === UserRole.SUPPORT;
     return this.safety.resolveSos(alertId, user.id, isStaff);
   }
 

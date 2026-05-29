@@ -1,8 +1,23 @@
-import { BadRequestException, Body, Controller, Get, Post, UnauthorizedException, UseGuards } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Post,
+  UnauthorizedException,
+  UseGuards,
+} from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { CurrentUser } from './current-user.decorator';
-import { LoginDto, LogoutDto, RefreshDto, RegisterDto, SendOtpDto, VerifyPhoneDto } from './dto';
+import {
+  LoginDto,
+  LogoutDto,
+  RefreshDto,
+  RegisterDto,
+  SendOtpDto,
+  VerifyPhoneDto,
+} from './dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
 @Controller('auth')
@@ -19,9 +34,12 @@ export class AuthController {
 
   @Post('register')
   @Throttle({ default: { ttl: 60_000, limit: 5 } })
-  async register(@Body() body: RegisterDto) { return this.authService.register(body); }
+  async register(@Body() body: RegisterDto) {
+    return this.authService.register(body);
+  }
 
   @Post('send-otp')
+  @Throttle({ default: { ttl: 60_000, limit: 3 } })
   async sendOtp(@Body() body: SendOtpDto) {
     await this.authService.sendOtp(body.phone);
     return { sent: true };
@@ -34,9 +52,12 @@ export class AuthController {
 
   @Get('me')
   @UseGuards(JwtAuthGuard)
-  async me(@CurrentUser() user: any) { return { user }; }
+  async me(@CurrentUser() user: any) {
+    return { user };
+  }
 
   @Post('verify-phone')
+  @Throttle({ default: { ttl: 60_000, limit: 5 } })
   async verifyPhone(@Body() body: VerifyPhoneDto) {
     const verified = await this.authService.verifyOtp(body.phone, body.code);
     if (!verified) {

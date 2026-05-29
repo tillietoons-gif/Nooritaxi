@@ -45,8 +45,10 @@ export class SafetyService {
   }
 
   async addContact(userId: string, data: CreateTrustedContactInput) {
-    if (!data.name?.trim()) throw new BadRequestException('Contact name is required');
-    if (!data.phone?.trim()) throw new BadRequestException('Contact phone is required');
+    if (!data.name?.trim())
+      throw new BadRequestException('Contact name is required');
+    if (!data.phone?.trim())
+      throw new BadRequestException('Contact phone is required');
 
     return this.prisma.trustedContact.upsert({
       where: { userId_phone: { userId, phone: data.phone.trim() } },
@@ -68,8 +70,11 @@ export class SafetyService {
   }
 
   async removeContact(userId: string, contactId: string) {
-    const contact = await this.prisma.trustedContact.findUnique({ where: { id: contactId } });
-    if (!contact || contact.userId !== userId) throw new NotFoundException('Trusted contact not found');
+    const contact = await this.prisma.trustedContact.findUnique({
+      where: { id: contactId },
+    });
+    if (!contact || contact.userId !== userId)
+      throw new NotFoundException('Trusted contact not found');
     await this.prisma.trustedContact.delete({ where: { id: contactId } });
     return { id: contactId, removed: true };
   }
@@ -82,10 +87,14 @@ export class SafetyService {
 
     if (data.tripId) {
       const trip = await this.prisma.trip.findFirst({
-        where: { id: data.tripId, OR: [{ customerId: userId }, { driverId: userId }] },
+        where: {
+          id: data.tripId,
+          OR: [{ customerId: userId }, { driverId: userId }],
+        },
         select: { id: true, safetyCode: true },
       });
-      if (!trip) throw new ForbiddenException('Trip is not assigned to this user');
+      if (!trip)
+        throw new ForbiddenException('Trip is not assigned to this user');
       resolvedTripId = trip.id;
       safetyCode = trip.safetyCode ?? undefined;
     }
@@ -127,7 +136,10 @@ export class SafetyService {
     // (Reuses the existing socket gateway if connected; falls through silently if not.)
     try {
       const adminDevices = await this.prisma.pushDevice.findMany({
-        where: { isActive: true, user: { role: { in: ['ADMIN', 'SUPPORT'] as any } } },
+        where: {
+          isActive: true,
+          user: { role: { in: ['ADMIN', 'SUPPORT'] as any } },
+        },
         select: { token: true },
       });
       if (adminDevices.length) {
@@ -135,11 +147,17 @@ export class SafetyService {
           adminDevices.map((d) => d.token),
           title,
           body,
-          { type: 'SOS', alertId: alert.id, ...(resolvedTripId ? { tripId: resolvedTripId } : {}) },
+          {
+            type: 'SOS',
+            alertId: alert.id,
+            ...(resolvedTripId ? { tripId: resolvedTripId } : {}),
+          },
         );
       }
     } catch (err) {
-      this.logger.error(`Failed to notify admins of SOS ${alert.id}: ${(err as Error).message}`);
+      this.logger.error(
+        `Failed to notify admins of SOS ${alert.id}: ${(err as Error).message}`,
+      );
     }
 
     await this.prisma.auditLog.create({
@@ -156,9 +174,12 @@ export class SafetyService {
   }
 
   async resolveSos(alertId: string, actorId: string, isStaff: boolean) {
-    const alert = await this.prisma.sosAlert.findUnique({ where: { id: alertId } });
+    const alert = await this.prisma.sosAlert.findUnique({
+      where: { id: alertId },
+    });
     if (!alert) throw new NotFoundException('SOS alert not found');
-    if (alert.userId !== actorId && !isStaff) throw new ForbiddenException('Cannot resolve another user SOS');
+    if (alert.userId !== actorId && !isStaff)
+      throw new ForbiddenException('Cannot resolve another user SOS');
     if (alert.status !== SosStatus.ACTIVE) return alert;
 
     const resolved = await this.prisma.sosAlert.update({
@@ -193,7 +214,8 @@ export class SafetyService {
   // ---------------- Public share ----------------
 
   async getPublicTripByCode(safetyCode: string) {
-    if (!safetyCode || safetyCode.length < 3) throw new NotFoundException('Trip not found');
+    if (!safetyCode || safetyCode.length < 3)
+      throw new NotFoundException('Trip not found');
 
     const trip = await this.prisma.trip.findFirst({
       where: { safetyCode },
@@ -223,17 +245,24 @@ export class SafetyService {
             },
           },
         },
-        vehicle: { select: { plateNumber: true, make: true, model: true, color: true } },
+        vehicle: {
+          select: { plateNumber: true, make: true, model: true, color: true },
+        },
       },
     });
 
     if (!trip) throw new NotFoundException('Trip not found');
 
     // Don't expose live driver location once the trip is over.
-    const isLive = trip.status !== TripStatus.COMPLETED && trip.status !== TripStatus.CANCELLED;
+    const isLive =
+      trip.status !== TripStatus.COMPLETED &&
+      trip.status !== TripStatus.CANCELLED;
     const driverLocation = isLive
       ? trip.driver?.driverProfile
-        ? { lat: trip.driver.driverProfile.currentLat, lng: trip.driver.driverProfile.currentLng }
+        ? {
+            lat: trip.driver.driverProfile.currentLat,
+            lng: trip.driver.driverProfile.currentLng,
+          }
         : null
       : null;
 
@@ -266,7 +295,11 @@ export class SafetyService {
       vehicle: trip.vehicle
         ? {
             plate: trip.vehicle.plateNumber,
-            description: [trip.vehicle.color, trip.vehicle.make, trip.vehicle.model]
+            description: [
+              trip.vehicle.color,
+              trip.vehicle.make,
+              trip.vehicle.model,
+            ]
               .filter(Boolean)
               .join(' '),
           }
@@ -275,7 +308,8 @@ export class SafetyService {
   }
 
   private buildShareUrl(safetyCode: string) {
-    const base = this.config.get<string>('WEB_PUBLIC_URL') ?? 'https://noori.app';
+    const base =
+      this.config.get<string>('WEB_PUBLIC_URL') ?? 'https://noori.app';
     return `${base.replace(/\/$/, '')}/share/${safetyCode}`;
   }
 }

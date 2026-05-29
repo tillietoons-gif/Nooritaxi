@@ -39,7 +39,11 @@ export class UsersService {
     });
   }
 
-  async verifyKycDocument(documentId: string, status: DocumentStatus, adminId: string) {
+  async verifyKycDocument(
+    documentId: string,
+    status: DocumentStatus,
+    adminId: string,
+  ) {
     const document = await this.prisma.driverDocument.update({
       where: { id: documentId },
       data: {

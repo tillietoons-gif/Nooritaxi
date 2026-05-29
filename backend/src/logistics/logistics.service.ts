@@ -12,8 +12,12 @@ export class LogisticsService {
   async createDelivery(data: any) {
     const driver = data.driverId
       ? null
-      : await this.dispatch.findNearestOnlineDriver(data.pickupLat ?? 0, data.pickupLng ?? 0, 10);
-    
+      : await this.dispatch.findNearestOnlineDriver(
+          data.pickupLat ?? 0,
+          data.pickupLng ?? 0,
+          10,
+        );
+
     const delivery = await this.prisma.delivery.create({
       data: {
         ...data,
@@ -24,8 +28,14 @@ export class LogisticsService {
       },
       include: { order: true, driver: true, vehicle: true },
     });
-    
-    await this.audit('DELIVERY_CREATED', 'Delivery', delivery.id, data.senderId, delivery);
+
+    await this.audit(
+      'DELIVERY_CREATED',
+      'Delivery',
+      delivery.id,
+      data.senderId,
+      delivery,
+    );
     return delivery;
   }
 
@@ -42,13 +52,34 @@ export class LogisticsService {
   async updateDelivery(id: string, data: any) {
     const before = await this.prisma.delivery.findUnique({ where: { id } });
     const delivery = await this.prisma.delivery.update({ where: { id }, data });
-    await this.audit('DELIVERY_UPDATED', 'Delivery', id, data.actorId, delivery, before);
+    await this.audit(
+      'DELIVERY_UPDATED',
+      'Delivery',
+      id,
+      data.actorId,
+      delivery,
+      before,
+    );
     return delivery;
   }
 
-  private async audit(action: string, entityType: string, entityId?: string, actorId?: string, after?: any, before?: any) {
+  private async audit(
+    action: string,
+    entityType: string,
+    entityId?: string,
+    actorId?: string,
+    after?: any,
+    before?: any,
+  ) {
     await this.prisma.auditLog.create({
-      data: { action, entityType, entityId, actorId, before: before ?? undefined, after: after ?? undefined },
+      data: {
+        action,
+        entityType,
+        entityId,
+        actorId,
+        before: before ?? undefined,
+        after: after ?? undefined,
+      },
     });
   }
 }

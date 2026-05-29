@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { ShieldCheck, LayoutDashboard, Car, Bell, Search } from "lucide-react"
+import { ShieldCheck, LayoutDashboard, Car, Bell, Search, X } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -12,6 +12,7 @@ import { fetchMe, getStoredUser, type AuthUser } from "@/lib/auth"
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(() => getStoredUser())
+  const [search, setSearch] = useState("")
 
   useEffect(() => {
     fetchMe().then((currentUser) => {
@@ -52,8 +53,30 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </aside>
       <div className="flex-1 lg:pl-64">
         <header className="h-16 border-b bg-card sticky top-0 z-30 flex items-center justify-between px-4 lg:px-8">
-           <div className="relative w-full max-w-md hidden md:block"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Search..." className="pl-10 bg-muted/50 border-none h-10" /></div>
-           <div className="flex items-center gap-2"><Button variant="ghost" size="icon"><Bell className="h-5 w-5" /></Button><Button variant="ghost" size="sm" className="font-semibold text-primary">Help</Button></div>
+           <div className="relative w-full max-w-md hidden md:block">
+             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+             <Input
+               placeholder="Search..."
+               className="pl-10 pr-10 bg-muted/50 border-none h-10"
+               value={search}
+               onChange={(e) => setSearch(e.target.value)}
+             />
+             {search && (
+               <button
+                 onClick={() => setSearch("")}
+                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none"
+                 aria-label="Clear search"
+               >
+                 <X className="h-4 w-4" />
+               </button>
+             )}
+           </div>
+           <div className="flex items-center gap-2">
+             <Button variant="ghost" size="icon" aria-label="Notifications">
+               <Bell className="h-5 w-5" />
+             </Button>
+             <Button variant="ghost" size="sm" className="font-semibold text-primary">Help</Button>
+           </div>
         </header>
         <main className="p-4 lg:p-8 max-w-7xl mx-auto">{children}</main>
       </div>

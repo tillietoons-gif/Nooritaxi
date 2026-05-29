@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TextInput, TouchableOpacity, SafeAreaView, ScrollView } from 'react-native';
-import { ShieldCheck, User, Phone, Lock } from 'lucide-react-native';
+import { ShieldCheck, User, Phone, Lock, Eye, EyeOff } from 'lucide-react-native';
 import { Link, router } from 'expo-router';
 import { register } from '../../lib/api';
 
@@ -10,6 +10,7 @@ export default function RegisterScreen() {
   const [password, setPassword] = React.useState('');
   const [message, setMessage] = React.useState('');
   const [loading, setLoading] = React.useState(false);
+  const [showPassword, setShowPassword] = React.useState(false);
 
   async function submit() {
     setMessage('');
@@ -54,7 +55,16 @@ export default function RegisterScreen() {
             <Text className="text-xs font-bold text-muted-foreground uppercase mb-2 ml-1">Password</Text>
             <View className="flex-row items-center bg-muted/30 h-14 px-4 rounded-xl">
                <Lock size={20} color="#6d7a71" />
-               <TextInput value={password} onChangeText={setPassword} placeholder="Create a secure password" secureTextEntry className="flex-1 ml-3 text-base" />
+               <TextInput
+                 value={password}
+                 onChangeText={setPassword}
+                 placeholder="Create a secure password"
+                 secureTextEntry={!showPassword}
+                 className="flex-1 ml-3 text-base"
+               />
+               <TouchableOpacity onPress={() => setShowPassword(!showPassword)} className="p-2">
+                 {showPassword ? <EyeOff size={20} color="#6d7a71" /> : <Eye size={20} color="#6d7a71" />}
+               </TouchableOpacity>
             </View>
           </View>
 

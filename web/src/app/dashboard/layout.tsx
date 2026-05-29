@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { ShieldCheck, LayoutDashboard, Car, Package, Bell, Search, Store, Users, Activity } from "lucide-react"
+import { ShieldCheck, LayoutDashboard, Car, Bell, Search } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -21,21 +21,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     })
   }, [])
 
-  const isAdminWorkspace = user?.role === "ADMIN" || user?.role === "SUPPORT"
-  const sidebarItems = isAdminWorkspace
-    ? [
-        { name: "Overview", icon: <LayoutDashboard className="h-5 w-5" />, href: "/admin" },
-        { name: "Trips", icon: <Car className="h-5 w-5" />, href: "/admin/trips" },
-        { name: "Orders", icon: <Store className="h-5 w-5" />, href: "/admin/orders" },
-        { name: "Deliveries", icon: <Package className="h-5 w-5" />, href: "/admin/deliveries" },
-        { name: "Users", icon: <Users className="h-5 w-5" />, href: "/admin/users" },
-        { name: "Surge", icon: <Activity className="h-5 w-5" />, href: "/admin/surge" },
-      ]
-    : [
-        { name: "Overview", icon: <LayoutDashboard className="h-5 w-5" />, href: "/dashboard" },
-        { name: "Book", icon: <Car className="h-5 w-5" />, href: "/book" },
-        { name: "Safety", icon: <ShieldCheck className="h-5 w-5" />, href: "/safety" },
-      ]
+  useEffect(() => {
+    if (user?.role === "ADMIN" || user?.role === "SUPPORT") {
+      window.location.href = "/admin"
+    }
+  }, [user?.role])
+
+  const sidebarItems = [
+    { name: "Overview", icon: <LayoutDashboard className="h-5 w-5" />, href: "/dashboard" },
+    { name: "Book", icon: <Car className="h-5 w-5" />, href: "/book" },
+    { name: "Safety", icon: <ShieldCheck className="h-5 w-5" />, href: "/safety" },
+  ]
+
+  if (user?.role === "ADMIN" || user?.role === "SUPPORT") {
+    return null
+  }
+
   return (
     <AuthGate>
     <div className="flex min-h-screen bg-muted/30">

@@ -2,6 +2,9 @@
 
 import { AuthGate } from "@/components/auth-gate"
 import { AdminListPage, StatusBadge } from "@/components/admin/admin-list-page"
+import { Button } from "@/components/ui/button"
+import { authedFetch } from "@/lib/auth"
+import { useState } from "react"
 
 type Trip = {
   id: string
@@ -25,9 +28,26 @@ const TRIP_STATUSES = [
 ]
 
 export default function AdminTripsPage() {
+  const [refreshKey, setRefreshKey] = useState(0)
+
+  async function cancelTrip(id: string) {
+    if (!confirm(`Cancel trip ${id}?`)) return
+    try {
+      const res = await authedFetch(`/admin/trips/${id}/status`, { 
+        method: "PATCH",
+        body: JSON.stringify({ status: "CANCELLED" }) 
+      })
+      if (!res.ok) throw new Error("Failed to cancel trip")
+      setRefreshKey((k) => k + 1)
+    } catch (err) {
+      alert((err as Error).message)
+    }
+  }
+
   return (
     <AuthGate roles={["ADMIN", "SUPPORT"]}>
       <AdminListPage<Trip>
+        key={refreshKey}
         title="Trips"
         endpoint="/admin/trips"
         statusOptions={TRIP_STATUSES}
@@ -72,6 +92,16 @@ export default function AdminTripsPage() {
             key: "createdAt",
             header: "Created",
             render: (r) => new Date(r.createdAt).toLocaleString(),
+          },
+          {
+            key: "actions",
+            header: "Actions",
+            render: (r) =>
+              r.status !== "CANCELLED" && r.status !== "COMPLETED" ? (
+                <Button variant="destructive" size="sm" onClick={() => cancelTrip(r.id)}>
+                  Cancel
+                </Button>
+              ) : null,
           },
         ]}
       />

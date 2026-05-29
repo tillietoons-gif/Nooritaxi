@@ -14,7 +14,8 @@ import { CurrentUser } from '../auth/current-user.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
-import { CreateTrustedContactInput, RaiseSosInput, SafetyService } from './safety.service';
+import type { CreateTrustedContactInput, RaiseSosInput } from './safety.service';
+import { SafetyService } from './safety.service';
 
 @Controller()
 export class SafetyController {

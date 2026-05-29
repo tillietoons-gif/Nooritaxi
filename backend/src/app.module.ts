@@ -17,6 +17,7 @@ import { DispatchModule } from './dispatch/dispatch.module';
 import { PaymentsModule } from './payments/payments.module';
 import { SafetyModule } from './safety/safety.module';
 import { AdminModule } from './admin/admin.module';
+import { SurgeModule } from './surge/surge.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 @Module({
@@ -36,6 +37,7 @@ import { AppService } from './app.service';
     PaymentsModule,
     SafetyModule,
     AdminModule,
+    SurgeModule,
   ],
   providers: [
     AppService,

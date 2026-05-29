@@ -1,0 +1,82 @@
+{
+  "food": {
+    "title": "سفارش غذا",
+    "hero_heading": "چیزی می‌خواهید؟",
+    "hero_subtitle": "از رستوران‌های محلی سفارش دهید و سریع تحویل بگیرید.",
+    "order_now": "سفارش بده",
+    "featured_restaurants": "رستوران‌های برتر",
+    "see_all": "همه",
+    "no_restaurants": "رستورانی موجود نیست",
+    "free_delivery": "ارسال رایگان",
+    "min_suffix": "-40 دقیقه"
+  },
+  "wallet": {
+    "title": "کیف پول",
+    "available_balance": "موجودی",
+    "top_up": "شارژ",
+    "recent_transactions": "تراکنش‌های اخیر",
+    "no_activity": "هنوز فعالیتی ندارید",
+    "amount_placeholder": "مقدار (AFN)",
+    "added": "{{amount}} AFN افزوده شد",
+    "invalid_amount": "مقدار معتبر وارد کنید (AFN > 0)"
+  },
+  "trips": {
+    "title": "سفرهای شما",
+    "book": "رزرو",
+    "track_active": "پیگیری سفر فعال",
+    "no_trips": "هنوز سفری نداشتید",
+    "no_trips_subtitle": "اولین سفر نوری خود را رزرو کنید."
+  },
+  "profile": {
+    "title": "پروفایل",
+    "safety_center": "مرکز ایمنی",
+    "safety_subtitle": "مدیریت مخاطبین اضطراری",
+    "notifications": "اعلان‌ها",
+    "language": "زبان",
+    "language_subtitle": "انگلیسی، دری، پشتو",
+    "help": "پشتیبانی",
+    "help_subtitle": "۲۴/۷",
+    "driver_verification": "تأیید راننده",
+    "driver_verification_subtitle": "آپلود اسناد",
+    "logout": "خروج",
+    "version": "نوری موبایل نسخه ۱.۰.۰",
+    "referral": "دعوت و درآمد",
+    "referral_subtitle": "کد خود را به اشتراک بگذارید و ۵۰ AFN دریافت کنید"
+  },
+  "common": {
+    "loading": "در حال بارگذاری…",
+    "error": "خطایی رخ داد",
+    "confirm": "تأیید",
+    "cancel": "لغو",
+    "save": "ذخیره",
+    "close": "بستن",
+    "share": "اشتراک",
+    "copied": "کپی شد!"
+  },
+  "book_ride": {
+    "title": "رزرو سفر",
+    "pickup_placeholder": "محل سوار شدن",
+    "destination_placeholder": "مقصد",
+    "fare_preview": "تخمین کرایه",
+    "enter_trip": "مسیر وارد کنید",
+    "estimate_note": "تخمین بر اساس مسافت شهری.",
+    "safety_code": "کد ایمنی",
+    "confirm_ride": "تأیید سفر",
+    "confirming": "در حال تأیید..."
+  },
+  "notifications": {
+    "title": "اعلان‌ها",
+    "no_notifications": "هنوز اعلانی ندارید",
+    "no_notifications_subtitle": "همه چیز آرام است!"
+  },
+  "delivery": {
+    "title": "ارسال بسته",
+    "pickup_address": "آدرس تحویل",
+    "dropoff_address": "آدرس مقصد",
+    "package_type": "نوع بسته",
+    "weight": "وزن (کیلوگرم)",
+    "fare_estimate": "تخمین هزینه",
+    "submit": "درخواست",
+    "submitting": "در حال ارسال..."
+  }
+}

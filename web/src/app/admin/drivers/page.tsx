@@ -23,6 +23,7 @@ export default function AdminDriversPage() {
         endpoint="/admin/drivers"
         statusOptions={DRIVER_STATUSES}
         searchPlaceholder="Search by name, phone, license…"
+        rowHref={(r) => `/admin/drivers/${r.id}`}
         rowKey={(r) => r.id}
         columns={[
           { key: "name", header: "Name", render: (r) => r.user?.name ?? "—" },

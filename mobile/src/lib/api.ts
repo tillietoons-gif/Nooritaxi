@@ -75,6 +75,7 @@ export type Restaurant = {
   ratingAverage: number;
   deliveryRadius?: number;
   imageUrl?: string;
+  avgPrepMinutes?: number;
 };
 
 export type MenuItem = {
@@ -283,4 +284,17 @@ export async function resolveSos(alertId: string) {
     method: 'PATCH',
   });
   return readJson<{ id: string; status: string }>(response, 'Unable to resolve SOS');
+}
+
+export async function getRestaurant(id: string) {
+  const response = await apiFetch(`/restaurants/${encodeURIComponent(id)}`);
+  return readJson<Restaurant & { menu: MenuItem[] }>(response, 'Unable to get restaurant');
+}
+
+export async function placeOrder(payload: any) {
+  const response = await apiFetch('/orders', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+  return readJson<{ id: string; status: string }>(response, 'Unable to place order');
 }

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TextInput, TouchableOpacity, SafeAreaView, ScrollView } from 'react-native';
 import { router } from 'expo-router';
+import * as Location from 'expo-location';
 import { Car, MapPin, Navigation, ShieldCheck } from 'lucide-react-native';
 import { bookRide, getRideEstimate, getStoredUser, RideEstimate } from '../lib/api';
 
@@ -11,6 +12,20 @@ export default function BookRideScreen() {
   const [safetyCode, setSafetyCode] = React.useState('');
   const [message, setMessage] = React.useState('');
   const [loading, setLoading] = React.useState(false);
+
+  React.useEffect(() => {
+    (async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') return;
+      try {
+        let location = await Location.getCurrentPositionAsync({});
+        // Mock reverse geocoding for now. In a real app we'd convert lat/lng to a string.
+        setPickupLocation('Current Location');
+      } catch (e) {
+        console.log('Location error:', e);
+      }
+    })();
+  }, []);
 
   React.useEffect(() => {
     if (!pickupLocation || !dropoffLocation) {

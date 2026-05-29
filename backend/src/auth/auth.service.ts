@@ -5,7 +5,10 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { Prisma, User, UserStatus } from '@prisma/client';
 import { PrismaService } from '../prisma.service';
+import { WalletService } from '../wallet/wallet.service';
 import { randomBytes, randomInt } from 'crypto';
+
+const REFERRAL_CREDIT_AFN = 50;
 
 @Injectable()
 export class AuthService {
@@ -14,6 +17,7 @@ export class AuthService {
     private jwtService: JwtService,
     private prisma: PrismaService,
     private configService: ConfigService,
+    private walletService: WalletService,
   ) {}
 
   async validateUser(phone: string, pass: string): Promise<any> {
@@ -89,12 +93,33 @@ export class AuthService {
 
   async register(data: any) {
     const hashedPassword = await bcrypt.hash(data.password, 10);
+
+    // Resolve referredBy from incoming referral code (different from the new user's own code)
+    let referredById: string | undefined;
+    if (data.referredByCode) {
+      const referrer = await this.prisma.user.findUnique({ where: { referralCode: data.referredByCode } });
+      if (referrer) referredById = referrer.id;
+    }
+
     const user = await this.usersService.create({
       ...data,
       password: hashedPassword,
-      referralCode: data.referralCode ?? this.createReferralCode(data.phone),
+      referralCode: this.createReferralCode(data.phone),
+      referredById,
       status: data.status ?? 'ACTIVE',
     });
+
+    // Award referral credits
+    if (referredById) {
+      const key = `referral:${referredById}:${user.id}`;
+      await Promise.allSettled([
+        this.walletService.deposit(user.id, REFERRAL_CREDIT_AFN, 'CUSTOMER', 'AFN',
+          `${key}:new-user`, { transactionType: 'REFERRAL_CREDIT', description: 'Referral welcome bonus' }),
+        this.walletService.deposit(referredById, REFERRAL_CREDIT_AFN, 'CUSTOMER', 'AFN',
+          `${key}:referrer`, { transactionType: 'REFERRAL_CREDIT', description: 'Referral reward' }),
+      ]);
+    }
+
     return this.login(user);
   }
 

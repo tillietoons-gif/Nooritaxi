@@ -1,0 +1,82 @@
+{
+  "food": {
+    "title": "د خوړو سپارنه",
+    "hero_heading": "یو شی غواړئ؟",
+    "hero_subtitle": "د ځایی رستورانونو څخه آرډر کړئ او ژر تحویل واخلئ.",
+    "order_now": "اوس آرډر کړئ",
+    "featured_restaurants": "غوره رستورانونه",
+    "see_all": "ټول وګورئ",
+    "no_restaurants": "هیڅ رستوران شتون نلري",
+    "free_delivery": "وړیا سپارنه",
+    "min_suffix": "-40 دقیقه"
+  },
+  "wallet": {
+    "title": "بټوه",
+    "available_balance": "شتمنه",
+    "top_up": "چارج",
+    "recent_transactions": "وروستۍ معاملې",
+    "no_activity": "لاهم هیڅ فعالیت نشته",
+    "amount_placeholder": "مقدار (AFN)",
+    "added": "{{amount}} AFN اضافه شو",
+    "invalid_amount": "سمه مقدار دننه کړئ (AFN > 0)"
+  },
+  "trips": {
+    "title": "ستاسې سفرونه",
+    "book": "بک کړئ",
+    "track_active": "فعال سفر تعقیب کړئ",
+    "no_trips": "لاهم سفر نه دی کړی",
+    "no_trips_subtitle": "خپل لومړنی نوري سفر بک کړئ."
+  },
+  "profile": {
+    "title": "پروفایل",
+    "safety_center": "د خوندیتوب مرکز",
+    "safety_subtitle": "د بیړني مخاطبینو مدیریت",
+    "notifications": "خبرتیاوې",
+    "language": "ژبه",
+    "language_subtitle": "انګلیسي، دري، پښتو",
+    "help": "مرسته او ملاتړ",
+    "help_subtitle": "۲۴/۷",
+    "driver_verification": "د ډرایور تصدیق",
+    "driver_verification_subtitle": "اسناد اپلوډ کړئ",
+    "logout": "وتل",
+    "version": "نوري ګرځنده نسخه ۱.۰.۰",
+    "referral": "بلنه او عاید",
+    "referral_subtitle": "خپل کوډ شریک کړئ او ۵۰ AFN ترلاسه کړئ"
+  },
+  "common": {
+    "loading": "بار کیږي…",
+    "error": "یوه ستونزه رامنځته شوه",
+    "confirm": "تایید",
+    "cancel": "لغو",
+    "save": "خوندي کړئ",
+    "close": "بندول",
+    "share": "شریکول",
+    "copied": "کاپي شو!"
+  },
+  "book_ride": {
+    "title": "سفر بک کړئ",
+    "pickup_placeholder": "د سپرلو ځای",
+    "destination_placeholder": "مقصد",
+    "fare_preview": "د کرایې اټکل",
+    "enter_trip": "لار دننه کړئ",
+    "estimate_note": "د ښار فاصلې پراساس اټکل.",
+    "safety_code": "د خوندیتوب کوډ",
+    "confirm_ride": "سفر تایید کړئ",
+    "confirming": "تایید کیږي..."
+  },
+  "notifications": {
+    "title": "خبرتیاوې",
+    "no_notifications": "لاهم هیڅ خبرتیا نشته",
+    "no_notifications_subtitle": "هر شی سم دی!"
+  },
+  "delivery": {
+    "title": "بسته لیږل",
+    "pickup_address": "د تحویلۍ پته",
+    "dropoff_address": "د مقصد پته",
+    "package_type": "د بسته ډول",
+    "weight": "وزن (کیلوګرام)",
+    "fare_estimate": "د لګښت اټکل",
+    "submit": "غوښتنه",
+    "submitting": "لیږل کیږي..."
+  }
+}

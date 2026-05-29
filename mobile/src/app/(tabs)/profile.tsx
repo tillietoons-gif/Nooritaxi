@@ -28,6 +28,7 @@ export default function ProfileScreen() {
     { id: 'safety', icon: <Shield size={22} color="#006947" />, title: 'Safety Center', subtitle: 'Manage emergency contacts and trip codes' },
     { id: 'notifications', icon: <Bell size={22} color="#006947" />, title: 'Notifications', subtitle: `${notificationCount} recent alerts` },
     { id: 'language', icon: <Globe size={22} color="#006947" />, title: 'Language', subtitle: 'English, Dari, Pashto' },
+    { id: 'referral', icon: <User size={22} color="#006947" />, title: 'Refer a Friend', subtitle: 'Share code and earn rewards' },
     { id: 'help', icon: <HelpCircle size={22} color="#006947" />, title: 'Help & Support', subtitle: '24/7 Assistance' },
     ...(user?.role === 'DRIVER' ? [{ id: 'kyc', icon: <User size={22} color="#006947" />, title: 'Driver Verification', subtitle: 'Upload required documents' }] : []),
   ];
@@ -38,10 +39,13 @@ export default function ProfileScreen() {
         router.push('/driver-kyc');
         break;
       case 'safety':
-        Alert.alert('Coming Soon', 'Safety Center will be available soon.');
+        Alert.alert('Safety Center', 'Safety Center will be available soon.');
         break;
       case 'notifications':
-        Alert.alert('Coming Soon', 'Notifications screen will be available soon.');
+        router.push('/notifications');
+        break;
+      case 'referral':
+        Alert.alert('Refer a Friend', `Your Referral Code: REF-${user?.phone?.slice(-4) ?? '1234'}\n\nShare this code with friends to earn AFN 50 when they complete their first ride!`);
         break;
       case 'language':
         Alert.alert('Coming Soon', 'Language selection will be available soon.');

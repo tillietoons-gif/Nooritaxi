@@ -2,8 +2,11 @@ import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, TextInput } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { Wallet, Plus, ArrowUpRight, ArrowDownRight, CreditCard } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { getStoredUser, getTransactions, getWalletBalance, topUpWallet, WalletTransaction } from '../../lib/api';
 
+export default function WalletScreen() {
+  const { t } = useTranslation();
   const [balance, setBalance] = React.useState('0');
   const [transactions, setTransactions] = React.useState<WalletTransaction[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -47,13 +50,13 @@ import { getStoredUser, getTransactions, getWalletBalance, topUpWallet, WalletTr
     if (!userId) return;
     const amount = Number(topUpAmount);
     if (!topUpAmount || isNaN(amount) || amount <= 0) {
-      setInputError('Enter a valid amount (AFN > 0)');
+      setInputError(t('wallet.invalid_amount'));
       return;
     }
     try {
       await topUpWallet(userId, amount);
       await loadWallet();
-      setMessage(`Added AFN ${amount}`);
+      setMessage(t('wallet.added', { amount }));
       setTopUpAmount('');
     } catch (err) {
       setMessage((err as Error).message);
@@ -63,18 +66,18 @@ import { getStoredUser, getTransactions, getWalletBalance, topUpWallet, WalletTr
   return (
     <SafeAreaView className="flex-1 bg-background">
       <View className="px-4 py-6">
-        <Text className="text-2xl font-bold text-primary mb-6">Wallet</Text>
+        <Text className="text-2xl font-bold text-primary mb-6">{t('wallet.title')}</Text>
 
         <View className="bg-primary p-8 rounded-[32px] shadow-xl shadow-primary/30 mb-8 overflow-hidden relative">
           <View className="relative z-10">
-            <Text className="text-white/70 text-sm font-medium mb-1">Available Balance</Text>
+            <Text className="text-white/70 text-sm font-medium mb-1">{t('wallet.available_balance')}</Text>
             <Text className="text-white text-4xl font-bold">{loading ? '...' : `${balance} AFN`}</Text>
 
             <View className="flex-row gap-4 mt-8 items-center">
               <TextInput
                 value={topUpAmount}
                 onChangeText={setTopUpAmount}
-                placeholder="Amount (AFN)"
+                placeholder={t('wallet.amount_placeholder')}
                 keyboardType="numeric"
                 className="bg-white/20 text-white px-4 py-3 rounded-xl w-32 text-base font-bold mr-2"
                 placeholderTextColor="#e0e7e3"
@@ -82,7 +85,7 @@ import { getStoredUser, getTransactions, getWalletBalance, topUpWallet, WalletTr
               />
               <TouchableOpacity onPress={topUp} className="bg-white/20 px-6 py-3 rounded-xl flex-row items-center gap-2">
                 <Plus size={20} color="white" />
-                <Text className="text-white font-bold">Top Up</Text>
+                <Text className="text-white font-bold">{t('wallet.top_up')}</Text>
               </TouchableOpacity>
               <TouchableOpacity className="bg-white/20 p-3 rounded-xl">
                 <CreditCard size={20} color="white" />
@@ -96,14 +99,14 @@ import { getStoredUser, getTransactions, getWalletBalance, topUpWallet, WalletTr
         </View>
 
         {message ? <Text className="mb-4 text-sm text-muted-foreground">{message}</Text> : null}
-        <Text className="text-lg font-bold mb-4">Recent Transactions</Text>
+        <Text className="text-lg font-bold mb-4">{t('wallet.recent_transactions')}</Text>
         <ScrollView className="space-y-4">
           {loading ? (
             [1, 2, 3].map((item) => <View key={item} className="h-20 bg-muted/30 rounded-2xl" />)
           ) : transactions.length === 0 ? (
             <View className="items-center py-10">
               <Wallet size={34} color="#6d7a71" />
-              <Text className="mt-3 font-bold">No wallet activity yet</Text>
+              <Text className="mt-3 font-bold">{t('wallet.no_activity')}</Text>
             </View>
           ) : (
             transactions.map((tx) => {

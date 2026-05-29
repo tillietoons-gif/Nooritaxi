@@ -2,6 +2,10 @@ import React from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import '../global.css';
+import { initI18n } from '../lib/i18n';
+
+// Initialize i18n before rendering anything
+initI18n().catch(console.error);
 
 export default function RootLayout() {
   return (
@@ -13,6 +17,9 @@ export default function RootLayout() {
         <Stack.Screen name="book-ride" options={{ headerShown: true, title: 'Book a Ride', presentation: 'modal' }} />
         <Stack.Screen name="active-trip" options={{ headerShown: true, title: 'Active Trip' }} />
         <Stack.Screen name="driver-kyc" options={{ headerShown: true, title: 'Driver Verification' }} />
+        <Stack.Screen name="restaurant/[id]" options={{ headerShown: true, title: 'Menu', presentation: 'card' }} />
+        <Stack.Screen name="checkout" options={{ headerShown: true, title: 'Checkout', presentation: 'modal' }} />
+        <Stack.Screen name="delivery" options={{ headerShown: true, title: 'Send a Parcel', presentation: 'modal' }} />
       </Stack>
     </>
   );

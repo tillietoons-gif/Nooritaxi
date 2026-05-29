@@ -1,7 +1,23 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { PushService } from '../push/push.service';
 import { WalletService } from '../wallet/wallet.service';
+
+// Loyalty tier thresholds (lifetime points)
+const LOYALTY_TIERS = [
+  { tier: 'PLATINUM', min: 5000 },
+  { tier: 'GOLD', min: 2000 },
+  { tier: 'SILVER', min: 500 },
+  { tier: 'BRONZE', min: 100 },
+  { tier: 'NOORI', min: 0 },
+] as const;
+
+function computeTier(lifetime: number): string {
+  for (const { tier, min } of LOYALTY_TIERS) {
+    if (lifetime >= min) return tier;
+  }
+  return 'NOORI';
+}
 
 @Injectable()
 export class SuperAppService {
@@ -46,16 +62,69 @@ export class SuperAppService {
     });
   }
 
-  redeemPromotion(data: any) {
-    return this.prisma.promotionRedemption.create({ data });
+  async redeemPromotion(data: { code: string; userId: string; orderId?: string; tripId?: string; spend?: number }) {
+    const { code, userId, orderId, tripId, spend } = data;
+
+    const promo = await this.prisma.promotion.findUnique({ where: { code } });
+    if (!promo) throw new BadRequestException('Promotion code not found');
+    if (!promo.isActive) throw new BadRequestException('Promotion is not active');
+    const now = new Date();
+    if (promo.startsAt > now) throw new BadRequestException('Promotion has not started yet');
+    if (promo.endsAt < now) throw new BadRequestException('Promotion has expired');
+
+    // Check spend minimum
+    if (promo.minSpend && spend != null && spend < Number(promo.minSpend)) {
+      throw new BadRequestException(`Minimum spend of ${promo.minSpend} required`);
+    }
+
+    // Check total usage limit
+    if (promo.usageLimit != null) {
+      const totalUses = await this.prisma.promotionRedemption.count({ where: { promotionId: promo.id } });
+      if (totalUses >= promo.usageLimit) throw new BadRequestException('Promotion usage limit reached');
+    }
+
+    // Check per-user limit
+    const userUses = await this.prisma.promotionRedemption.count({ where: { promotionId: promo.id, userId } });
+    if (userUses >= promo.perUserLimit) throw new BadRequestException('You have already used this promotion');
+
+    // Compute discount
+    let discount = Number(promo.value);
+    if (promo.type === 'PERCENTAGE' && spend != null) {
+      discount = Math.min((spend * Number(promo.value)) / 100, promo.maxDiscount ? Number(promo.maxDiscount) : Infinity);
+    }
+
+    const redemption = await this.prisma.promotionRedemption.create({
+      data: { promotionId: promo.id, userId, orderId, tripId, discount },
+    });
+
+    // Credit wallet for WALLET_CREDIT type promos
+    if (promo.type === 'WALLET_CREDIT') {
+      await this.wallet.deposit(userId, discount, 'CUSTOMER', 'AFN',
+        `promo:${promo.id}:${userId}`,
+        { transactionType: 'PROMO_CREDIT', description: `Promo credit: ${promo.code}` },
+      );
+    }
+
+    return { redemption, discount };
   }
 
-  upsertLoyalty(userId: string, points: number) {
-    return this.prisma.loyaltyAccount.upsert({
+  async upsertLoyalty(userId: string, points: number) {
+    const updated = await this.prisma.loyaltyAccount.upsert({
       where: { userId },
-      update: { points: { increment: points }, lifetime: { increment: Math.max(points, 0) } },
+      update: {
+        points: { increment: points },
+        lifetime: { increment: Math.max(points, 0) },
+      },
       create: { userId, points, lifetime: Math.max(points, 0) },
     });
+
+    // Compute and persist tier from updated lifetime
+    const newTier = computeTier(updated.lifetime);
+    if (newTier !== updated.tier) {
+      await this.prisma.loyaltyAccount.update({ where: { userId }, data: { tier: newTier } });
+      return { ...updated, tier: newTier };
+    }
+    return updated;
   }
 
   async createNotification(data: any) {
@@ -161,7 +230,7 @@ export class SuperAppService {
     );
   }
 
-  private async audit(action: string, entityType: string, entityId?: string, actorId?: string, after?: any, before?: any) {
+  async audit(action: string, entityType: string, entityId?: string, actorId?: string, after?: any, before?: any) {
     await this.prisma.auditLog.create({
       data: {
         action,

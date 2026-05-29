@@ -1,8 +1,9 @@
-import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Query, UseGuards } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
+import { CurrentUser } from '../auth/current-user.decorator';
 import { AdminService } from './admin.service';
 
 @Controller('admin')
@@ -89,5 +90,47 @@ export class AdminController {
     @Query('role') role?: string,
   ) {
     return this.admin.listUsers({ ...this.parseListArgs(status, q, page, limit), role });
+  }
+
+  // ---- Action endpoints ----
+
+  @Patch('trips/:id/status')
+  updateTripStatus(@Param('id') id: string, @Body('status') status: string, @CurrentUser() actor: any) {
+    return this.admin.updateTripStatus(id, status, actor?.userId);
+  }
+
+  @Patch('orders/:id/status')
+  updateOrderStatus(@Param('id') id: string, @Body('status') status: string, @CurrentUser() actor: any) {
+    return this.admin.updateOrderStatus(id, status, actor?.userId);
+  }
+
+  @Patch('users/:id/status')
+  updateUserStatus(@Param('id') id: string, @Body('status') status: string, @CurrentUser() actor: any) {
+    return this.admin.updateUserStatus(id, status, actor?.userId);
+  }
+
+  @Get('drivers/:id/documents')
+  listDriverDocuments(@Param('id') driverId: string) {
+    return this.admin.listDriverDocuments(driverId);
+  }
+
+  @Patch('drivers/:id/documents/:docId')
+  updateDocumentStatus(
+    @Param('id') driverId: string,
+    @Param('docId') docId: string,
+    @Body('status') status: string,
+    @CurrentUser() actor: any,
+  ) {
+    return this.admin.updateDocumentStatus(driverId, docId, status, actor?.userId);
+  }
+
+  @Get('sos')
+  listActiveSos() {
+    return this.admin.listActiveSos();
+  }
+
+  @Patch('sos/:id/resolve')
+  resolveSos(@Param('id') alertId: string, @CurrentUser() actor: any) {
+    return this.admin.resolveSos(alertId, actor?.userId);
   }
 }

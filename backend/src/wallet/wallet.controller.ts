@@ -60,7 +60,7 @@ export class WalletController {
     if (user?.id !== userId && user?.role !== UserRole.ADMIN) {
       throw new ForbiddenException('Cannot top up another user wallet');
     }
-    return this.paymentsService.createPaymentIntent(userId, body.amount, body.currency ?? 'AFN', body.provider);
+    return this.paymentsService.createIntent({ userId, amount: body.amount, currency: body.currency ?? 'AFN', provider: body.provider });
   }
 
   @Post(':userId/topup/verify')

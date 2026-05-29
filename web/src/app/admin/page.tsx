@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { BodyMd, HeadingMd } from "@/components/ui/typography"
-import { Car, Headphones, Package, RefreshCw, ShieldCheck, Store, Users, ArrowRight } from "lucide-react"
+import { Car, Headphones, Package, RefreshCw, ShieldCheck, Store, Users, ArrowRight, Activity } from "lucide-react"
 import { AuthGate } from "@/components/auth-gate"
 import Link from "next/link"
 import { authedFetch } from "@/lib/auth"
@@ -61,6 +61,7 @@ async function fetchJson<T>(path: string, fallback: T): Promise<{ data: T; error
 export default function AdminPage() {
   const [overview, setOverview] = useState<Overview>(EMPTY_OVERVIEW)
   const [openTickets, setOpenTickets] = useState<SupportTicket[]>([])
+  const [sosAlerts, setSosAlerts] = useState<any[]>([])
   const [errors, setErrors] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [ticketsPage, setTicketsPage] = useState(1)
@@ -68,17 +69,19 @@ export default function AdminPage() {
   const load = useCallback(
     async (page = 1) => {
       setLoading(true)
-      const [overviewResult, ticketsResult] = await Promise.all([
+      const [overviewResult, ticketsResult, sosResult] = await Promise.all([
         fetchJson<Overview>("/admin/overview", EMPTY_OVERVIEW),
         fetchJson<SupportTicket[]>(
           `/support/tickets?status=OPEN&page=${page}&limit=${TICKETS_PER_PAGE}`,
           [],
         ),
+        fetchJson<any[]>("/admin/sos/active", []),
       ])
 
       setOverview(overviewResult.data)
       setOpenTickets(Array.isArray(ticketsResult.data) ? ticketsResult.data : [])
-      setErrors([overviewResult.error, ticketsResult.error].filter(Boolean) as string[])
+      setSosAlerts(Array.isArray(sosResult.data) ? sosResult.data : [])
+      setErrors([overviewResult.error, ticketsResult.error, sosResult.error].filter(Boolean) as string[])
       setLoading(false)
     },
     [],
@@ -88,11 +91,23 @@ export default function AdminPage() {
     void load(ticketsPage)
   }, [load, ticketsPage])
 
+  async function resolveSos(id: string) {
+    if (!confirm('Mark this SOS as resolved?')) return
+    try {
+      const res = await authedFetch(`/admin/sos/${id}/resolve`, { method: 'PATCH' })
+      if (!res.ok) throw new Error('Failed to resolve SOS')
+      void load(ticketsPage)
+    } catch (err) {
+      alert((err as Error).message)
+    }
+  }
+
   const metrics = [
     { label: "Users", value: overview.users, icon: Users, href: "/admin/users" },
     { label: "Drivers", value: overview.drivers, icon: Car, href: "/admin/drivers" },
     { label: "Orders", value: overview.orders, icon: Store, href: "/admin/orders" },
     { label: "Deliveries", value: overview.deliveries, icon: Package, href: "/admin/deliveries" },
+    { label: "Surge Zones", value: "Control", icon: Activity, href: "/admin/surge" },
   ]
 
   const supportCount = (keyword: string) =>
@@ -214,6 +229,36 @@ export default function AdminPage() {
               </CardContent>
             </Card>
           </div>
+
+          {sosAlerts.length > 0 && (
+            <Card className="border-destructive shadow-sm">
+              <CardHeader className="bg-destructive/10 text-destructive">
+                <CardTitle className="flex items-center gap-2">
+                  <ShieldCheck className="h-5 w-5" />
+                  Active SOS Alerts
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <ul className="divide-y">
+                  {sosAlerts.map(alert => (
+                    <li key={alert.id} className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      <div>
+                        <p className="font-bold text-destructive">SOS triggered by {alert.user?.name || alert.user?.phone || 'Unknown'}</p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {alert.tripId ? `Trip ID: ${alert.tripId.slice(-8)}` : 'No active trip'} 
+                          {alert.lat && alert.lng ? ` · Location: ${alert.lat.toFixed(4)}, ${alert.lng.toFixed(4)}` : ''}
+                        </p>
+                        <p className="text-xs mt-2 font-mono">{new Date(alert.createdAt).toLocaleString()}</p>
+                      </div>
+                      <Button variant="outline" className="border-destructive text-destructive hover:bg-destructive hover:text-white" onClick={() => resolveSos(alert.id)}>
+                        Mark Resolved
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          )}
 
           <Card id="open-tickets">
             <CardHeader>

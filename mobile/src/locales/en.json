@@ -1,0 +1,82 @@
+{
+  "food": {
+    "title": "Food Delivery",
+    "hero_heading": "Craving something?",
+    "hero_subtitle": "Order from top local restaurants and get it delivered fast.",
+    "order_now": "Order Now",
+    "featured_restaurants": "Featured Restaurants",
+    "see_all": "See all",
+    "no_restaurants": "No restaurants available",
+    "free_delivery": "Free Delivery",
+    "min_suffix": "-40 min"
+  },
+  "wallet": {
+    "title": "Wallet",
+    "available_balance": "Available Balance",
+    "top_up": "Top Up",
+    "recent_transactions": "Recent Transactions",
+    "no_activity": "No wallet activity yet",
+    "amount_placeholder": "Amount (AFN)",
+    "added": "Added AFN {{amount}}",
+    "invalid_amount": "Enter a valid amount (AFN > 0)"
+  },
+  "trips": {
+    "title": "Your Trips",
+    "book": "Book",
+    "track_active": "Track active trip",
+    "no_trips": "No trips yet",
+    "no_trips_subtitle": "Book your first Noori ride to see it here."
+  },
+  "profile": {
+    "title": "Profile",
+    "safety_center": "Safety Center",
+    "safety_subtitle": "Manage emergency contacts and trip codes",
+    "notifications": "Notifications",
+    "language": "Language",
+    "language_subtitle": "English, Dari, Pashto",
+    "help": "Help & Support",
+    "help_subtitle": "24/7 Assistance",
+    "driver_verification": "Driver Verification",
+    "driver_verification_subtitle": "Upload required documents",
+    "logout": "Log Out",
+    "version": "Noori Mobility System v1.0.0",
+    "referral": "Refer & Earn",
+    "referral_subtitle": "Share your code and earn AFN 50"
+  },
+  "common": {
+    "loading": "Loading…",
+    "error": "An error occurred",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "save": "Save",
+    "close": "Close",
+    "share": "Share",
+    "copied": "Copied!"
+  },
+  "book_ride": {
+    "title": "Book a Ride",
+    "pickup_placeholder": "Pickup location",
+    "destination_placeholder": "Destination",
+    "fare_preview": "Fare preview",
+    "enter_trip": "Enter trip",
+    "estimate_note": "Estimate uses city distance until GPS is available.",
+    "safety_code": "Safety code",
+    "confirm_ride": "Confirm Ride",
+    "confirming": "Confirming..."
+  },
+  "notifications": {
+    "title": "Notifications",
+    "no_notifications": "No notifications yet",
+    "no_notifications_subtitle": "You're all caught up!"
+  },
+  "delivery": {
+    "title": "Send a Parcel",
+    "pickup_address": "Pickup address",
+    "dropoff_address": "Delivery address",
+    "package_type": "Package type",
+    "weight": "Weight (kg)",
+    "fare_estimate": "Fare estimate",
+    "submit": "Request Pickup",
+    "submitting": "Submitting..."
+  }
+}

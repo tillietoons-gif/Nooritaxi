@@ -6,6 +6,7 @@ import { Footer } from "@/components/layout/footer"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { HeadingMd, BodyMd } from "@/components/ui/typography"
 import { MapPin, Navigation, Shield, Clock, Car } from "lucide-react"
 import { authedFetch, getStoredUser, type AuthUser } from "@/lib/auth"
@@ -103,17 +104,39 @@ export default function BookingPage() {
               <Card className="border-none shadow-sm"><CardContent className="p-6 space-y-6">
                   <HeadingMd>Book a Ride</HeadingMd>
                   <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="relative"><MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" /><Input value={pickupLocation} onChange={(event) => updatePickupLocation(event.target.value)} placeholder="Pickup" className="pl-10 h-12 bg-muted/30 border-none" /></div>
-                    <div className="relative"><Navigation className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-accent-foreground" /><Input value={dropoffLocation} onChange={(event) => updateDropoffLocation(event.target.value)} placeholder="Destination" className="pl-10 h-12 bg-muted/30 border-none" /></div>
+                    <div className="relative">
+                      <Label htmlFor="pickup-location" className="sr-only">Pickup Location</Label>
+                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
+                      <Input
+                        id="pickup-location"
+                        value={pickupLocation}
+                        onChange={(event) => updatePickupLocation(event.target.value)}
+                        placeholder="Pickup"
+                        className="pl-10 h-12 bg-muted/30 border-none"
+                        aria-invalid={!!error}
+                      />
+                    </div>
+                    <div className="relative">
+                      <Label htmlFor="dropoff-location" className="sr-only">Destination</Label>
+                      <Navigation className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-accent-foreground" />
+                      <Input
+                        id="dropoff-location"
+                        value={dropoffLocation}
+                        onChange={(event) => updateDropoffLocation(event.target.value)}
+                        placeholder="Destination"
+                        className="pl-10 h-12 bg-muted/30 border-none"
+                        aria-invalid={!!error}
+                      />
+                    </div>
                     <div className="rounded-lg border bg-background p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2"><Car className="h-4 w-4 text-primary" /><span className="text-sm font-medium">Fare estimate</span></div>
-                        <span className="text-lg font-bold">{estimate ? `${estimate.currency} ${estimate.fare.toLocaleString()}` : "Enter trip"}</span>
+                        <span className="text-lg font-bold" aria-live="polite">{estimate ? `${estimate.currency} ${estimate.fare.toLocaleString()}` : "Enter trip"}</span>
                       </div>
                       <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground"><Clock className="h-3.5 w-3.5" />Estimated on a {estimate?.distance ?? 5} km city ride</div>
                     </div>
-                    {error ? <p className="text-sm text-destructive">{error}</p> : null}
-                    {status ? <p className="text-sm text-primary">{status}</p> : null}
+                    {error ? <p role="alert" aria-live="assertive" className="text-sm text-destructive">{error}</p> : null}
+                    {status ? <p aria-live="polite" className="text-sm text-primary">{status}</p> : null}
                     {safetyCode ? <div className="rounded-lg bg-primary/10 p-3 text-sm font-semibold text-primary">Safety code: {safetyCode}</div> : null}
                     <Button size="xl" className="w-full mt-4 h-14 font-bold shadow-lg" disabled={isSubmitting}>{isSubmitting ? "Confirming..." : "Confirm Booking"}</Button>
                   </form>

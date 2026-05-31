@@ -29,11 +29,19 @@ export class DispatchService {
         return b.driver.ratingAverage - a.driver.ratingAverage;
       });
 
-    // 3. Simulate OSRM/Routing API check for real ETA on the top 3 drivers
+    // 3. Simulate OSRM/Routing API check for real ETA on the top 3 drivers (parallelized)
+    // Optimization: Parallelizing reduces dispatch latency by ~60-66% (3x serial -> 1x parallel)
     const topCandidates = sortedDrivers.slice(0, 3);
-    for (const candidate of topCandidates) {
-      candidate.distance = await this.calculateRouteDistance(pickupLat, pickupLng, candidate.driver.currentLat!, candidate.driver.currentLng!);
-    }
+    await Promise.all(
+      topCandidates.map(async (candidate) => {
+        candidate.distance = await this.calculateRouteDistance(
+          pickupLat,
+          pickupLng,
+          candidate.driver.currentLat!,
+          candidate.driver.currentLng!,
+        );
+      }),
+    );
     topCandidates.sort((a: { distance: number }, b: { distance: number }) => a.distance - b.distance);
 
     return topCandidates[0]?.driver;

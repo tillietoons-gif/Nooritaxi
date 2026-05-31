@@ -1,18 +1,29 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Redirect } from 'expo-router';
-import { ActivityIndicator, View } from 'react-native';
 import { getStoredUser } from '../lib/api';
+import { SplashScreen } from '../components/SplashScreen';
 
 export default function IndexRoute() {
-  const [target, setTarget] = React.useState<'/(auth)/login' | '/(tabs)/trips' | null>(null);
+  const [target, setTarget] = useState<'/(auth)/login' | '/(tabs)/trips' | null>(null);
+  const [animationFinished, setAnimationFinished] = useState(false);
+  const [dataLoaded, setDataLoaded] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     let mounted = true;
 
     (async () => {
-      const user = await getStoredUser();
-      if (mounted) {
-        setTarget(user ? '/(tabs)/trips' : '/(auth)/login');
+      try {
+        const user = await getStoredUser();
+        if (mounted) {
+          setTarget(user ? '/(tabs)/trips' : '/(auth)/login');
+          setDataLoaded(true);
+        }
+      } catch (error) {
+        console.error('Failed to load user session:', error);
+        if (mounted) {
+          setTarget('/(auth)/login');
+          setDataLoaded(true);
+        }
       }
     })();
 
@@ -21,13 +32,14 @@ export default function IndexRoute() {
     };
   }, []);
 
-  if (!target) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#006947" />
-      </View>
-    );
+  const handleAnimationComplete = () => {
+    setAnimationFinished(true);
+  };
+
+  // Only redirect if both the data is loaded AND the animation is finished
+  if (dataLoaded && animationFinished && target) {
+    return <Redirect href={target} />;
   }
 
-  return <Redirect href={target} />;
+  return <SplashScreen onAnimationComplete={handleAnimationComplete} />;
 }

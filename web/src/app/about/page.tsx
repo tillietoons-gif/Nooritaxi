@@ -3,7 +3,7 @@
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { useTranslation } from "react-i18next"
-import { motion } from "framer-motion"
+import { motion, type Variants } from "framer-motion"
 import { PatternOverlay } from "@/components/ui/pattern-overlay"
 import { HeadingLg, HeadingMd, BodyMd } from "@/components/ui/typography"
 import { Badge } from "@/components/ui/badge"
@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge"
 export default function AboutPage() {
   const { t } = useTranslation()
 
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -19,7 +19,7 @@ export default function AboutPage() {
     }
   }
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { y: 20, opacity: 0 },
     visible: { y: 0, opacity: 1, transition: { duration: 0.6 } }
   }

@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { HeadingLg, HeadingMd, BodyLg, BodyMd, LabelSm } from "@/components/ui/typography"
 import { Car, Package, Utensils, Smartphone, ArrowRight, Shield, Globe, Clock, MapPin, Star } from "lucide-react"
-import { motion } from "framer-motion"
+import { motion, type Variants } from "framer-motion"
 import { PatternOverlay } from "@/components/ui/pattern-overlay"
 import { NooriLogo } from "@/components/ui/noori-logo"
 
@@ -37,7 +37,7 @@ export default function LandingPage() {
     }
   ]
 
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -47,7 +47,7 @@ export default function LandingPage() {
     }
   }
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { y: 20, opacity: 0 },
     visible: {
       y: 0,

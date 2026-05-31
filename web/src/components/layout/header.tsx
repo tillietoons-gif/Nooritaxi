@@ -64,11 +64,11 @@ export function Header() {
             </Button>
           </div>
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
-            <SheetTrigger asChild>
+            <SheetTrigger render={
               <Button variant="ghost" size="icon" className="md:hidden" aria-label="Open menu">
                 <Menu className="h-6 w-6" />
               </Button>
-            </SheetTrigger>
+            } />
             <SheetContent side="right" className="w-[300px] sm:w-[400px] glass">
               <nav className="flex flex-col space-y-6 mt-12 px-4">
                 {navigation.map((item) => (

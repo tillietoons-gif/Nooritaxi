@@ -4,7 +4,7 @@ import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { ShieldCheck, Eye, Phone, MapPin, Shield } from "lucide-react"
 import { useTranslation } from "react-i18next"
-import { motion } from "framer-motion"
+import { motion, type Variants } from "framer-motion"
 import { PatternOverlay } from "@/components/ui/pattern-overlay"
 import { NooriLogo } from "@/components/ui/noori-logo"
 import { HeadingLg, HeadingMd, BodyMd } from "@/components/ui/typography"
@@ -35,7 +35,7 @@ export default function SafetyPage() {
     },
   ]
 
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -43,7 +43,7 @@ export default function SafetyPage() {
     }
   }
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { y: 20, opacity: 0 },
     visible: { y: 0, opacity: 1, transition: { duration: 0.5 } }
   }

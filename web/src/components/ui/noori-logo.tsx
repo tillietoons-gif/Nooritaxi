@@ -1,7 +1,7 @@
 "use client"
 
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, type Variants } from 'framer-motion';
 
 interface NooriLogoProps {
   size?: number;
@@ -22,7 +22,7 @@ export const NooriLogo: React.FC<NooriLogoProps> = ({
   // Stylized N path
   const nPath = "M 35 65 V 35 L 65 65 V 35";
 
-  const pathVariants = {
+  const pathVariants: Variants = {
     hidden: { pathLength: 0, opacity: 0 },
     visible: {
       pathLength: 1,

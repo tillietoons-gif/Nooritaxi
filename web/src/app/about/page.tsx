@@ -2,104 +2,124 @@
 
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
+import { motion } from "framer-motion"
 import { useTranslation } from "react-i18next"
-import { motion, type Variants } from "framer-motion"
 import { PatternOverlay } from "@/components/ui/pattern-overlay"
-import { HeadingLg, HeadingMd, BodyMd } from "@/components/ui/typography"
+import { HeadingLg, HeadingMd, BodyMd, LabelMd } from "@/components/ui/typography"
 import { Badge } from "@/components/ui/badge"
+import { GlassSurface } from "@/components/ui/glass-surface"
+import { BentoGrid, BentoCard } from "@/components/ui/bento-grid"
+import { Globe, Users, Target, Rocket } from "lucide-react"
 
 export default function AboutPage() {
   const { t } = useTranslation()
 
-  const containerVariants: Variants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.2 }
+  const missionItems = [
+    {
+      title: "Our Mission",
+      description: "Empowering Afghanistan by digitizing the movement of people and goods with unrivaled efficiency.",
+      icon: <Target className="h-6 w-6" />,
+      size: "medium" as const,
+    },
+    {
+      title: "Our Vision",
+      description: "To become the unified operating system for regional logistics and mobility.",
+      icon: <Rocket className="h-6 w-6" />,
+      size: "medium" as const,
+    },
+    {
+      title: "Core Integrity",
+      description: "Safety and transparency are built into every line of code we write.",
+      icon: <Globe className="h-6 w-6" />,
+      size: "large" as const,
+      header: <div className="h-40 w-full bg-primary/5 rounded-2xl flex items-center justify-center overflow-hidden">
+        <div className="absolute inset-0 opacity-10"><PatternOverlay /></div>
+        <Users className="h-16 w-16 text-primary/40" />
+      </div>
     }
-  }
-
-  const itemVariants: Variants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { duration: 0.6 } }
-  }
+  ]
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
       <main className="flex-1">
-        <section className="relative py-32 md:py-48 px-4 overflow-hidden">
-          <PatternOverlay opacity={0.04} />
-          <div className="max-w-4xl mx-auto text-center relative z-10 space-y-8">
-            <motion.div
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.8 }}
-            >
-              <Badge variant="secondary" className="px-4 py-1.5 text-sm font-bold bg-primary/10 text-primary border-primary/20 mb-6">
-                Our Story
-              </Badge>
-              <HeadingLg className="text-5xl md:text-7xl font-black text-primary leading-tight">
-                {t('about.title_1', 'Redefining')} <span className="text-gold italic">{t('about.title_2', 'Mobility')}</span>
-              </HeadingLg>
-            </motion.div>
-
-            <motion.p
-              className="text-xl text-muted-foreground leading-relaxed max-w-3xl mx-auto"
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.2, duration: 0.8 }}
-            >
-              {t('about.subtitle', 'We are redefining mobility and convenience in Afghanistan. Our super app brings rides, food delivery, and seamless payments into one ecosystem.')}
-            </motion.p>
+        {/* Editorial Hero */}
+        <section className="relative pt-48 pb-32 px-4 overflow-hidden">
+          <div className="container mx-auto">
+            <div className="max-w-4xl space-y-12">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8 }}
+              >
+                <div className="flex items-center gap-3 mb-8">
+                  <div className="h-[1px] w-12 bg-primary/30" />
+                  <LabelMd>The Noori Narrative</LabelMd>
+                </div>
+                <HeadingLg className="text-6xl md:text-8xl font-black leading-[0.9] mb-12">
+                  Redefining the <br/><span className="text-primary italic">Geometry of Motion.</span>
+                </HeadingLg>
+                <BodyMd className="text-xl md:text-2xl text-muted-foreground leading-relaxed max-w-2xl">
+                  Noori isn&apos;t just a super app. It&apos;s a technological response to the infrastructure challenges of a nation on the move.
+                </BodyMd>
+              </motion.div>
+            </div>
           </div>
         </section>
 
-        <section className="py-24 px-4 bg-card relative overflow-hidden">
-          <div className="max-w-6xl mx-auto">
-            <motion.div
-              className="grid md:grid-cols-3 gap-10"
-              variants={containerVariants}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-            >
-              {[
-                {
-                  title: t('about.mission_title', 'Our Mission'),
-                  desc: t('about.mission_desc', 'To empower local communities by providing accessible, safe, and reliable transportation and delivery services.'),
-                  color: "primary"
-                },
-                {
-                  title: t('about.vision_title', 'Our Vision'),
-                  desc: t('about.vision_desc', 'To become the leading digital ecosystem in the region, connecting people, merchants, and drivers seamlessly.'),
-                  color: "gold"
-                },
-                {
-                  title: t('about.values_title', 'Our Values'),
-                  desc: t('about.values_desc', 'Safety first, customer obsession, community empowerment, and continuous innovation.'),
-                  color: "primary"
-                }
-              ].map((item, index) => (
-                <motion.div
-                  key={index}
-                  variants={itemVariants}
-                  className="glass p-10 rounded-[2.5rem] border-none hover:-translate-y-2 transition-transform duration-300"
-                >
-                  <h3 className={`text-3xl font-extrabold mb-6 ${item.color === 'gold' ? 'text-gold' : 'text-primary'}`}>{item.title}</h3>
-                  <p className="text-muted-foreground text-lg leading-relaxed">{item.desc}</p>
-                </motion.div>
+        {/* Modular Grid */}
+        <section className="py-24 px-4 bg-primary/5">
+          <div className="max-w-7xl mx-auto">
+            <BentoGrid>
+              {missionItems.map((item, i) => (
+                <BentoCard
+                  key={i}
+                  title={item.title}
+                  description={item.description}
+                  icon={item.icon}
+                  size={item.size}
+                  header={item.header}
+                  className="bg-background/50"
+                />
               ))}
-            </motion.div>
+            </BentoGrid>
           </div>
         </section>
 
-        <section className="py-32 px-4 text-center max-w-3xl mx-auto space-y-8">
-          <HeadingMd className="text-4xl font-black text-primary italic">&quot;Building with Heart, Serving with Trust.&quot;</HeadingMd>
-          <div className="h-1 w-20 bg-gold mx-auto rounded-full" />
-          <BodyMd className="text-lg text-muted-foreground">
-            Noori is more than just an app; it&apos;s a commitment to the people of Afghanistan. We believe in the power of technology to improve lives and create opportunities.
-          </BodyMd>
+        {/* Narrative Section */}
+        <section className="py-40 px-4 relative">
+          <div className="container mx-auto">
+             <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
+                <div className="order-2 lg:order-1">
+                   <GlassSurface variant="premium" className="p-12 md:p-20 border-none bento-shadow space-y-10">
+                      <HeadingMd className="font-black">Built for Resilience.</HeadingMd>
+                      <div className="space-y-6 text-lg text-muted-foreground leading-relaxed">
+                        <p>
+                          Founded in Kabul, Noori was born from the necessity of reliable transportation in a rapidly evolving landscape. Our engineering team prioritizes performance on low-bandwidth networks and security in complex environments.
+                        </p>
+                        <p>
+                          Today, we serve thousands of users daily, connecting them to essential services through an interface that feels like the future, today.
+                        </p>
+                      </div>
+                      <div className="pt-6 border-t border-border/50">
+                        <p className="text-sm font-black uppercase tracking-widest text-primary italic">&quot;Excellence is our only standard.&quot;</p>
+                      </div>
+                   </GlassSurface>
+                </div>
+                <div className="order-1 lg:order-2 space-y-12">
+                   <div className="aspect-square bg-primary/5 rounded-[4rem] relative overflow-hidden flex items-center justify-center">
+                      <div className="absolute inset-0 opacity-20"><PatternOverlay /></div>
+                      <motion.div
+                        animate={{ scale: [1, 1.05, 1] }}
+                        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+                        className="h-64 w-64 bg-primary rounded-[3rem] shadow-2xl flex items-center justify-center"
+                      >
+                         <Globe className="h-32 w-32 text-white/20" />
+                      </motion.div>
+                   </div>
+                </div>
+             </div>
+          </div>
         </section>
       </main>
       <Footer />

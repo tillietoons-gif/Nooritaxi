@@ -6,25 +6,30 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        background: '#F7F8F4',
-        foreground: '#102217',
-        card: '#FFFFFF',
+        background: '#fcfdfe',
+        foreground: '#002114',
+        card: '#ffffff',
         primary: '#006947',
-        'primary-dark': '#004d34',
-        'primary-light': '#008a5d',
-        accent: '#D4AF37', // Gold accent for cultural touch
-        muted: '#D9E1DA',
-        'muted-foreground': '#6D7A71',
-        destructive: '#C2410C',
+        secondary: '#f3e9d2',
+        accent: '#D4AF37',
+        muted: '#f0f5f1',
+        'muted-foreground': '#52635a',
+        destructive: '#ba1a1a',
         success: '#15803D',
-        'glass-bg': 'rgba(255, 255, 255, 0.7)',
+        border: '#dbe5dd',
+      },
+      fontFamily: {
+        heading: ['Geist-Bold', 'System'],
+        sans: ['Inter-Regular', 'System'],
       },
       borderRadius: {
         '3xl': '24px',
         '4xl': '32px',
+        '5xl': '40px',
       },
       boxShadow: {
-        'high-tech': '0 10px 30px -10px rgba(0, 105, 71, 0.3)',
+        'premium': '0 20px 50px rgba(0, 105, 71, 0.15)',
+        'bento': '0 8px 32px rgba(0, 0, 0, 0.05)',
       }
     },
   },

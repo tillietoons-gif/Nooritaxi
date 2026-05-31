@@ -2,11 +2,13 @@
 
 import Link from "next/link"
 import { useState } from "react"
-import { Lock, Phone, User, Eye, EyeOff } from "lucide-react"
+import { motion } from "framer-motion"
+import { Lock, Phone, User, Eye, EyeOff, ShieldCheck, ArrowLeft, Zap } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { GlassSurface } from "@/components/ui/glass-surface"
 import { Input } from "@/components/ui/input"
-import { BodyMd } from "@/components/ui/typography"
+import { BodyMd, HeadingMd, LabelMd } from "@/components/ui/typography"
+import { NooriLogo } from "@/components/ui/noori-logo"
 import { apiUrl, saveSession } from "@/lib/auth"
 
 export default function SignupPage() {
@@ -31,72 +33,128 @@ export default function SignupPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        setMessage(data.message ?? "Sign up failed")
+        setMessage(data.message ?? "Registration protocol failed.")
         return
       }
 
       saveSession(data.access_token, data.user)
       window.location.href = "/dashboard"
     } catch {
-      setMessage("Unable to reach the server")
+      setMessage("Connection to registration authority timed out.")
     } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-2">
-          <CardTitle>Create account</CardTitle>
-          <BodyMd className="text-muted-foreground">Start with your phone number.</BodyMd>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={submit} className="space-y-4">
-            <label className="block space-y-2">
-              <span className="text-sm font-medium">Full name</span>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input className="h-11 pl-9" value={name} onChange={(event) => setName(event.target.value)} required />
+    <main className="relative min-h-screen flex items-center justify-center bg-background px-4 py-10 overflow-hidden">
+      {/* Background FX */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150%] h-[150%] opacity-10">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--primary)_0%,_transparent_70%)]" />
+         </div>
+      </div>
+
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        className="w-full max-w-2xl relative z-10"
+      >
+        <div className="mb-10 flex flex-col items-center text-center">
+           <div className="inline-flex items-center gap-2 bg-primary/5 px-4 py-2 rounded-full border border-primary/10 mb-8">
+             <Zap className="h-3 w-3 text-primary animate-pulse" />
+             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Priority Enrollment Active</span>
+           </div>
+           <NooriLogo size={48} className="text-primary mb-6" />
+           <HeadingMd className="font-black text-4xl mb-4">Join the Ecosystem</HeadingMd>
+           <BodyMd className="text-lg max-w-md mx-auto">Establish your unique identifier to access world-class mobility and logistics.</BodyMd>
+        </div>
+
+        <GlassSurface variant="premium" className="p-8 md:p-16 bento-shadow border-none grid grid-cols-1 md:grid-cols-1 gap-12">
+          <form onSubmit={submit} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <LabelMd className="text-xs font-black">Legal Identity</LabelMd>
+                <div className="relative">
+                  <User className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40" />
+                  <Input
+                    className="h-14 pl-12 rounded-2xl glass border-none focus-visible:ring-primary/30 font-bold"
+                    value={name}
+                    onChange={(event) => setName(event.target.value)}
+                    placeholder="Full Name"
+                    required
+                  />
+                </div>
               </div>
-            </label>
-            <label className="block space-y-2">
-              <span className="text-sm font-medium">Phone</span>
-              <div className="relative">
-                <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input className="h-11 pl-9" value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="+93 7xx xxx xxx" required />
+
+              <div className="space-y-2">
+                <LabelMd className="text-xs font-black">Communication Node</LabelMd>
+                <div className="relative">
+                  <Phone className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40" />
+                  <Input
+                    className="h-14 pl-12 rounded-2xl glass border-none focus-visible:ring-primary/30 font-bold"
+                    value={phone}
+                    onChange={(event) => setPhone(event.target.value)}
+                    placeholder="+93 7XX XXX XXX"
+                    required
+                  />
+                </div>
               </div>
-            </label>
-            <label className="block space-y-2">
-              <span className="text-sm font-medium">Password</span>
+            </div>
+
+            <div className="space-y-2">
+              <LabelMd className="text-xs font-black">Security Protocol</LabelMd>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40" />
                 <Input
-                  className="h-11 pl-9 pr-10"
+                  className="h-14 pl-12 pr-12 rounded-2xl glass border-none focus-visible:ring-primary/30 font-bold"
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
-                  minLength={6}
+                  placeholder="Min. 8 characters"
+                  minLength={8}
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-primary/40 hover:text-primary transition-colors focus:outline-none"
                 >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
-            </label>
-            {message ? <p className="text-sm text-destructive">{message}</p> : null}
-            <Button className="h-11 w-full" type="submit" disabled={isLoading}>{isLoading ? "Creating..." : "Sign Up"}</Button>
+            </div>
+
+            <div className="flex items-start gap-3 p-4 bg-primary/5 rounded-2xl border border-primary/10">
+              <ShieldCheck className="h-5 w-5 text-primary shrink-0" />
+              <p className="text-[10px] text-muted-foreground font-medium leading-relaxed uppercase tracking-wider">
+                By initializing this session, you agree to our 128-bit encrypted terms of service and decentralized privacy protocols.
+              </p>
+            </div>
+
+            {message ? (
+              <div className="bg-destructive/5 text-destructive p-4 rounded-xl border border-destructive/20 text-xs font-bold">
+                {message}
+              </div>
+            ) : null}
+
+            <Button
+              className="h-16 w-full rounded-2xl bg-primary hover:bg-primary/90 text-xl font-black shadow-2xl shadow-primary/30 transition-all active:scale-[0.98]"
+              type="submit"
+              disabled={isLoading}
+            >
+              {isLoading ? "Synchronizing..." : "Establish Account"}
+            </Button>
           </form>
-          <p className="mt-5 text-center text-sm text-muted-foreground">
-            Already registered? <Link className="font-medium text-primary" href="/login">Log in</Link>
-          </p>
-        </CardContent>
-      </Card>
+
+          <div className="text-center">
+             <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">
+               Already connected? <Link className="text-primary hover:underline" href="/login">Return to Login</Link>
+             </p>
+          </div>
+        </GlassSurface>
+      </motion.div>
     </main>
   )
 }

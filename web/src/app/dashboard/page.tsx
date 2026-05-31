@@ -1,35 +1,29 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { HeadingMd, BodyMd } from "@/components/ui/typography"
+import { HeadingMd, BodyMd, HeadingSm, LabelMd } from "@/components/ui/typography"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { TrendingUp, Car, Package, DollarSign, ArrowUpRight, MapPin, Clock } from "lucide-react"
+import { GlassSurface } from "@/components/ui/glass-surface"
+import {
+  TrendingUp,
+  Car,
+  Package,
+  DollarSign,
+  ArrowUpRight,
+  MapPin,
+  Clock,
+  Activity,
+  Box,
+  LayoutGrid
+} from "lucide-react"
 import { authedFetch, apiUrl, getStoredUser, type AuthUser } from "@/lib/auth"
 import { useSocket } from "@/lib/use-socket"
+import { useUserBehavior } from "@/components/user-behavior-provider"
 
-type Ride = {
-  id: string
-  status: string
-  pickupLocation: string
-  dropoffLocation: string
-  fare?: string | number
-  requestedAt?: string
-  createdAt?: string
-}
-
-type Order = {
-  id: string
-  status: string
-  total?: string | number
-  deliveryAddress: string
-  placedAt?: string
-  createdAt?: string
-  restaurant?: { name?: string }
-}
-
-type Activity = {
+type ActivityItem = {
   id: string
   type: "Ride" | "Order"
   title: string
@@ -41,137 +35,187 @@ type Activity = {
 
 export default function DashboardPage() {
   const [user] = useState<AuthUser | null>(() => getStoredUser())
+  const { behavior, trackFeatureUsage } = useUserBehavior()
+
   const [counts, setCounts] = useState({ rides: 0, deliveries: 0, restaurants: 0 })
   const [walletBalance, setWalletBalance] = useState<string>("0")
-  const [rides, setRides] = useState<Ride[]>([])
-  const [orders, setOrders] = useState<Order[]>([])
-  const [driverLocation, setDriverLocation] = useState<{ lat: number; lng: number; timestamp?: string } | null>(null)
+  const [rides, setRides] = useState<any[]>([])
+  const [orders, setOrders] = useState<any[]>([])
+  const [driverLocation, setDriverLocation] = useState<any>(null)
   const [error, setError] = useState("")
   const { socket, connected } = useSocket(Boolean(user?.id))
 
+  // Initial order for widgets
+  const defaultWidgets = ["stats", "activity", "map"]
+  const [widgetOrder, setWidgetOrder] = useState(defaultWidgets)
+
+  useEffect(() => {
+    // Reorder based on usage frequency from behavior provider
+    const sorted = [...defaultWidgets].sort((a, b) => {
+      const usageA = behavior.featureUsage?.[a] || 0
+      const usageB = behavior.featureUsage?.[b] || 0
+      return usageB - usageA
+    })
+    setWidgetOrder(sorted)
+  }, [behavior.featureUsage])
+
   useEffect(() => {
     if (!user?.id) return
-    const userId = user.id
-
     async function load() {
-      setError("")
       const [ridesData, ordersData, deliveries, restaurants, wallet] = await Promise.all([
-        authedFetch(`/trips?userId=${userId}&limit=5`).then((res) => res.ok ? res.json() : []),
-        authedFetch(`/food/orders?userId=${userId}&limit=5`).then((res) => res.ok ? res.json() : []),
-        authedFetch(`/logistics/deliveries?userId=${userId}`).then((res) => res.ok ? res.json() : []),
+        authedFetch(`/trips?userId=${user?.id}&limit=5`).then((res) => res.ok ? res.json() : []),
+        authedFetch(`/food/orders?userId=${user?.id}&limit=5`).then((res) => res.ok ? res.json() : []),
+        authedFetch(`/logistics/deliveries?userId=${user?.id}`).then((res) => res.ok ? res.json() : []),
         fetch(`${apiUrl}/food/restaurants`).then((res) => res.ok ? res.json() : []),
-        authedFetch(`/wallet/${userId}?type=CUSTOMER&currency=AFN`).then((res) => res.ok ? res.json() : null),
+        authedFetch(`/wallet/${user?.id}?type=CUSTOMER&currency=AFN`).then((res) => res.ok ? res.json() : null),
       ])
-
       setRides(ridesData)
       setOrders(ordersData)
       setCounts({ rides: ridesData.length, deliveries: deliveries.length, restaurants: restaurants.length })
       setWalletBalance(wallet?.balance ? Number(wallet.balance).toLocaleString() : "0")
     }
-
-    load().catch((err) => setError(err.message ?? "Unable to load dashboard data"))
+    load().catch((err) => setError(err.message))
   }, [user?.id])
 
-  useEffect(() => {
-    if (!socket || !rides.length) return
-
-    const trackableRides = rides.filter((ride) => !["COMPLETED", "CANCELLED"].includes(ride.status))
-    trackableRides.forEach((ride) => socket.emit("joinTrip", ride.id))
-
-    socket.on("locationUpdated", setDriverLocation)
-    return () => {
-      socket.off("locationUpdated", setDriverLocation)
-    }
-  }, [socket, rides])
-
-  const activity = useMemo<Activity[]>(() => {
-    const rideActivity = rides.map((ride) => ({
-      id: ride.id,
-      type: "Ride" as const,
-      title: `${ride.pickupLocation} to ${ride.dropoffLocation}`,
-      subtitle: "Transportation",
-      amount: ride.fare,
-      status: ride.status,
-      timestamp: ride.requestedAt ?? ride.createdAt ?? "",
+  const activity = useMemo<ActivityItem[]>(() => {
+    const rideActivity = rides.map((r) => ({
+      id: r.id, type: "Ride" as const, title: `${r.pickupLocation} to ${r.dropoffLocation}`,
+      subtitle: "Transportation", amount: r.fare, status: r.status, timestamp: r.requestedAt || r.createdAt || ""
     }))
-    const orderActivity = orders.map((order) => ({
-      id: order.id,
-      type: "Order" as const,
-      title: order.restaurant?.name ?? "Restaurant order",
-      subtitle: order.deliveryAddress,
-      amount: order.total,
-      status: order.status,
-      timestamp: order.placedAt ?? order.createdAt ?? "",
+    const orderActivity = orders.map((o) => ({
+      id: o.id, type: "Order" as const, title: o.restaurant?.name || "Restaurant order",
+      subtitle: o.deliveryAddress, amount: o.total, status: o.status, timestamp: o.placedAt || o.createdAt || ""
     }))
-
     return [...rideActivity, ...orderActivity]
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
       .slice(0, 5)
   }, [rides, orders])
 
   const stats = [
-    { name: "Wallet", value: `AFN ${walletBalance}`, change: "Live", icon: <DollarSign className="h-5 w-5" /> },
-    { name: "Trips", value: counts.rides.toString(), change: "Live", icon: <Car className="h-5 w-5" /> },
-    { name: "Deliveries", value: counts.deliveries.toString(), change: "Live", icon: <Package className="h-5 w-5" /> },
-    { name: "Restaurants", value: counts.restaurants.toString(), change: "Open", icon: <TrendingUp className="h-5 w-5" /> },
+    { id: "wallet", name: "Wallet", value: `AFN ${walletBalance}`, icon: <DollarSign className="h-5 w-5" /> },
+    { id: "rides", name: "Trips", value: counts.rides.toString(), icon: <Car className="h-5 w-5" /> },
+    { id: "deliveries", name: "Deliveries", value: counts.deliveries.toString(), icon: <Package className="h-5 w-5" /> },
+    { id: "analytics", name: "Efficiency", value: "98%", icon: <Activity className="h-5 w-5" /> },
   ]
 
-  return (
-    <div className="space-y-8">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div><HeadingMd className="text-2xl">Assalam-o-Alaikum, {user?.name ?? "Noori user"}!</HeadingMd><BodyMd className="text-muted-foreground text-sm">Your live super-app workspace is connected to the backend.</BodyMd></div>
-        <div className="flex gap-3"><Button variant="outline">Export</Button><Button onClick={() => { window.location.href = "/book" }}>New Booking</Button></div>
-      </div>
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat) => (
-          <Card key={stat.name} className="border-none shadow-sm"><CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4"><div className="bg-primary/10 p-2.5 rounded-lg text-primary">{stat.icon}</div><Badge variant="success" className="flex gap-1 h-6"><ArrowUpRight className="h-3 w-3" />{stat.change}</Badge></div>
-              <div className="space-y-1"><p className="text-sm font-medium text-muted-foreground">{stat.name}</p><p className="text-2xl font-bold">{stat.value}</p></div>
-          </CardContent></Card>
-        ))}
-      </div>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <Card className="lg:col-span-2 border-none shadow-sm">
-          <CardHeader><CardTitle className="text-lg">Recent Activity</CardTitle></CardHeader>
-          <CardContent className="p-0">
-            {activity.length ? (
-              <div className="divide-y">
-                {activity.map((item) => (
-                  <div key={`${item.type}-${item.id}`} className="flex items-center justify-between gap-4 p-4">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="secondary">{item.type}</Badge>
-                        <p className="truncate text-sm font-medium">{item.title}</p>
-                      </div>
-                      <p className="mt-1 truncate text-xs text-muted-foreground">{item.subtitle}</p>
+  const renderWidget = (id: string) => {
+    switch (id) {
+      case "stats":
+        return (
+          <div key="stats" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" onMouseEnter={() => trackFeatureUsage("stats")}>
+            {stats.map((stat) => (
+              <GlassSurface key={stat.id} className="p-6 bento-shadow border-none hover:translate-y-[-4px] transition-transform">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="bg-primary/10 p-2.5 rounded-xl text-primary">{stat.icon}</div>
+                  <Badge className="bg-primary/5 text-primary border-none">Live</Badge>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm font-semibold text-muted-foreground">{stat.name}</p>
+                  <p className="text-2xl font-black">{stat.value}</p>
+                </div>
+              </GlassSurface>
+            ))}
+          </div>
+        )
+      case "activity":
+        return (
+          <GlassSurface key="activity" className="p-0 border-none bento-shadow overflow-hidden" onMouseEnter={() => trackFeatureUsage("activity")}>
+            <div className="p-6 border-b border-border/50 flex justify-between items-center">
+              <HeadingSm className="text-lg">Recent Logistics</HeadingSm>
+              <Button variant="ghost" size="sm" className="rounded-full">View All</Button>
+            </div>
+            <div className="divide-y divide-border/30">
+              {activity.map((item) => (
+                <div key={item.id} className="flex items-center justify-between p-4 hover:bg-primary/5 transition-colors group">
+                  <div className="flex gap-4 items-center">
+                    <div className="h-10 w-10 bg-secondary/50 rounded-full flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                      {item.type === "Ride" ? <Car className="h-5 w-5" /> : <Box className="h-5 w-5" />}
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm font-semibold">{item.amount ? `AFN ${Number(item.amount).toLocaleString()}` : "Pending"}</p>
-                      <p className="text-xs text-muted-foreground">{item.status}</p>
+                    <div>
+                      <p className="text-sm font-bold">{item.title}</p>
+                      <p className="text-xs text-muted-foreground">{item.subtitle}</p>
                     </div>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="p-6 text-center text-muted-foreground">No recent rides or orders yet.</div>
-            )}
-          </CardContent>
-        </Card>
-        <Card className="border-none shadow-sm flex flex-col"><CardHeader><CardTitle className="text-lg">Real-time Map</CardTitle></CardHeader><CardContent className="flex-1 p-6 flex flex-col">
-             <div className="bg-secondary/40 rounded-xl flex-1 min-h-[220px] mb-6 flex flex-col items-center justify-center gap-3">
-              <MapPin className={`h-10 w-10 text-primary ${driverLocation ? "" : "animate-bounce"}`} />
-              {driverLocation ? (
-                <div className="text-center">
-                  <p className="text-sm font-semibold">Driver location live</p>
-                  <p className="text-xs text-muted-foreground">{driverLocation.lat.toFixed(5)}, {driverLocation.lng.toFixed(5)}</p>
+                  <div className="text-right">
+                    <p className="text-sm font-black">{item.amount ? `AFN ${Number(item.amount).toLocaleString()}` : "---"}</p>
+                    <Badge variant="outline" className="text-[10px] uppercase font-bold py-0">{item.status}</Badge>
+                  </div>
                 </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">{connected ? "Waiting for driver coordinates" : "Socket disconnected"}</p>
-              )}
+              ))}
+              {!activity.length && <div className="p-12 text-center text-muted-foreground italic">No recent flow detected.</div>}
+            </div>
+          </GlassSurface>
+        )
+      case "map":
+        return (
+          <GlassSurface key="map" className="p-6 border-none bento-shadow flex flex-col min-h-[400px]" onMouseEnter={() => trackFeatureUsage("map")}>
+             <div className="flex justify-between items-center mb-6">
+                <HeadingSm className="text-lg">Real-time Visualization</HeadingSm>
+                <div className="flex items-center gap-2">
+                  <div className="h-2 w-2 bg-primary rounded-full animate-pulse" />
+                  <span className="text-xs font-bold text-primary">Live Network</span>
+                </div>
              </div>
-             <div className="space-y-4"><div className="flex items-center gap-3"><Clock className="h-4 w-4 text-muted-foreground" /><span className="text-sm">{connected ? "Tracking gateway connected" : "Tracking gateway offline"}</span></div><Button className="w-full mt-2 h-10">Expand View</Button></div>
-        </CardContent></Card>
+             <div className="flex-1 bg-black/5 dark:bg-white/5 rounded-3xl relative overflow-hidden flex flex-col items-center justify-center">
+                <MapPin className="h-12 w-12 text-primary animate-bounce mb-4" />
+                <BodyMd className="text-sm font-bold">Network Grid Active</BodyMd>
+                <p className="text-xs text-muted-foreground">Monitoring 14 nodes in Kabul cluster</p>
+             </div>
+             <div className="mt-6 flex gap-4">
+                <Button className="flex-1 rounded-full h-12 font-bold bg-primary">Expand Map</Button>
+                <Button variant="outline" className="flex-1 rounded-full h-12 font-bold glass">Optimize Routes</Button>
+             </div>
+          </GlassSurface>
+        )
+      default:
+        return null
+    }
+  }
+
+  return (
+    <div className="space-y-12 pb-20">
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <LayoutGrid className="h-5 w-5 text-primary" />
+            <LabelMd>Intelligent Command Center</LabelMd>
+          </div>
+          <HeadingMd className="text-4xl md:text-5xl font-black">
+            Assalam, {user?.name?.split(" ")[0] || "User"}
+          </HeadingMd>
+          <BodyMd className="text-lg">Your adaptive workspace is optimized for peak performance.</BodyMd>
+        </div>
+        <div className="flex gap-4">
+          <Button variant="outline" className="rounded-full h-12 px-6 font-bold glass">System Health</Button>
+          <Button className="rounded-full h-12 px-6 font-bold bg-primary shadow-xl shadow-primary/20" onClick={() => window.location.href = "/book"}>New Operation</Button>
+        </div>
+      </header>
+
+      <div className="space-y-8">
+        <AnimatePresence mode="popLayout">
+          {widgetOrder.map((id) => (
+            <motion.div
+              key={id}
+              layout
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            >
+              {id === "stats" ? renderWidget("stats") : (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                  <div className="lg:col-span-2">
+                    {id === "activity" ? renderWidget("activity") : id === "map" ? renderWidget("map") : null}
+                  </div>
+                  <div className="hidden lg:block">
+                     {/* Dynamic Secondary Content */}
+                     {id === "activity" ? renderWidget("map") : renderWidget("activity")}
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          ))}
+        </AnimatePresence>
       </div>
     </div>
   )

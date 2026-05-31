@@ -1,324 +1,305 @@
-"use client"
+"use client";
 
-import { Header } from "@/components/layout/header"
-import { Footer } from "@/components/layout/footer"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import Link from "next/link"
-import { HeadingLg, HeadingMd, BodyLg, BodyMd, LabelSm } from "@/components/ui/typography"
-import { Car, Package, Utensils, Smartphone, ArrowRight, Shield, Globe, Clock, MapPin, Star } from "lucide-react"
-import { motion, type Variants } from "framer-motion"
-import { PatternOverlay } from "@/components/ui/pattern-overlay"
-import { NooriLogo } from "@/components/ui/noori-logo"
+import React, { useEffect, useState } from "react";
+import Link from "next/link";
+import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
+import {
+  ArrowRight,
+  Shield,
+  Clock,
+  Smartphone,
+  Globe,
+  Star,
+  Car,
+  Package,
+  MapPin,
+  ChevronRight,
+  Activity,
+  Zap,
+  Layers,
+  BarChart3
+} from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { HeadingLg, HeadingMd, HeadingSm, BodyLg, BodyMd, LabelMd } from "@/components/ui/typography";
+import { NooriLogo } from "@/components/ui/noori-logo";
+import { PatternOverlay } from "@/components/ui/pattern-overlay";
+import { Header } from "@/components/layout/header";
+import { Footer } from "@/components/layout/footer";
+import { BentoGrid, BentoCard } from "@/components/ui/bento-grid";
+import { GlassSurface } from "@/components/ui/glass-surface";
+import { Scene3D } from "@/components/interactive/scene-3d";
+import { LogisticsNetwork } from "@/components/interactive/logistics-network";
+import { useUserBehavior } from "@/components/user-behavior-provider";
 
 export default function LandingPage() {
+  const { behavior, updateBehavior } = useUserBehavior();
+  const { scrollY } = useScroll();
+  const y1 = useTransform(scrollY, [0, 500], [0, 200]);
+  const opacity = useTransform(scrollY, [0, 300], [1, 0]);
+
+  const [greeting, setGreeting] = useState("Welcome to Noori");
+
+  useEffect(() => {
+    const hours = behavior.timeOfDay;
+    if (hours === "morning") setGreeting("Good Morning");
+    else if (hours === "afternoon") setGreeting("Good Afternoon");
+    else if (hours === "evening") setGreeting("Good Evening");
+    else setGreeting("Welcome Back");
+  }, [behavior.timeOfDay]);
+
   const services = [
     {
-      title: "NooriTaxi",
-      description: "Reliable rides at the tap of a button. Safe, tracked, and verified.",
-      icon: <Car className="h-10 w-10 text-primary" />,
-      tag: "Mobility",
-      color: "emerald"
+      title: "Real-Time Tracking",
+      description: "AI-powered precision tracking for every shipment, everywhere.",
+      icon: <Activity className="h-6 w-6" />,
+      size: "large" as const,
+      header: <div className="h-40 w-full bg-primary/5 rounded-2xl flex items-center justify-center overflow-hidden relative">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--primary)_0%,_transparent_70%)] opacity-10" />
+        <div className="flex gap-4 items-end h-20">
+          {[40, 70, 45, 90, 65, 80, 50].map((h, i) => (
+            <motion.div
+              key={i}
+              className="w-3 bg-primary rounded-t-full"
+              initial={{ height: 0 }}
+              animate={{ height: `${h}%` }}
+              transition={{ delay: i * 0.1, repeat: Infinity, repeatType: "reverse", duration: 1.5 }}
+            />
+          ))}
+        </div>
+      </div>
     },
     {
-      title: "NooriParcel",
-      description: "Fast and secure delivery for your items across the city.",
-      icon: <Package className="h-10 w-10 text-primary" />,
-      tag: "Logistics",
-      color: "gold"
+      title: "Smart Logistics",
+      description: "Route optimization that saves time and fuel.",
+      icon: <Zap className="h-6 w-6" />,
+      size: "medium" as const,
+      header: <div className="h-40 w-full bg-primary/5 rounded-2xl p-4 overflow-hidden">
+        <div className="flex flex-col gap-2">
+          <div className="h-2 w-full bg-primary/10 rounded-full overflow-hidden">
+            <motion.div className="h-full bg-primary" animate={{ x: ["-100%", "100%"] }} transition={{ duration: 2, repeat: Infinity }} />
+          </div>
+          <div className="h-2 w-3/4 bg-primary/10 rounded-full overflow-hidden">
+            <motion.div className="h-full bg-gold" animate={{ x: ["-100%", "100%"] }} transition={{ duration: 3, repeat: Infinity, delay: 0.5 }} />
+          </div>
+        </div>
+      </div>
     },
     {
-      title: "NooriFood",
-      description: "Your favorite meals delivered fresh to your doorstep.",
-      icon: <Utensils className="h-10 w-10 text-primary" />,
-      tag: "Delivery",
-      color: "emerald"
+      title: "Global Reach",
+      description: "Connecting Afghanistan to the world via multi-modal routes.",
+      icon: <Globe className="h-6 w-6" />,
+      size: "small" as const,
+    },
+    {
+      title: "Fleet Monitoring",
+      description: "24/7 visibility into your entire transportation asset base.",
+      icon: <Car className="h-6 w-6" />,
+      size: "medium" as const,
+    },
+    {
+      title: "Deep Analytics",
+      description: "Data-driven insights to scale your operations efficiently.",
+      icon: <BarChart3 className="h-6 w-6" />,
+      size: "medium" as const,
+    },
+    {
+      title: "Security First",
+      description: "Military-grade protection for high-value cargo.",
+      icon: <Shield className="h-6 w-6" />,
+      size: "small" as const,
     }
-  ]
+  ];
 
-  const containerVariants: Variants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.2
-      }
-    }
-  }
-
-  const itemVariants: Variants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        duration: 0.6,
-        ease: "easeOut"
-      }
-    }
-  }
+  // Dynamic prioritization
+  const sortedServices = [...services].sort((a, b) => {
+    if (behavior.preferredService === "delivery" && a.title.includes("Tracking")) return -1;
+    if (behavior.preferredService === "ride" && a.title.includes("Fleet")) return -1;
+    return 0;
+  });
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen selection:bg-primary/20 selection:text-primary">
       <Header />
-      <main className="flex-1">
-        {/* Hero Section */}
-        <section className="relative pt-32 pb-32 md:pt-48 md:pb-48 overflow-hidden bg-background">
-          <PatternOverlay opacity={0.05} />
 
-          {/* Animated Background Blobs */}
-          <div className="absolute top-1/4 -left-20 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse-slow" />
-          <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-gold/10 rounded-full blur-3xl animate-pulse-slow delay-1000" />
-
-          <div className="container mx-auto px-4 relative z-10">
-            <div className="flex flex-col lg:flex-row items-center gap-16">
-              <motion.div
-                className="lg:w-1/2 space-y-10"
-                initial="hidden"
-                animate="visible"
-                variants={containerVariants}
-              >
-                <motion.div variants={itemVariants}>
-                  <Badge variant="secondary" className="px-4 py-1.5 text-sm font-bold bg-primary/10 text-primary border-primary/20">
-                    Afghan Mobility Super App
-                  </Badge>
-                </motion.div>
-
-                <motion.div variants={itemVariants} className="space-y-6">
-                  <HeadingLg className="text-5xl md:text-7xl font-extrabold text-primary leading-[1.05] tracking-tight text-balance">
-                    Clarity, Guidance, and <span className="text-gold italic">Safety</span> in Every Journey.
-                  </HeadingLg>
-                  <BodyLg className="text-muted-foreground max-w-xl text-xl leading-relaxed">
-                    Noori is your trusted companion for daily transit, logistics, and delivery in Afghanistan. Built for extreme utility and maximum trust.
-                  </BodyLg>
-                </motion.div>
-
-                <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-5">
-                  <Button size="xl" className="group h-16 px-8 text-lg font-bold shadow-xl shadow-primary/20" asChild>
-                    <Link href="/book">
-                      Book a Ride
-                      <ArrowRight className="ml-3 h-5 w-5 transition-transform group-hover:translate-x-1.5" />
-                    </Link>
-                  </Button>
-                  <Button variant="outline" size="xl" className="h-16 px-8 text-lg font-bold border-2 hover:bg-secondary/50" asChild>
-                    <Link href="/partners">Become a Partner</Link>
-                  </Button>
-                </motion.div>
-
-                <motion.div variants={itemVariants} className="flex items-center gap-6 pt-4">
-                  <div className="flex -space-x-3">
-                    {[1, 2, 3, 4].map((i) => (
-                      <div key={i} className="h-12 w-12 rounded-full border-4 border-background bg-secondary flex items-center justify-center overflow-hidden">
-                        <div className="h-full w-full bg-primary/20" />
-                      </div>
-                    ))}
-                  </div>
-                  <div className="space-y-1">
-                    <div className="flex text-gold">
-                      {[1, 2, 3, 4, 5].map((i) => <Star key={i} className="h-4 w-4 fill-current" />)}
-                    </div>
-                    <p className="text-sm font-bold text-muted-foreground">Trusted by 50k+ users</p>
-                  </div>
-                </motion.div>
-              </motion.div>
-
-              <motion.div
-                className="lg:w-1/2 relative"
-                initial={{ opacity: 0, scale: 0.8, rotate: -5 }}
-                animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                transition={{ duration: 1, ease: "easeOut" }}
-              >
-                <div className="relative w-full aspect-[4/5] max-w-md mx-auto">
-                  {/* Floating App Mockup */}
-                  <div className="absolute inset-0 glass rounded-[3rem] p-4 shadow-2xl overflow-hidden animate-float">
-                    <div className="bg-background w-full h-full rounded-[2.5rem] overflow-hidden flex flex-col relative">
-                      {/* App Header */}
-                      <div className="h-16 bg-primary flex items-center justify-between px-6">
-                        <NooriLogo size={24} color="white" />
-                        <div className="h-8 w-8 rounded-full bg-white/20" />
-                      </div>
-
-                      {/* App Content Preview */}
-                      <div className="p-6 space-y-6 flex-1 overflow-hidden">
-                        <div className="space-y-2">
-                           <div className="h-4 w-2/3 bg-muted rounded-full" />
-                           <div className="h-8 w-full bg-muted rounded-xl" />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                           <div className="aspect-square bg-primary/5 rounded-2xl flex items-center justify-center"><Car className="h-8 w-8 text-primary" /></div>
-                           <div className="aspect-square bg-primary/5 rounded-2xl flex items-center justify-center"><Package className="h-8 w-8 text-primary" /></div>
-                        </div>
-                        <div className="h-32 w-full bg-secondary rounded-2xl relative overflow-hidden">
-                           <PatternOverlay opacity={0.1} />
-                           <div className="absolute inset-0 flex items-center justify-center"><MapPin className="h-8 w-8 text-primary animate-bounce" /></div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Decorative Elements */}
-                  <div className="absolute -top-8 -right-8 h-24 w-24 bg-gold rounded-full flex items-center justify-center shadow-xl z-20 animate-pulse">
-                    <Shield className="h-10 w-10 text-white" />
-                  </div>
-                  <div className="absolute -bottom-8 -left-8 glass p-4 rounded-2xl shadow-xl z-20 flex items-center gap-3">
-                    <div className="h-12 w-12 bg-primary/10 rounded-xl flex items-center justify-center"><Clock className="h-6 w-6 text-primary" /></div>
-                    <div>
-                      <p className="text-xs font-bold text-muted-foreground uppercase">Average Arrival</p>
-                      <p className="text-lg font-extrabold text-primary">3.5 Mins</p>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            </div>
+      <main className="flex-grow">
+        {/* HERO SECTION */}
+        <section className="relative min-h-[100vh] flex items-center overflow-hidden pt-20">
+          <div className="absolute inset-0 z-0 opacity-40 dark:opacity-20 pointer-events-none">
+            <Scene3D cameraPosition={[0, 0, 8]}>
+              <LogisticsNetwork />
+            </Scene3D>
           </div>
-        </section>
 
-        {/* Services Section */}
-        <section id="services" className="py-32 relative bg-card overflow-hidden">
           <div className="container mx-auto px-4 relative z-10">
             <motion.div
-              className="text-center space-y-4 mb-20"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              style={{ opacity, y: y1 }}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+              className="max-w-4xl"
             >
-              <Badge variant="outline" className="px-4 py-1 border-primary/30 text-primary font-bold">Our Services</Badge>
-              <HeadingMd className="text-4xl md:text-5xl font-extrabold text-primary">Everything You Need, One App</HeadingMd>
-              <BodyMd className="text-muted-foreground max-w-2xl mx-auto text-lg leading-relaxed">
-                Noori brings essential mobility and delivery services under one roof, designed specifically for the unique needs of Afghanistan.
-              </BodyMd>
-            </motion.div>
+              <div className="flex items-center gap-3 mb-8">
+                <div className="h-[1px] w-12 bg-primary/30" />
+                <LabelMd className="text-primary font-bold tracking-widest">{greeting}, {behavior.visitCount > 1 ? "Welcome Back" : "Explore Future Mobility"}</LabelMd>
+              </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-              {services.map((service, index) => (
-                <motion.div
-                  key={service.title}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <Card className="group hover:shadow-2xl transition-all duration-500 border-none glass hover:-translate-y-2 overflow-hidden h-full">
-                    <CardContent className="p-10 space-y-8 relative">
-                      <div className="absolute top-0 right-0 p-6 opacity-0 group-hover:opacity-10 transition-opacity">
-                        <NooriLogo size={80} className="text-primary" />
-                      </div>
-                      <div className="bg-primary/5 p-6 rounded-2xl w-fit group-hover:bg-primary group-hover:text-white transition-all duration-500 shadow-inner">
-                        {service.icon}
-                      </div>
-                      <div className="space-y-4">
-                        <div className="space-y-1">
-                          <LabelSm className="text-gold font-black">{service.tag}</LabelSm>
-                          <HeadingMd className="text-2xl font-extrabold group-hover:text-primary transition-colors">{service.title}</HeadingMd>
-                        </div>
-                        <BodyMd className="text-muted-foreground text-base leading-relaxed">
-                          {service.description}
-                        </BodyMd>
-                        <Button variant="ghost" className="p-0 h-auto font-bold group-hover:text-primary" asChild>
-                           <Link href="/book">Learn more <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" /></Link>
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
+              <HeadingLg className="mb-8 leading-[1.1] text-balance">
+                The Operating System for <span className="text-primary italic">Modern Logistics</span> in Afghanistan.
+              </HeadingLg>
+
+              <BodyLg className="mb-12 max-w-2xl text-xl text-muted-foreground leading-relaxed">
+                Noori combines AI-driven routing, real-time WebGL tracking, and premium fleet management into a single, unified ecosystem.
+              </BodyLg>
+
+              <div className="flex flex-col sm:flex-row gap-6">
+                <Button size="xl" className="rounded-full px-10 h-16 text-lg font-black bg-primary hover:bg-primary/90 shadow-[0_20px_50px_rgba(0,105,71,0.3)] group" asChild>
+                  <Link href="/signup">
+                    Get Started <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                  </Link>
+                </Button>
+                <Button variant="outline" size="xl" className="rounded-full px-10 h-16 text-lg font-black glass border-primary/20 hover:bg-primary/5" asChild>
+                  <Link href="/book">View Network</Link>
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Scroll Indicator */}
+          <motion.div
+            className="absolute bottom-10 left-1/2 -translate-x-1/2"
+            animate={{ y: [0, 10, 0] }}
+            transition={{ duration: 2, repeat: Infinity }}
+          >
+            <div className="w-6 h-10 rounded-full border-2 border-primary/20 flex justify-center p-1">
+              <div className="w-1 h-2 bg-primary rounded-full" />
             </div>
+          </motion.div>
+        </section>
+
+        {/* BENTO GRID SERVICES */}
+        <section id="services" className="py-32 relative bg-background">
+          <div className="container mx-auto px-4">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-20">
+              <div className="max-w-2xl space-y-6">
+                <Badge className="bg-primary/5 text-primary border-primary/10 px-4 py-1 rounded-full font-bold">Services</Badge>
+                <HeadingMd className="font-black">Unrivaled Infrastructure. <br/>Intelligent Design.</HeadingMd>
+              </div>
+              <BodyMd className="max-w-sm text-lg text-muted-foreground">
+                Modular components designed to scale with your business needs, from local deliveries to international freight.
+              </BodyMd>
+            </div>
+
+            <BentoGrid>
+              {sortedServices.map((service, i) => (
+                <BentoCard
+                  key={i}
+                  title={service.title}
+                  description={service.description}
+                  header={service.header}
+                  icon={service.icon}
+                  size={service.size}
+                  className="cursor-pointer"
+                />
+              ))}
+            </BentoGrid>
           </div>
         </section>
 
-        {/* Why Noori Section */}
-        <section className="py-32 bg-background relative overflow-hidden">
-          <PatternOverlay opacity={0.03} />
-          <div className="container mx-auto px-4">
-            <div className="flex flex-col lg:flex-row items-center gap-20">
-              <motion.div
-                className="lg:w-1/2 space-y-12"
-                initial={{ opacity: 0, x: -30 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-              >
+        {/* ADAPTIVE EXPERIENCE SECTION */}
+        <section className="py-32 bg-primary/5 relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-50">
+             <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-[120px] animate-pulse" />
+             <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gold/10 rounded-full blur-[120px] animate-pulse-slow" />
+          </div>
+
+          <div className="container mx-auto px-4 relative z-10">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+              <div className="space-y-12">
                 <div className="space-y-6">
-                  <Badge className="bg-gold/10 text-gold border-gold/20 font-bold px-4 py-1.5">Why Choose Noori?</Badge>
-                  <HeadingMd className="text-4xl md:text-5xl font-extrabold text-primary">Uncompromising Safety & Localized Experience</HeadingMd>
-                  <BodyMd className="text-muted-foreground text-lg leading-relaxed">
-                    We&apos;ve built Noori from the ground up to address the specific challenges and cultural nuances of Afghanistan.
-                  </BodyMd>
+                  <Badge className="bg-gold/10 text-gold border-gold/20 font-bold px-4 py-1.5 rounded-full">Adaptive Intelligence</Badge>
+                  <HeadingMd className="font-black text-4xl md:text-6xl leading-tight">A Platform that <br/><span className="text-primary">Learns from You.</span></HeadingMd>
+                  <BodyLg className="text-xl leading-relaxed">
+                    Noori adapts its interface in real-time based on your usage patterns. Returning users see their most-used tools prioritized instantly.
+                  </BodyLg>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                   {[
-                    { title: "24/7 Security", desc: "Monitored trips with real-time tracking.", icon: <Shield className="h-6 w-6" /> },
-                    { title: "Cash or Wallet", desc: "Flexible payment for maximum accessibility.", icon: <Star className="h-6 w-6" /> },
-                    { title: "Localized", desc: "Dari, Pashto, and English support.", icon: <Globe className="h-6 w-6" /> },
-                    { title: "Fast Flows", desc: "Optimized for low-bandwidth networks.", icon: <Clock className="h-6 w-6" /> },
-                  ].map((feature) => (
-                    <div key={feature.title} className="flex gap-4">
-                      <div className="h-12 w-12 bg-primary/5 rounded-xl flex items-center justify-center shrink-0 text-primary">
-                        {feature.icon}
+                    { title: "Dynamic UI", desc: "Widgets rearrange based on your frequency.", icon: <Layers className="h-6 w-6" /> },
+                    { title: "Smart Defaults", desc: "Your most common routes pre-filled.", icon: <Zap className="h-6 w-6" /> },
+                    { title: "Predictive Routing", desc: "AI forecasts demand before it happens.", icon: <Activity className="h-6 w-6" /> },
+                    { title: "Localized Context", desc: "Adaptive language and regional settings.", icon: <Globe className="h-6 w-6" /> },
+                  ].map((feat, idx) => (
+                    <motion.div
+                      key={idx}
+                      whileHover={{ scale: 1.02 }}
+                      className="flex flex-col p-6 rounded-2xl glass-premium"
+                    >
+                      <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary mb-4">
+                        {feat.icon}
                       </div>
-                      <div className="space-y-1">
-                        <h4 className="font-bold text-primary">{feature.title}</h4>
-                        <p className="text-sm text-muted-foreground leading-snug">{feature.desc}</p>
-                      </div>
-                    </div>
+                      <h4 className="font-bold text-lg mb-2">{feat.title}</h4>
+                      <p className="text-sm text-muted-foreground">{feat.desc}</p>
+                    </motion.div>
                   ))}
                 </div>
-              </motion.div>
+              </div>
 
-              <motion.div
-                className="lg:w-1/2"
-                initial={{ opacity: 0, x: 30 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-              >
-                <div className="relative rounded-[2.5rem] overflow-hidden shadow-2xl shadow-primary/10 border-4 border-white">
-                   <div className="aspect-video bg-primary flex items-center justify-center p-12 relative">
-                      <PatternOverlay opacity={0.1} />
-                      <div className="text-center space-y-6 z-10">
-                        <Smartphone className="h-24 w-24 text-white/20 mx-auto" />
-                        <HeadingMd className="text-white text-3xl font-black">Experience the Super App</HeadingMd>
-                        <Button variant="secondary" size="lg" className="h-14 px-8 font-black rounded-full shadow-xl">
-                          Download Now
-                        </Button>
+              <div className="relative">
+                <div className="aspect-square glass-premium rounded-[3rem] p-12 relative flex items-center justify-center overflow-hidden">
+                   <div className="absolute inset-0 bg-primary opacity-5" />
+                   <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
+                    className="absolute w-[150%] h-[150%] border border-primary/10 rounded-full"
+                   />
+                   <div className="text-center space-y-8 z-10">
+                      <div className="h-32 w-32 bg-primary rounded-full mx-auto flex items-center justify-center shadow-2xl shadow-primary/40">
+                        <NooriLogo size={60} color="white" />
                       </div>
+                      <div className="space-y-2">
+                        <HeadingSm>System Integrity 99.9%</HeadingSm>
+                        <BodyMd>Operating at peak efficiency</BodyMd>
+                      </div>
+                      <Button className="rounded-full h-12 px-8 bg-primary font-bold">
+                        View Dashboard
+                      </Button>
                    </div>
                 </div>
-              </motion.div>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* CTA Section */}
-        <section className="py-24">
+        {/* CTA SECTION */}
+        <section className="py-40">
           <div className="container mx-auto px-4">
-            <motion.div
-              className="bg-primary rounded-[3rem] p-12 md:p-24 text-center space-y-10 relative overflow-hidden shadow-2xl shadow-primary/30"
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-            >
-              <PatternOverlay opacity={0.1} color="white" />
-              <div className="relative z-10 space-y-6">
-                <NooriLogo size={80} color="white" className="mx-auto mb-8 animate-pulse-slow" />
-                <HeadingLg className="text-white text-4xl md:text-6xl font-black leading-tight text-balance">Ready to start your journey with Noori?</HeadingLg>
-                <BodyLg className="text-white/80 text-xl max-w-2xl mx-auto font-medium">
-                  Join thousands of satisfied users and experience the best mobility service in the country.
+            <GlassSurface variant="premium" className="p-16 md:p-32 text-center relative overflow-hidden border-none shadow-[0_50px_100px_rgba(0,105,71,0.15)]">
+              <div className="absolute inset-0 opacity-5 pointer-events-none">
+                <PatternOverlay />
+              </div>
+              <div className="relative z-10 max-w-4xl mx-auto space-y-12">
+                <HeadingLg className="leading-tight font-black">Ready for the Next <br/>Era of Mobility?</HeadingLg>
+                <BodyLg className="max-w-2xl mx-auto text-2xl font-medium text-muted-foreground">
+                  Join the elite businesses and individuals scaling with Noori. Experience logistics without friction.
                 </BodyLg>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
-                  <Button size="xl" variant="secondary" className="h-16 px-10 text-lg font-black shadow-lg" asChild>
-                    <Link href="/signup">Sign Up Today</Link>
+                <div className="flex flex-col sm:flex-row gap-6 justify-center">
+                  <Button size="xl" className="h-20 px-12 rounded-full text-xl font-black shadow-2xl shadow-primary/40 group">
+                    Start Your Journey <ChevronRight className="ml-2 h-6 w-6 transition-transform group-hover:translate-x-1" />
                   </Button>
-                  <Button size="xl" variant="outline" className="h-16 px-10 text-lg font-black bg-white/10 text-white border-white/20 hover:bg-white/20" asChild>
-                    <Link href="/partners">Partner With Us</Link>
+                  <Button variant="outline" size="xl" className="h-20 px-12 rounded-full text-xl font-black glass border-primary/20">
+                    Contact Sales
                   </Button>
                 </div>
               </div>
-            </motion.div>
+            </GlassSurface>
           </div>
         </section>
       </main>
+
       <Footer />
     </div>
-  )
+  );
 }

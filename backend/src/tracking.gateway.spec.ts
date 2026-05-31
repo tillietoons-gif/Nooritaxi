@@ -25,7 +25,9 @@ describe('TrackingGateway', () => {
     }).compile();
 
     gateway = module.get<TrackingGateway>(TrackingGateway);
-    gateway.server = { to: jest.fn().mockReturnValue({ emit: jest.fn() }) } as any;
+    gateway.server = {
+      to: jest.fn().mockReturnValue({ emit: jest.fn() }),
+    } as any;
   });
 
   it('should be defined', () => {

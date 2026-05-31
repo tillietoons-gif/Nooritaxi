@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { SurgeService } from './surge.service';
 import { UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -38,11 +47,14 @@ export class SurgeController {
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
-  updateZone(@Param('id') id: string, @Body() body: { isActive: boolean; activeUntil?: string }) {
+  updateZone(
+    @Param('id') id: string,
+    @Body() body: { isActive: boolean; activeUntil?: string },
+  ) {
     return this.surgeService.updateZoneStatus(
-      id, 
-      body.isActive, 
-      body.activeUntil ? new Date(body.activeUntil) : undefined
+      id,
+      body.isActive,
+      body.activeUntil ? new Date(body.activeUntil) : undefined,
     );
   }
 
@@ -57,6 +69,8 @@ export class SurgeController {
   @Get('check')
   checkSurge(@Query('lat') lat: string, @Query('lng') lng: string) {
     if (!lat || !lng) return { multiplier: 1.0 };
-    return this.surgeService.getCurrentSurgeMultiplier(Number(lat), Number(lng)).then(multiplier => ({ multiplier }));
+    return this.surgeService
+      .getCurrentSurgeMultiplier(Number(lat), Number(lng))
+      .then((multiplier) => ({ multiplier }));
   }
 }

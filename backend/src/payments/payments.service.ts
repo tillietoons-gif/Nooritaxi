@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { WalletService } from '../wallet/wallet.service';
 import { randomUUID } from 'crypto';
@@ -29,7 +34,15 @@ export class PaymentsService {
     orderId?: string;
     deliveryId?: string;
   }) {
-    const { userId, amount, currency = 'AFN', provider = 'HESABPAY', tripId, orderId, deliveryId } = data;
+    const {
+      userId,
+      amount,
+      currency = 'AFN',
+      provider = 'HESABPAY',
+      tripId,
+      orderId,
+      deliveryId,
+    } = data;
 
     if (!Number.isFinite(amount) || amount <= 0) {
       throw new BadRequestException('Payment amount must be positive');
@@ -63,7 +76,9 @@ export class PaymentsService {
       },
     });
 
-    this.logger.log(`Payment intent created: ${transaction.id} (${provider}, ${amount} ${currency})`);
+    this.logger.log(
+      `Payment intent created: ${transaction.id} (${provider}, ${amount} ${currency})`,
+    );
 
     return {
       intentId: transaction.id,
@@ -80,14 +95,25 @@ export class PaymentsService {
    * In production this would call the provider's verify API. Here it always
    * succeeds to unblock development and testing.
    */
-  async verifyPayment(intentId: string, providerRef?: string, actorId?: string) {
-    const transaction = await this.prisma.transaction.findUnique({ where: { id: intentId } });
+  async verifyPayment(
+    intentId: string,
+    providerRef?: string,
+    actorId?: string,
+  ) {
+    const transaction = await this.prisma.transaction.findUnique({
+      where: { id: intentId },
+    });
     if (!transaction) throw new NotFoundException('Payment intent not found');
-    if (transaction.status === 'COMPLETED') return { success: true, transaction };
+    if (transaction.status === 'COMPLETED')
+      return { success: true, transaction };
 
-    const wallet = await this.prisma.wallet.findUniqueOrThrow({ where: { id: transaction.walletId } });
+    const wallet = await this.prisma.wallet.findUniqueOrThrow({
+      where: { id: transaction.walletId },
+    });
 
-    this.logger.log(`Verifying payment intent ${intentId} (ref: ${providerRef ?? 'n/a'})`);
+    this.logger.log(
+      `Verifying payment intent ${intentId} (ref: ${providerRef ?? 'n/a'})`,
+    );
 
     // Credit wallet
     await this.wallet.deposit(
@@ -98,7 +124,9 @@ export class PaymentsService {
       `verified:${intentId}`,
       {
         transactionType: 'DEPOSIT',
-        description: providerRef ? `Payment verified (ref: ${providerRef})` : 'Payment verified',
+        description: providerRef
+          ? `Payment verified (ref: ${providerRef})`
+          : 'Payment verified',
         tripId: transaction.tripId ?? undefined,
         orderId: transaction.orderId ?? undefined,
         deliveryId: transaction.deliveryId ?? undefined,
@@ -106,7 +134,10 @@ export class PaymentsService {
     );
 
     // Mark original PENDING transaction completed
-    await this.prisma.transaction.update({ where: { id: intentId }, data: { status: 'COMPLETED' } });
+    await this.prisma.transaction.update({
+      where: { id: intentId },
+      data: { status: 'COMPLETED' },
+    });
 
     await this.prisma.auditLog.create({
       data: {
@@ -118,7 +149,10 @@ export class PaymentsService {
       },
     });
 
-    return { success: true, transaction: { ...transaction, status: 'COMPLETED' } };
+    return {
+      success: true,
+      transaction: { ...transaction, status: 'COMPLETED' },
+    };
   }
 
   async listTransactions(userId: string, page = 1, limit = 25) {
@@ -141,14 +175,25 @@ export class PaymentsService {
   }
 
   async refundPayment(intentId: string, amount?: number) {
-    const transaction = await this.prisma.transaction.findUnique({ where: { id: intentId } });
+    const transaction = await this.prisma.transaction.findUnique({
+      where: { id: intentId },
+    });
     if (!transaction) throw new NotFoundException('Transaction not found');
-    const wallet = await this.prisma.wallet.findUniqueOrThrow({ where: { id: transaction.walletId } });
+    const wallet = await this.prisma.wallet.findUniqueOrThrow({
+      where: { id: transaction.walletId },
+    });
     const refundAmount = amount ?? Number(transaction.amount);
     this.logger.log(`Refund ${intentId} amount=${refundAmount}`);
-    return this.wallet.deposit(wallet.userId, refundAmount, 'CUSTOMER', wallet.currency, `refund:${intentId}`, {
-      transactionType: 'REFUND',
-      description: 'Payment refunded',
-    });
+    return this.wallet.deposit(
+      wallet.userId,
+      refundAmount,
+      'CUSTOMER',
+      wallet.currency,
+      `refund:${intentId}`,
+      {
+        transactionType: 'REFUND',
+        description: 'Payment refunded',
+      },
+    );
   }
 }

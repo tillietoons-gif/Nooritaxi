@@ -14,7 +14,9 @@ export function assertTripStatusTransition(from: TripStatus, to: TripStatus) {
   if (from === to) return;
 
   if (!TripStatusMachine[from]?.includes(to)) {
-    throw new BadRequestException(`Invalid trip status transition from ${from} to ${to}`);
+    throw new BadRequestException(
+      `Invalid trip status transition from ${from} to ${to}`,
+    );
   }
 }
 

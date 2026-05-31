@@ -23,6 +23,7 @@ export default function BookingPage() {
   const [pickupLocation, setPickupLocation] = useState("")
   const [dropoffLocation, setDropoffLocation] = useState("")
   const [estimate, setEstimate] = useState<Estimate | null>(null)
+  const [isEstimating, setIsEstimating] = useState(false)
   const [safetyCode, setSafetyCode] = useState("")
   const [status, setStatus] = useState("")
   const [error, setError] = useState("")
@@ -30,9 +31,12 @@ export default function BookingPage() {
 
   useEffect(() => {
     if (!user?.id || !pickupLocation || !dropoffLocation) {
+      setEstimate(null)
+      setIsEstimating(false)
       return
     }
 
+    setIsEstimating(true)
     const timeout = window.setTimeout(() => {
       authedFetch("/trips/estimate?distance=5")
         .then(async (response) => {
@@ -41,7 +45,8 @@ export default function BookingPage() {
         })
         .then(setEstimate)
         .catch(() => setEstimate(null))
-    }, 250)
+        .finally(() => setIsEstimating(false))
+    }, 400)
 
     return () => window.clearTimeout(timeout)
   }, [user?.id, pickupLocation, dropoffLocation])
@@ -105,38 +110,32 @@ export default function BookingPage() {
                   <HeadingMd>Book a Ride</HeadingMd>
                   <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="relative">
-                      <Label htmlFor="pickup-location" className="sr-only">Pickup Location</Label>
+                      <Label htmlFor="pickup" className="sr-only">Pickup Location</Label>
                       <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
-                      <Input
-                        id="pickup-location"
-                        value={pickupLocation}
-                        onChange={(event) => updatePickupLocation(event.target.value)}
-                        placeholder="Pickup"
-                        className="pl-10 h-12 bg-muted/30 border-none"
-                        aria-invalid={!!error}
-                      />
+                      <Input id="pickup" value={pickupLocation} onChange={(event) => updatePickupLocation(event.target.value)} placeholder="Pickup" className="pl-10 h-12 bg-muted/30 border-none" />
                     </div>
                     <div className="relative">
-                      <Label htmlFor="dropoff-location" className="sr-only">Destination</Label>
+                      <Label htmlFor="destination" className="sr-only">Destination Location</Label>
                       <Navigation className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-accent-foreground" />
-                      <Input
-                        id="dropoff-location"
-                        value={dropoffLocation}
-                        onChange={(event) => updateDropoffLocation(event.target.value)}
-                        placeholder="Destination"
-                        className="pl-10 h-12 bg-muted/30 border-none"
-                        aria-invalid={!!error}
-                      />
+                      <Input id="destination" value={dropoffLocation} onChange={(event) => updateDropoffLocation(event.target.value)} placeholder="Destination" className="pl-10 h-12 bg-muted/30 border-none" />
                     </div>
                     <div className="rounded-lg border bg-background p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2"><Car className="h-4 w-4 text-primary" /><span className="text-sm font-medium">Fare estimate</span></div>
-                        <span className="text-lg font-bold" aria-live="polite">{estimate ? `${estimate.currency} ${estimate.fare.toLocaleString()}` : "Enter trip"}</span>
+                        <span className="text-lg font-bold" aria-live="polite">
+                          {isEstimating ? (
+                            <span className="text-sm font-normal text-muted-foreground animate-pulse">Calculating...</span>
+                          ) : estimate ? (
+                            `${estimate.currency} ${estimate.fare.toLocaleString()}`
+                          ) : (
+                            "Enter trip"
+                          )}
+                        </span>
                       </div>
                       <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground"><Clock className="h-3.5 w-3.5" />Estimated on a {estimate?.distance ?? 5} km city ride</div>
                     </div>
-                    {error ? <p role="alert" aria-live="assertive" className="text-sm text-destructive">{error}</p> : null}
-                    {status ? <p aria-live="polite" className="text-sm text-primary">{status}</p> : null}
+                    {error ? <p className="text-sm text-destructive" role="alert">{error}</p> : null}
+                    {status ? <p className="text-sm text-primary">{status}</p> : null}
                     {safetyCode ? <div className="rounded-lg bg-primary/10 p-3 text-sm font-semibold text-primary">Safety code: {safetyCode}</div> : null}
                     <Button size="xl" className="w-full mt-4 h-14 font-bold shadow-lg" disabled={isSubmitting}>{isSubmitting ? "Confirming..." : "Confirm Booking"}</Button>
                   </form>

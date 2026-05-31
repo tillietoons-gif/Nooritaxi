@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -16,8 +25,16 @@ export class LogisticsController {
   }
 
   @Get('deliveries')
-  listDeliveries(@Query('userId') userId?: string, @Query('page') page?: string, @Query('limit') limit?: string) {
-    return this.logisticsService.listDeliveries(userId, Number(page ?? 1), Number(limit ?? 25));
+  listDeliveries(
+    @Query('userId') userId?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.logisticsService.listDeliveries(
+      userId,
+      Number(page ?? 1),
+      Number(limit ?? 25),
+    );
   }
 
   @Patch('deliveries/:id')

@@ -20,13 +20,15 @@ export class SurgeService {
     const offset = data.radiusKm * 0.01; // ~1km in degrees
     const polygon = {
       type: 'Polygon',
-      coordinates: [[
-        [data.centerLng - offset, data.centerLat - offset],
-        [data.centerLng + offset, data.centerLat - offset],
-        [data.centerLng + offset, data.centerLat + offset],
-        [data.centerLng - offset, data.centerLat + offset],
-        [data.centerLng - offset, data.centerLat - offset]
-      ]]
+      coordinates: [
+        [
+          [data.centerLng - offset, data.centerLat - offset],
+          [data.centerLng + offset, data.centerLat - offset],
+          [data.centerLng + offset, data.centerLat + offset],
+          [data.centerLng - offset, data.centerLat + offset],
+          [data.centerLng - offset, data.centerLat - offset],
+        ],
+      ],
     };
 
     return this.prisma.surgeZone.create({
@@ -38,7 +40,7 @@ export class SurgeService {
         activeFrom: data.activeFrom,
         activeUntil: data.activeUntil,
         polygon: polygon,
-      }
+      },
     });
   }
 
@@ -48,28 +50,28 @@ export class SurgeService {
       where: {
         isActive: true,
         activeFrom: { lte: now },
-        activeUntil: { gte: now }
+        activeUntil: { gte: now },
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
     });
   }
 
   async getAllZones() {
     return this.prisma.surgeZone.findMany({
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
     });
   }
 
   async updateZoneStatus(id: string, isActive: boolean, activeUntil?: Date) {
     const zone = await this.prisma.surgeZone.findUnique({ where: { id } });
     if (!zone) throw new NotFoundException('Surge zone not found');
-    
+
     return this.prisma.surgeZone.update({
       where: { id },
-      data: { 
+      data: {
         isActive,
-        ...(activeUntil ? { activeUntil } : {})
-      }
+        ...(activeUntil ? { activeUntil } : {}),
+      },
     });
   }
 
@@ -90,7 +92,12 @@ export class SurgeService {
             const minLat = Math.min(...coords.map((c: any) => c[1]));
             const maxLat = Math.max(...coords.map((c: any) => c[1]));
 
-            if (lng >= minLng && lng <= maxLng && lat >= minLat && lat <= maxLat) {
+            if (
+              lng >= minLng &&
+              lng <= maxLng &&
+              lat >= minLat &&
+              lat <= maxLat
+            ) {
               maxMultiplier = zone.multiplier;
             }
           }

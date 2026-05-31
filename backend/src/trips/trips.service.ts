@@ -1,5 +1,5 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { Driver, DriverStatus, PaymentMethod, Trip, TripStatus } from '@prisma/client';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { DriverStatus, PaymentMethod, Trip, TripStatus } from '@prisma/client';
 import { PrismaService } from '../prisma.service';
 import { PushService } from '../push/push.service';
 import { assertTripStatusTransition, tripStatusTimestampData } from './trip-status-machine';
@@ -62,7 +62,7 @@ export class TripsService {
         select: { token: true },
       });
 
-      return { ride: updatedRide, matchedDriverTokens: devices.map((device) => device.token) };
+      return { ride: updatedRide, matchedDriverTokens: devices.map((device: any) => device.token) };
     });
 
     if (matchedDriverTokens.length) {
@@ -96,7 +96,7 @@ export class TripsService {
   async updateRide(id: string, data: any) {
     const { ride, before } = await this.prisma.$transaction(async (tx) => {
       const before = await tx.trip.findUnique({ where: { id } });
-      const { actorId, ...rideData } = data;
+      const { actorId: _, ...rideData } = data;
 
       if (before && rideData.status) {
         assertTripStatusTransition(before.status, rideData.status);
@@ -158,8 +158,25 @@ export class TripsService {
   private isPointInGeoJsonPolygon(lat: number, lng: number, polygon: unknown) {
     if (!this.isGeoJsonPolygon(polygon)) return false;
     const [outerRing, ...holes] = polygon.coordinates;
-    if (!outerRing || !this.isPointInRing(lat, lng, outerRing)) return false;
+    if (!outerRing) return false;
+
+    // Performance Optimization: Bounding Box Pre-check
+    // Fast O(1) check to skip O(N) Point-in-Polygon for distant zones
+    if (!this.isPointInBoundingBox(lat, lng, outerRing)) return false;
+
+    if (!this.isPointInRing(lat, lng, outerRing)) return false;
     return !holes.some((ring) => this.isPointInRing(lat, lng, ring));
+  }
+
+  private isPointInBoundingBox(lat: number, lng: number, ring: number[][]) {
+    let minLat = Infinity, maxLat = -Infinity, minLng = Infinity, maxLng = -Infinity;
+    for (const [rLng, rLat] of ring) {
+      if (rLat < minLat) minLat = rLat;
+      if (rLat > maxLat) maxLat = rLat;
+      if (rLng < minLng) minLng = rLng;
+      if (rLng > maxLng) maxLng = rLng;
+    }
+    return lat >= minLat && lat <= maxLat && lng >= minLng && lng <= maxLng;
   }
 
   private isGeoJsonPolygon(value: unknown): value is GeoJsonPolygon {

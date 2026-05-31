@@ -22,7 +22,7 @@ export class AuthService {
 
   async validateUser(phone: string, pass: string): Promise<any> {
     const user = await this.usersService.findOne(phone);
-    if (user && await bcrypt.compare(pass, user.password)) {
+    if (user && (await bcrypt.compare(pass, user.password))) {
       const { password, ...result } = user;
       return result;
     }
@@ -97,7 +97,9 @@ export class AuthService {
     // Resolve referredBy from incoming referral code (different from the new user's own code)
     let referredById: string | undefined;
     if (data.referredByCode) {
-      const referrer = await this.prisma.user.findUnique({ where: { referralCode: data.referredByCode } });
+      const referrer = await this.prisma.user.findUnique({
+        where: { referralCode: data.referredByCode },
+      });
       if (referrer) referredById = referrer.id;
     }
 
@@ -113,10 +115,28 @@ export class AuthService {
     if (referredById) {
       const key = `referral:${referredById}:${user.id}`;
       await Promise.allSettled([
-        this.walletService.deposit(user.id, REFERRAL_CREDIT_AFN, 'CUSTOMER', 'AFN',
-          `${key}:new-user`, { transactionType: 'REFERRAL_CREDIT', description: 'Referral welcome bonus' }),
-        this.walletService.deposit(referredById, REFERRAL_CREDIT_AFN, 'CUSTOMER', 'AFN',
-          `${key}:referrer`, { transactionType: 'REFERRAL_CREDIT', description: 'Referral reward' }),
+        this.walletService.deposit(
+          user.id,
+          REFERRAL_CREDIT_AFN,
+          'CUSTOMER',
+          'AFN',
+          `${key}:new-user`,
+          {
+            transactionType: 'REFERRAL_CREDIT',
+            description: 'Referral welcome bonus',
+          },
+        ),
+        this.walletService.deposit(
+          referredById,
+          REFERRAL_CREDIT_AFN,
+          'CUSTOMER',
+          'AFN',
+          `${key}:referrer`,
+          {
+            transactionType: 'REFERRAL_CREDIT',
+            description: 'Referral reward',
+          },
+        ),
       ]);
     }
 
@@ -129,7 +149,10 @@ export class AuthService {
       throw new UnauthorizedException('Invalid or expired refresh token');
     }
 
-    const matchedToken = await this.findActiveRefreshToken(userId, rawRefreshToken);
+    const matchedToken = await this.findActiveRefreshToken(
+      userId,
+      rawRefreshToken,
+    );
     if (!matchedToken) {
       throw new UnauthorizedException('Invalid or expired refresh token');
     }
@@ -146,7 +169,10 @@ export class AuthService {
   }
 
   async logout(userId: string, rawRefreshToken: string): Promise<void> {
-    const matchedToken = await this.findActiveRefreshToken(userId, rawRefreshToken);
+    const matchedToken = await this.findActiveRefreshToken(
+      userId,
+      rawRefreshToken,
+    );
     if (!matchedToken) {
       throw new UnauthorizedException('Invalid or expired refresh token');
     }
@@ -158,11 +184,17 @@ export class AuthService {
   }
 
   private createReferralCode(seed: string) {
-    const suffix = seed.replace(/\D/g, '').slice(-5) || Math.random().toString(36).slice(2, 7).toUpperCase();
+    const suffix =
+      seed.replace(/\D/g, '').slice(-5) ||
+      Math.random().toString(36).slice(2, 7).toUpperCase();
     return `NOORI${suffix}`;
   }
 
-  private async dispatchOtp(phone: string, code: string, smsProvider: string): Promise<void> {
+  private async dispatchOtp(
+    phone: string,
+    code: string,
+    smsProvider: string,
+  ): Promise<void> {
     const providerUrl = smsProvider.startsWith('http')
       ? smsProvider
       : this.configService.get<string>('SMS_PROVIDER_URL');
@@ -212,7 +244,10 @@ export class AuthService {
     };
   }
 
-  private async findActiveRefreshToken(userId: string, rawRefreshToken: string) {
+  private async findActiveRefreshToken(
+    userId: string,
+    rawRefreshToken: string,
+  ) {
     const tokens = await this.prisma.refreshToken.findMany({
       where: {
         userId,

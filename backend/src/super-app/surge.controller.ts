@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -12,10 +21,18 @@ export class SurgeController {
   @Get()
   list(@Query('active') active?: string) {
     const now = new Date();
-    const where = active === 'true'
-      ? { isActive: true, activeFrom: { lte: now }, activeUntil: { gte: now } }
-      : {};
-    return this.prisma.surgeZone.findMany({ where, orderBy: { multiplier: 'desc' } });
+    const where =
+      active === 'true'
+        ? {
+            isActive: true,
+            activeFrom: { lte: now },
+            activeUntil: { gte: now },
+          }
+        : {};
+    return this.prisma.surgeZone.findMany({
+      where,
+      orderBy: { multiplier: 'desc' },
+    });
   }
 
   @Post()
@@ -36,6 +53,9 @@ export class SurgeController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   deactivate(@Param('id') id: string) {
-    return this.prisma.surgeZone.update({ where: { id }, data: { isActive: false } });
+    return this.prisma.surgeZone.update({
+      where: { id },
+      data: { isActive: false },
+    });
   }
 }

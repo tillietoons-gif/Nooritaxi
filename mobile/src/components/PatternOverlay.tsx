@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, DimensionValue } from 'react-native';
 import Svg, { Path, Defs, Pattern, Rect } from 'react-native-svg';
 
 interface PatternOverlayProps {
@@ -11,15 +11,18 @@ export const PatternOverlay: React.FC<PatternOverlayProps> = ({
   color = "#D4AF37",
   opacity = 0.05
 }) => {
+  const width: DimensionValue = "100%";
+  const height: DimensionValue = "100%";
+
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none">
-      <Svg width="100%" height="100%">
+      <Svg width={width} height={height}>
         <Defs>
           <Pattern
             id={`afghanPattern-${color.replace('#', '')}`}
             patternUnits="userSpaceOnUse"
-            width="40"
-            height="40"
+            width={40}
+            height={40}
             viewBox="0 0 40 40"
           >
             {/* Simple Geometric Star/Diamond inspired by Afghan embroidery */}
@@ -30,7 +33,7 @@ export const PatternOverlay: React.FC<PatternOverlayProps> = ({
             />
           </Pattern>
         </Defs>
-        <Rect width="100%" height="100%" fill={`url(#afghanPattern-${color.replace('#', '')})`} />
+        <Rect width={width} height={height} fill={`url(#afghanPattern-${color.replace('#', '')})`} />
       </Svg>
     </View>
   );

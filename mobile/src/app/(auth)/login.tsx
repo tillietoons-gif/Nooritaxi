@@ -16,7 +16,7 @@ export default function LoginScreen() {
     setLoading(true);
     try {
       await login(phone, password);
-      router.replace('/(tabs)/trips');
+      router.replace('/(tabs)/home');
     } catch (error) {
       setMessage((error as Error).message);
     } finally {

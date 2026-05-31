@@ -17,7 +17,7 @@ export default function RegisterScreen() {
     setLoading(true);
     try {
       await register(name, phone, password);
-      router.replace('/(tabs)/trips');
+      router.replace('/(tabs)/home');
     } catch (error) {
       setMessage((error as Error).message);
     } finally {

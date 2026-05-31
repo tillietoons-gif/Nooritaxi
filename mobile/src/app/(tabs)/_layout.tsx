@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { Tabs } from 'expo-router';
-import { Car, Wallet, UtensilsCrossed, User, Bell } from 'lucide-react-native';
+import { Home, Car, Wallet, UtensilsCrossed, User } from 'lucide-react-native';
 import SessionGuard from '../../lib/SessionGuard';
 
 export default function TabsLayout() {
@@ -24,6 +23,13 @@ export default function TabsLayout() {
           },
         }}
       >
+        <Tabs.Screen
+          name="home"
+          options={{
+            title: 'Home',
+            tabBarIcon: ({ color, size }) => <Home size={size} color={color} />,
+          }}
+        />
         <Tabs.Screen
           name="trips"
           options={{
@@ -52,11 +58,11 @@ export default function TabsLayout() {
             tabBarIcon: ({ color, size }) => <User size={size} color={color} />,
           }}
         />
+        {/* Hide notifications from tab bar but keep the route */}
         <Tabs.Screen
           name="notifications"
           options={{
-            title: 'Alerts',
-            tabBarIcon: ({ color, size }) => <Bell size={size} color={color} />,
+            href: null,
           }}
         />
       </Tabs>

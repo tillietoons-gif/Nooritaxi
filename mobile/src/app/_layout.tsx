@@ -20,6 +20,9 @@ export default function RootLayout() {
         <Stack.Screen name="restaurant/[id]" options={{ headerShown: true, title: 'Menu', presentation: 'card' }} />
         <Stack.Screen name="checkout" options={{ headerShown: true, title: 'Checkout', presentation: 'modal' }} />
         <Stack.Screen name="delivery" options={{ headerShown: true, title: 'Send a Parcel', presentation: 'modal' }} />
+        <Stack.Screen name="trusted-contacts" options={{ headerShown: true, title: 'Safety Center' }} />
+        <Stack.Screen name="language-selection" options={{ headerShown: true, title: 'Language' }} />
+        <Stack.Screen name="help-support" options={{ headerShown: true, title: 'Help & Support' }} />
       </Stack>
     </>
   );

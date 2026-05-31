@@ -1,30 +1,31 @@
 import React from 'react';
-import { View, Text, ScrollView, SafeAreaView, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, SafeAreaView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { Bell, CheckCircle2, AlertTriangle, Info, BellRing } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import { getStoredUser, apiFetch } from '../../lib/api';
+import { getStoredUser, getNotifications, NotificationItem } from '../../lib/api';
 
 export default function NotificationsScreen() {
   const { t } = useTranslation();
-  const [notifications, setNotifications] = React.useState<any[]>([]);
+  const [notifications, setNotifications] = React.useState<NotificationItem[]>([]);
   const [loading, setLoading] = React.useState(true);
 
   useFocusEffect(
     React.useCallback(() => {
       async function load() {
-      try {
-        const user = await getStoredUser();
-        if (!user) return;
-        const res = await apiFetch(`/users/${user.id}/notifications`);
-        if (!res.ok) throw new Error('Failed to load notifications');
-        const data = await res.json();
-        setNotifications(data);
-      } catch (e) {
-        console.warn('Failed to load notifications', e);
+        setLoading(true);
+        try {
+          const user = await getStoredUser();
+          if (!user) return;
+          const data = await getNotifications(user.id);
+          setNotifications(data);
+        } catch (e) {
+          console.warn('Failed to load notifications', e);
+        } finally {
+          setLoading(false);
+        }
       }
-    }
-    load();
+      load();
     }, [])
   );
 
@@ -39,22 +40,29 @@ export default function NotificationsScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
+      <View className="px-4 py-6 border-b border-muted/10">
+        <Text className="text-2xl font-bold text-primary">{t('notifications.title', 'Alerts')}</Text>
+      </View>
       <ScrollView className="px-4 py-4">
         {loading ? (
-          [1, 2, 3].map((i) => <View key={i} className="h-20 bg-muted/30 rounded-2xl mb-3" />)
+          <View className="py-10">
+            <ActivityIndicator color="#006947" />
+          </View>
         ) : notifications.length === 0 ? (
           <View className="items-center justify-center py-20">
             <View className="bg-primary/5 p-6 rounded-full mb-4">
               <Bell size={48} color="#6d7a71" />
             </View>
-            <Text className="text-xl font-bold mb-2">{t('notifications.no_notifications')}</Text>
-            <Text className="text-muted-foreground">{t('notifications.no_notifications_subtitle')}</Text>
+            <Text className="text-xl font-bold mb-2 text-foreground">{t('notifications.no_notifications', 'No notifications')}</Text>
+            <Text className="text-muted-foreground text-center px-10">
+              {t('notifications.no_notifications_subtitle', "We'll notify you about your rides, orders, and special offers.")}
+            </Text>
           </View>
         ) : (
           notifications.map((n) => (
             <TouchableOpacity key={n.id} className={`flex-row p-4 rounded-2xl mb-3 border ${n.isRead ? 'bg-card border-muted/10' : 'bg-primary/5 border-primary/20'}`}>
               <View className="w-10 h-10 rounded-full bg-primary/10 items-center justify-center mr-4">
-                {getIcon(n.type)}
+                {getIcon((n as any).type)}
               </View>
               <View className="flex-1">
                 <Text className={`font-bold ${n.isRead ? 'text-foreground' : 'text-primary'}`}>{n.title}</Text>

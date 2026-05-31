@@ -93,6 +93,7 @@ export type NotificationItem = {
   title: string;
   body: string;
   createdAt: string;
+  isRead?: boolean;
 };
 
 export type Restaurant = {
@@ -104,6 +105,7 @@ export type Restaurant = {
   deliveryRadius?: number;
   imageUrl?: string;
   avgPrepMinutes?: number;
+  menu?: MenuItem[];
 };
 
 export type MenuItem = {
@@ -215,6 +217,22 @@ export async function topUpWallet(userId: string, amount: number) {
   return readJson<WalletBalance>(response, 'Unable to top up wallet');
 }
 
+export async function transferWallet(payload: {
+  userId: string;
+  amount: number;
+  currency: string;
+  description: string;
+  orderId?: string;
+  tripId?: string;
+  deliveryId?: string;
+}) {
+  const response = await apiFetch('/wallet/transfer', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+  return readJson<any>(response, 'Insufficient wallet balance');
+}
+
 export async function getRideEstimate(distance = 5) {
   const response = await apiFetch(`/trips/estimate?distance=${distance}`);
   return readJson<RideEstimate>(response, 'Unable to estimate fare');
@@ -243,12 +261,65 @@ export async function getRestaurantMenu(restaurantId: string) {
   return readJson<MenuItem[]>(response, 'Unable to load menu');
 }
 
+export async function placeFoodOrder(payload: {
+  customerId: string;
+  restaurantId: string;
+  items: { menuItemId: string; quantity: number }[];
+  deliveryAddress: string;
+}) {
+  const response = await apiFetch('/food/orders', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+  return readJson<any>(response, 'Unable to place order');
+}
+
+export async function createDelivery(payload: {
+  customerId: string;
+  pickupAddress: string;
+  dropoffAddress: string;
+  packageType: string;
+  weight: number;
+}) {
+  const response = await apiFetch('/delivery', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+  return readJson<any>(response, 'Unable to request delivery');
+}
+
 export async function uploadKycDocument(driverId: string, type: string, url: string) {
   const response = await apiFetch(`/users/${encodeURIComponent(driverId)}/documents`, {
     method: 'POST',
     body: JSON.stringify({ type, url }),
   });
   return readJson<any>(response, 'Unable to upload KYC document');
+}
+
+// ---------- Payment ----------
+
+export async function createPaymentIntent(payload: {
+  userId: string;
+  amount: number;
+  currency: string;
+  provider: string;
+  orderId?: string;
+  tripId?: string;
+  deliveryId?: string;
+}) {
+  const response = await apiFetch('/payments/intent', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+  return readJson<{ intentId: string }>(response, 'Unable to initialize payment');
+}
+
+export async function verifyPayment(intentId: string, providerRef: string) {
+  const response = await apiFetch('/payments/verify', {
+    method: 'POST',
+    body: JSON.stringify({ intentId, providerRef }),
+  });
+  return readJson<any>(response, 'Unable to verify payment');
 }
 
 // ---------- Safety ----------
@@ -312,17 +383,4 @@ export async function resolveSos(alertId: string) {
     method: 'PATCH',
   });
   return readJson<{ id: string; status: string }>(response, 'Unable to resolve SOS');
-}
-
-export async function getRestaurant(id: string) {
-  const response = await apiFetch(`/restaurants/${encodeURIComponent(id)}`);
-  return readJson<Restaurant & { menu: MenuItem[] }>(response, 'Unable to get restaurant');
-}
-
-export async function placeOrder(payload: any) {
-  const response = await apiFetch('/orders', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
-  return readJson<{ id: string; status: string }>(response, 'Unable to place order');
 }

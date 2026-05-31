@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, SafeAreaView, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, SafeAreaView, Alert, Share } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { User, Shield, Bell, HelpCircle, LogOut, ChevronRight, Globe } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
@@ -35,25 +35,33 @@ export default function ProfileScreen() {
     ...(user?.role === 'DRIVER' ? [{ id: 'kyc', icon: <User size={22} color="#006947" />, title: 'Driver Verification', subtitle: 'Upload required documents' }] : []),
   ];
 
-  function handleMenuPress(id: string) {
+  async function handleMenuPress(id: string) {
     switch (id) {
       case 'kyc':
         router.push('/driver-kyc');
         break;
       case 'safety':
-        Alert.alert('Safety Center', 'Safety Center will be available soon.');
+        router.push('/trusted-contacts');
         break;
       case 'notifications':
         router.push('/notifications');
         break;
-      case 'referral':
-        Alert.alert('Refer a Friend', `Your Referral Code: REF-${user?.phone?.slice(-4) ?? '1234'}\n\nShare this code with friends to earn AFN 50 when they complete their first ride!`);
+      case 'referral': {
+        const code = `REF-${user?.phone?.slice(-4) ?? '1234'}`;
+        try {
+          await Share.share({
+            message: `Join Noori Mobility and get AFN 50 off your first ride! Use my code: ${code}`,
+          });
+        } catch (error) {
+          Alert.alert('Refer a Friend', `Your Referral Code: ${code}\n\nShare this code with friends to earn AFN 50 when they complete their first ride!`);
+        }
         break;
+      }
       case 'language':
-        Alert.alert('Coming Soon', 'Language selection will be available soon.');
+        router.push('/language-selection');
         break;
       case 'help':
-        Alert.alert('Coming Soon', 'Help & Support will be available soon.');
+        router.push('/help-support');
         break;
       default:
         break;
@@ -73,7 +81,7 @@ export default function ProfileScreen() {
             <User size={40} color="#006947" />
           </View>
           <View>
-            <Text className="text-2xl font-bold">{user?.name ?? 'Noori user'}</Text>
+            <Text className="text-2xl font-bold text-foreground">{user?.name ?? 'Noori user'}</Text>
             <Text className="text-muted-foreground">{user?.phone ?? 'Not signed in'}</Text>
             <Text className="text-xs text-primary font-bold mt-1">{user?.role ?? 'RIDER'}</Text>
           </View>
@@ -81,13 +89,13 @@ export default function ProfileScreen() {
 
         <View className="space-y-3">
           {menuItems.map((item) => (
-            <TouchableOpacity key={item.id} onPress={() => handleMenuPress(item.id)} className="flex-row items-center justify-between p-4 bg-card rounded-2xl border border-muted/10">
+            <TouchableOpacity key={item.id} onPress={() => handleMenuPress(item.id)} className="flex-row items-center justify-between p-4 bg-card rounded-2xl border border-muted/10 shadow-sm">
               <View className="flex-row items-center gap-4">
                 <View className="p-2 bg-primary/5 rounded-lg">
                   {item.icon}
                 </View>
                 <View>
-                  <Text className="font-bold text-sm">{item.title}</Text>
+                  <Text className="font-bold text-sm text-foreground">{item.title}</Text>
                   <Text className="text-muted-foreground text-xs">{item.subtitle}</Text>
                 </View>
               </View>

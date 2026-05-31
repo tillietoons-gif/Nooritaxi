@@ -3,7 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, SafeAreaView, ScrollView, Aler
 import { router } from 'expo-router';
 import { Package, MapPin, Navigation, Info, ArrowRight } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import { getStoredUser, API_URL } from '../lib/api';
+import { getStoredUser, createDelivery } from '../lib/api';
 
 export default function DeliveryScreen() {
   const { t } = useTranslation();
@@ -32,20 +32,14 @@ export default function DeliveryScreen() {
         return;
       }
       
-      const res = await fetch(`${API_URL}/deliveries`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          customerId: user.id,
-          pickupLocation: pickup,
-          dropoffLocation: dropoff,
-          packageType: type,
-          weight: Number(weight),
-        }),
+      await createDelivery({
+        customerId: user.id,
+        pickupAddress: pickup,
+        dropoffAddress: dropoff,
+        packageType: type,
+        weight: Number(weight),
       });
 
-      if (!res.ok) throw new Error('Failed to request delivery');
-      
       Alert.alert('Success', 'Delivery partner has been requested.');
       router.back();
     } catch (err) {

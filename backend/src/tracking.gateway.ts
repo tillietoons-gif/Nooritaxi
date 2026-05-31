@@ -54,7 +54,9 @@ export class TrackingGateway {
     });
 
     if (!trip) {
-      throw new WsException('Only the assigned driver can update this trip location');
+      throw new WsException(
+        'Only the assigned driver can update this trip location',
+      );
     }
 
     await this.prisma.driver.update({

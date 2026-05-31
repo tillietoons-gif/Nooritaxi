@@ -28,11 +28,17 @@ export class SuperAppService {
   ) {}
 
   createDriverProfile(data: any) {
-    return this.prisma.driver.create({ data, include: { user: true, vehicles: true } });
+    return this.prisma.driver.create({
+      data,
+      include: { user: true, vehicles: true },
+    });
   }
 
   listDrivers() {
-    return this.prisma.driver.findMany({ include: { user: true, vehicles: true }, orderBy: { updatedAt: 'desc' } });
+    return this.prisma.driver.findMany({
+      include: { user: true, vehicles: true },
+      orderBy: { updatedAt: 'desc' },
+    });
   }
 
   upsertRiderProfile(userId: string, data: any) {
@@ -48,7 +54,10 @@ export class SuperAppService {
   }
 
   listVehicles(driverId?: string) {
-    return this.prisma.vehicle.findMany({ where: driverId ? { driverId } : {}, include: { driver: { include: { user: true } } } });
+    return this.prisma.vehicle.findMany({
+      where: driverId ? { driverId } : {},
+      include: { driver: { include: { user: true } } },
+    });
   }
 
   createPromotion(data: any) {
@@ -57,40 +66,66 @@ export class SuperAppService {
 
   listPromotions(activeOnly = true) {
     return this.prisma.promotion.findMany({
-      where: activeOnly ? { isActive: true, startsAt: { lte: new Date() }, endsAt: { gte: new Date() } } : {},
+      where: activeOnly
+        ? {
+            isActive: true,
+            startsAt: { lte: new Date() },
+            endsAt: { gte: new Date() },
+          }
+        : {},
       orderBy: { createdAt: 'desc' },
     });
   }
 
-  async redeemPromotion(data: { code: string; userId: string; orderId?: string; tripId?: string; spend?: number }) {
+  async redeemPromotion(data: {
+    code: string;
+    userId: string;
+    orderId?: string;
+    tripId?: string;
+    spend?: number;
+  }) {
     const { code, userId, orderId, tripId, spend } = data;
 
     const promo = await this.prisma.promotion.findUnique({ where: { code } });
     if (!promo) throw new BadRequestException('Promotion code not found');
-    if (!promo.isActive) throw new BadRequestException('Promotion is not active');
+    if (!promo.isActive)
+      throw new BadRequestException('Promotion is not active');
     const now = new Date();
-    if (promo.startsAt > now) throw new BadRequestException('Promotion has not started yet');
-    if (promo.endsAt < now) throw new BadRequestException('Promotion has expired');
+    if (promo.startsAt > now)
+      throw new BadRequestException('Promotion has not started yet');
+    if (promo.endsAt < now)
+      throw new BadRequestException('Promotion has expired');
 
     // Check spend minimum
     if (promo.minSpend && spend != null && spend < Number(promo.minSpend)) {
-      throw new BadRequestException(`Minimum spend of ${promo.minSpend} required`);
+      throw new BadRequestException(
+        `Minimum spend of ${promo.minSpend} required`,
+      );
     }
 
     // Check total usage limit
     if (promo.usageLimit != null) {
-      const totalUses = await this.prisma.promotionRedemption.count({ where: { promotionId: promo.id } });
-      if (totalUses >= promo.usageLimit) throw new BadRequestException('Promotion usage limit reached');
+      const totalUses = await this.prisma.promotionRedemption.count({
+        where: { promotionId: promo.id },
+      });
+      if (totalUses >= promo.usageLimit)
+        throw new BadRequestException('Promotion usage limit reached');
     }
 
     // Check per-user limit
-    const userUses = await this.prisma.promotionRedemption.count({ where: { promotionId: promo.id, userId } });
-    if (userUses >= promo.perUserLimit) throw new BadRequestException('You have already used this promotion');
+    const userUses = await this.prisma.promotionRedemption.count({
+      where: { promotionId: promo.id, userId },
+    });
+    if (userUses >= promo.perUserLimit)
+      throw new BadRequestException('You have already used this promotion');
 
     // Compute discount
     let discount = Number(promo.value);
     if (promo.type === 'PERCENTAGE' && spend != null) {
-      discount = Math.min((spend * Number(promo.value)) / 100, promo.maxDiscount ? Number(promo.maxDiscount) : Infinity);
+      discount = Math.min(
+        (spend * Number(promo.value)) / 100,
+        promo.maxDiscount ? Number(promo.maxDiscount) : Infinity,
+      );
     }
 
     const redemption = await this.prisma.promotionRedemption.create({
@@ -99,9 +134,16 @@ export class SuperAppService {
 
     // Credit wallet for WALLET_CREDIT type promos
     if (promo.type === 'WALLET_CREDIT') {
-      await this.wallet.deposit(userId, discount, 'CUSTOMER', 'AFN',
+      await this.wallet.deposit(
+        userId,
+        discount,
+        'CUSTOMER',
+        'AFN',
         `promo:${promo.id}:${userId}`,
-        { transactionType: 'PROMO_CREDIT', description: `Promo credit: ${promo.code}` },
+        {
+          transactionType: 'PROMO_CREDIT',
+          description: `Promo credit: ${promo.code}`,
+        },
       );
     }
 
@@ -121,7 +163,10 @@ export class SuperAppService {
     // Compute and persist tier from updated lifetime
     const newTier = computeTier(updated.lifetime);
     if (newTier !== updated.tier) {
-      await this.prisma.loyaltyAccount.update({ where: { userId }, data: { tier: newTier } });
+      await this.prisma.loyaltyAccount.update({
+        where: { userId },
+        data: { tier: newTier },
+      });
       return { ...updated, tier: newTier };
     }
     return updated;
@@ -129,7 +174,9 @@ export class SuperAppService {
 
   async createNotification(data: any) {
     const notification = await this.prisma.notification.create({ data });
-    const devices = await this.prisma.pushDevice.findMany({ where: { userId: data.userId, isActive: true } });
+    const devices = await this.prisma.pushDevice.findMany({
+      where: { userId: data.userId, isActive: true },
+    });
     const pushResult = await this.push.sendToTokens(
       devices.map((device) => device.token),
       data.title,
@@ -140,7 +187,10 @@ export class SuperAppService {
   }
 
   listNotifications(userId: string) {
-    return this.prisma.notification.findMany({ where: { userId }, orderBy: { createdAt: 'desc' } });
+    return this.prisma.notification.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
   }
 
   registerPushDevice(data: any) {
@@ -152,12 +202,18 @@ export class SuperAppService {
   }
 
   createSupportTicket(data: any) {
-    return this.prisma.supportTicket.create({ data, include: { messages: true } });
+    return this.prisma.supportTicket.create({
+      data,
+      include: { messages: true },
+    });
   }
 
   listSupportTickets(status?: any, page = 1, limit = 25) {
     const safePage = Math.max(Number.isFinite(page) ? page : 1, 1);
-    const safeLimit = Math.min(Math.max(Number.isFinite(limit) ? limit : 25, 1), 100);
+    const safeLimit = Math.min(
+      Math.max(Number.isFinite(limit) ? limit : 25, 1),
+      100,
+    );
     return this.prisma.supportTicket.findMany({
       where: status ? { status } : {},
       include: { requester: true, assignee: true, messages: true },
@@ -175,11 +231,21 @@ export class SuperAppService {
     const term = query ?? '';
     return Promise.all([
       this.prisma.restaurant.findMany({
-        where: { OR: [{ name: { contains: term, mode: 'insensitive' } }, { cuisineTypes: { has: term } }] },
+        where: {
+          OR: [
+            { name: { contains: term, mode: 'insensitive' } },
+            { cuisineTypes: { has: term } },
+          ],
+        },
         take: 10,
       }),
       this.prisma.menuItem.findMany({
-        where: { OR: [{ name: { contains: term, mode: 'insensitive' } }, { category: { contains: term, mode: 'insensitive' } }] },
+        where: {
+          OR: [
+            { name: { contains: term, mode: 'insensitive' } },
+            { category: { contains: term, mode: 'insensitive' } },
+          ],
+        },
         take: 10,
       }),
       this.prisma.driver.findMany({
@@ -187,13 +253,33 @@ export class SuperAppService {
         include: { user: true, vehicles: true },
         take: 10,
       }),
-    ]).then(([restaurants, menuItems, drivers]) => ({ restaurants, menuItems, drivers }));
+    ]).then(([restaurants, menuItems, drivers]) => ({
+      restaurants,
+      menuItems,
+      drivers,
+    }));
   }
 
   adminOverview() {
-    const activeTripStatuses = ['REQUESTED', 'ACCEPTED', 'DRIVER_ARRIVED', 'IN_PROGRESS'] as any;
-    const activeOrderStatuses = ['PLACED', 'ACCEPTED', 'PREPARING', 'READY_FOR_PICKUP', 'OUT_FOR_DELIVERY'] as any;
-    const activeDeliveryStatuses = ['REQUESTED', 'ASSIGNED', 'PICKED_UP', 'IN_TRANSIT'] as any;
+    const activeTripStatuses = [
+      'REQUESTED',
+      'ACCEPTED',
+      'DRIVER_ARRIVED',
+      'IN_PROGRESS',
+    ] as any;
+    const activeOrderStatuses = [
+      'PLACED',
+      'ACCEPTED',
+      'PREPARING',
+      'READY_FOR_PICKUP',
+      'OUT_FOR_DELIVERY',
+    ] as any;
+    const activeDeliveryStatuses = [
+      'REQUESTED',
+      'ASSIGNED',
+      'PICKED_UP',
+      'IN_TRANSIT',
+    ] as any;
 
     return Promise.all([
       this.prisma.user.count(),
@@ -201,10 +287,16 @@ export class SuperAppService {
       this.prisma.trip.count(),
       this.prisma.order.count(),
       this.prisma.delivery.count(),
-      this.prisma.supportTicket.count({ where: { status: { in: ['OPEN', 'PENDING'] as any } } }),
+      this.prisma.supportTicket.count({
+        where: { status: { in: ['OPEN', 'PENDING'] as any } },
+      }),
       this.prisma.trip.count({ where: { status: { in: activeTripStatuses } } }),
-      this.prisma.order.count({ where: { status: { in: activeOrderStatuses } } }),
-      this.prisma.delivery.count({ where: { status: { in: activeDeliveryStatuses } } }),
+      this.prisma.order.count({
+        where: { status: { in: activeOrderStatuses } },
+      }),
+      this.prisma.delivery.count({
+        where: { status: { in: activeDeliveryStatuses } },
+      }),
     ]).then(
       ([
         users,
@@ -230,7 +322,14 @@ export class SuperAppService {
     );
   }
 
-  async audit(action: string, entityType: string, entityId?: string, actorId?: string, after?: any, before?: any) {
+  async audit(
+    action: string,
+    entityType: string,
+    entityId?: string,
+    actorId?: string,
+    after?: any,
+    before?: any,
+  ) {
     await this.prisma.auditLog.create({
       data: {
         action,

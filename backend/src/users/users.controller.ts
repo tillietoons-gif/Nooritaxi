@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { DocumentStatus, DocumentType, UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -28,7 +37,10 @@ export class UsersController {
     @Query('page') page?: string,
     @Query('limit') limit?: string,
   ) {
-    return this.usersService.listPendingKycDocuments(Number(page ?? 1), Number(limit ?? 25));
+    return this.usersService.listPendingKycDocuments(
+      Number(page ?? 1),
+      Number(limit ?? 25),
+    );
   }
 
   @Patch('admin/documents/:documentId/verify')
@@ -39,6 +51,10 @@ export class UsersController {
     @Body() body: { status: DocumentStatus },
     @CurrentUser() user: any,
   ) {
-    return this.usersService.verifyKycDocument(documentId, body.status, user.id);
+    return this.usersService.verifyKycDocument(
+      documentId,
+      body.status,
+      user.id,
+    );
   }
 }

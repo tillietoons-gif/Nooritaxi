@@ -18,7 +18,10 @@ describe('AppController', () => {
 
   describe('root', () => {
     it('should return service status object', () => {
-      expect(appController.getRoot()).toEqual({ service: 'noori-backend', status: 'ok' });
+      expect(appController.getRoot()).toEqual({
+        service: 'noori-backend',
+        status: 'ok',
+      });
     });
   });
 });

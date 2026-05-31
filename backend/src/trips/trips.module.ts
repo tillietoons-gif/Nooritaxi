@@ -8,6 +8,6 @@ import { DispatchModule } from '../dispatch/dispatch.module';
 @Module({
   imports: [PushModule, WalletModule, DispatchModule],
   providers: [TripsService],
-  controllers: [TripsController]
+  controllers: [TripsController],
 })
 export class TripsModule {}

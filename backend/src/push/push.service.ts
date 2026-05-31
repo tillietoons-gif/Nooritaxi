@@ -9,7 +9,9 @@ export class PushService {
   private readonly enabled: boolean;
 
   constructor(config: ConfigService) {
-    this.enabled = config.get<string>('PUSH_PROVIDER') === 'firebase' && Boolean(config.get<string>('FIREBASE_PROJECT_ID'));
+    this.enabled =
+      config.get<string>('PUSH_PROVIDER') === 'firebase' &&
+      Boolean(config.get<string>('FIREBASE_PROJECT_ID'));
 
     if (this.enabled && !getApps().length) {
       try {
@@ -18,13 +20,21 @@ export class PushService {
           projectId: config.get<string>('FIREBASE_PROJECT_ID'),
         });
       } catch (error) {
-        this.logger.warn(`Firebase initialization skipped: ${(error as Error).message}`);
+        this.logger.warn(
+          `Firebase initialization skipped: ${(error as Error).message}`,
+        );
       }
     }
   }
 
-  async sendToTokens(tokens: string[], title: string, body: string, data?: Record<string, string>) {
-    if (!this.enabled || !tokens.length || !getApps().length) return { sent: 0, skipped: tokens.length };
+  async sendToTokens(
+    tokens: string[],
+    title: string,
+    body: string,
+    data?: Record<string, string>,
+  ) {
+    if (!this.enabled || !tokens.length || !getApps().length)
+      return { sent: 0, skipped: tokens.length };
 
     const response = await getMessaging().sendEachForMulticast({
       tokens,

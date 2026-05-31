@@ -55,6 +55,17 @@ export class DispatchService {
     return topCandidates[0]?.driver;
   }
 
+  private calculateBoundingBox(lat: number, lng: number, distanceKm: number) {
+    const latDelta = distanceKm / 111;
+    const lngDelta = distanceKm / (111 * Math.cos(this.toRadians(lat)));
+    return {
+      minLat: lat - latDelta,
+      maxLat: lat + latDelta,
+      minLng: lng - lngDelta,
+      maxLng: lng + lngDelta,
+    };
+  }
+
   // Mock integration with OSRM/Google Maps for actual road distance
   private async calculateRouteDistance(fromLat: number, fromLng: number, toLat: number, toLng: number): Promise<number> {
     const straightLine = this.distanceKm(fromLat, fromLng, toLat, toLng);

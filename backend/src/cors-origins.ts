@@ -5,17 +5,25 @@ const LOCAL_DEV_ORIGIN_PATTERNS = [
   /^http:\/\/10\.\d+\.\d+\.\d+:\d+$/,
 ];
 
-export function getConfiguredCorsOrigins(corsOrigin: string | undefined): string[] {
+export function getConfiguredCorsOrigins(
+  corsOrigin: string | undefined,
+): string[] {
   return (corsOrigin ?? '')
     .split(',')
     .map((origin) => origin.trim())
     .filter(Boolean);
 }
 
-export function isAllowedCorsOrigin(origin: string | undefined, allowedOrigins: string[]): boolean {
+export function isAllowedCorsOrigin(
+  origin: string | undefined,
+  allowedOrigins: string[],
+): boolean {
   if (!origin) {
     return true;
   }
 
-  return allowedOrigins.includes(origin) || LOCAL_DEV_ORIGIN_PATTERNS.some((pattern) => pattern.test(origin));
+  return (
+    allowedOrigins.includes(origin) ||
+    LOCAL_DEV_ORIGIN_PATTERNS.some((pattern) => pattern.test(origin))
+  );
 }

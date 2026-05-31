@@ -1,4 +1,23 @@
 {
+  "home": {
+    "greeting_morning": "Good morning",
+    "greeting_evening": "Good evening",
+    "wallet_label": "Total Balance",
+    "add_money": "Add Money",
+    "details": "Details",
+    "search_placeholder": "Where would you like to go?",
+    "services_title": "Our Services",
+    "taxi_label": "NooriTaxi",
+    "taxi_sub": "Daily Rides",
+    "food_label": "NooriFood",
+    "food_sub": "Hot Meals",
+    "parcel_label": "NooriParcel",
+    "parcel_sub": "Delivery",
+    "more_label": "More",
+    "more_sub": "Stay Tuned",
+    "cultural_tip_title": "Safe Travels with Noori",
+    "cultural_tip_body": "Your safety is our priority. Use the Safety Code for every ride to verify your driver."
+  },
   "food": {
     "title": "Food Delivery",
     "hero_heading": "Craving something?",

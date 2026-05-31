@@ -2,9 +2,10 @@ import React from 'react';
 import { View, Text, TextInput, TouchableOpacity, SafeAreaView, ScrollView } from 'react-native';
 import { router } from 'expo-router';
 import * as Location from 'expo-location';
-import { Car, MapPin, Navigation, ShieldCheck } from 'lucide-react-native';
+import { Car, MapPin, Navigation, ShieldCheck, ChevronLeft } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { bookRide, getRideEstimate, getStoredUser, RideEstimate } from '../lib/api';
+import { PatternOverlay } from '../components/PatternOverlay';
 
 export default function BookRideScreen() {
   const { t } = useTranslation();
@@ -21,7 +22,6 @@ export default function BookRideScreen() {
       if (status !== 'granted') return;
       try {
         let location = await Location.getCurrentPositionAsync({});
-        // Mock reverse geocoding for now. In a real app we'd convert lat/lng to a string.
         setPickupLocation('Current Location');
       } catch (e) {
         console.log('Location error:', e);
@@ -71,48 +71,100 @@ export default function BookRideScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <ScrollView className="px-4 py-6">
-        <Text className="text-2xl font-bold text-primary mb-6">{t('book_ride.title', 'Book a Ride')}</Text>
-
-        <View className="space-y-4">
-          <View className="flex-row items-center bg-muted/30 h-14 px-4 rounded-xl">
-            <MapPin size={20} color="#006947" />
-            <TextInput value={pickupLocation} onChangeText={setPickupLocation} placeholder="Pickup location" className="flex-1 ml-3 text-base" />
+      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+        <View className="px-6 py-6">
+          <View className="flex-row items-center mb-8 gap-4">
+             <TouchableOpacity onPress={() => router.back()} className="p-3 bg-card rounded-2xl border border-muted/20 shadow-sm">
+                <ChevronLeft size={20} color="#006947" />
+             </TouchableOpacity>
+             <Text className="text-2xl font-bold text-foreground">{t('book_ride.title', 'Book a Ride')}</Text>
           </View>
-          <View className="flex-row items-center bg-muted/30 h-14 px-4 rounded-xl">
-            <Navigation size={20} color="#6d7a71" />
-            <TextInput value={dropoffLocation} onChangeText={setDropoffLocation} placeholder="Destination" className="flex-1 ml-3 text-base" />
-          </View>
-        </View>
 
-        <View className="bg-card rounded-2xl border border-muted/10 p-5 mt-6">
-          <View className="flex-row items-center justify-between">
-            <View className="flex-row items-center gap-2">
-              <Car size={18} color="#006947" />
-              <Text className="font-bold">{t('book_ride.fare_preview', 'Fare preview')}</Text>
+          <View className="bg-card p-6 rounded-4xl shadow-sm border border-muted/10 mb-8">
+            <View className="space-y-4">
+              <View>
+                <Text className="text-xs font-bold text-muted-foreground uppercase mb-2 ml-1">From</Text>
+                <View className="flex-row items-center bg-muted/10 h-14 px-4 rounded-2xl border border-muted/20">
+                  <MapPin size={20} color="#006947" />
+                  <TextInput
+                    value={pickupLocation}
+                    onChangeText={setPickupLocation}
+                    placeholder={t('book_ride.pickup_placeholder', 'Pickup location')}
+                    className="flex-1 ml-3 text-base font-bold text-foreground"
+                  />
+                </View>
+              </View>
+
+              <View className="h-4 items-center">
+                 <View className="w-[1px] h-full bg-muted/30" />
+              </View>
+
+              <View>
+                <Text className="text-xs font-bold text-muted-foreground uppercase mb-2 ml-1">To</Text>
+                <View className="flex-row items-center bg-muted/10 h-14 px-4 rounded-2xl border border-muted/20">
+                  <Navigation size={20} color="#D4AF37" />
+                  <TextInput
+                    value={dropoffLocation}
+                    onChangeText={setDropoffLocation}
+                    placeholder={t('book_ride.destination_placeholder', 'Destination')}
+                    className="flex-1 ml-3 text-base font-bold text-foreground"
+                  />
+                </View>
+              </View>
             </View>
-            <Text className="text-xl font-bold text-primary">
-              {estimate ? `${estimate.fare.toLocaleString()} ${estimate.currency}` : 'Enter trip'}
+          </View>
+
+          <View className="bg-primary/5 rounded-3xl border border-primary/10 p-6 mb-8">
+            <View className="flex-row items-center justify-between">
+              <View className="flex-row items-center gap-3">
+                <View className="bg-primary/10 p-3 rounded-2xl">
+                  <Car size={20} color="#006947" />
+                </View>
+                <View>
+                  <Text className="font-bold text-foreground">{t('book_ride.fare_preview', 'Fare preview')}</Text>
+                  <Text className="text-[10px] text-muted-foreground uppercase font-black">Estimate</Text>
+                </View>
+              </View>
+              <Text className="text-2xl font-black text-primary">
+                {estimate ? `${estimate.fare.toLocaleString()} ${estimate.currency}` : '---'}
+              </Text>
+            </View>
+            <Text className="text-[10px] text-muted-foreground mt-4 leading-4">
+              {t('book_ride.estimate_notice', 'Estimate uses city distance until GPS route is fully calculated.')}
             </Text>
           </View>
-          <Text className="text-xs text-muted-foreground mt-2">{t('book_ride.estimate_notice', 'Estimate uses a 5 km city ride until map distance is available.')}</Text>
-        </View>
 
-        {safetyCode ? (
-          <View className="bg-primary/10 rounded-2xl p-5 mt-6 flex-row items-center gap-3">
-            <ShieldCheck size={24} color="#006947" />
-            <View>
-              <Text className="text-primary font-bold">{t('book_ride.safety_code', 'Safety code')}</Text>
-              <Text className="text-2xl font-bold text-primary">{safetyCode}</Text>
+          {safetyCode ? (
+            <View className="bg-primary rounded-4xl p-8 mb-8 shadow-high-tech overflow-hidden relative">
+              <PatternOverlay color="#ffffff" opacity={0.1} />
+              <View className="relative z-10 flex-row items-center justify-between">
+                <View>
+                  <Text className="text-white/70 text-[10px] font-bold uppercase tracking-widest mb-1">{t('book_ride.safety_code', 'Safety code')}</Text>
+                  <Text className="text-4xl font-black text-white">{safetyCode}</Text>
+                </View>
+                <View className="bg-accent p-4 rounded-3xl">
+                   <ShieldCheck size={32} color="#002113" />
+                </View>
+              </View>
             </View>
-          </View>
-        ) : null}
+          ) : null}
 
-        {message ? <Text className="text-center text-sm text-muted-foreground mt-5">{message}</Text> : null}
+          {message && !safetyCode ? (
+            <View className="mb-6 p-4 bg-primary/10 rounded-2xl border border-primary/20">
+              <Text className="text-primary font-bold text-center text-xs">{message}</Text>
+            </View>
+          ) : null}
 
-        <TouchableOpacity onPress={confirm} disabled={loading || !pickupLocation || !dropoffLocation} className="bg-primary h-14 rounded-xl items-center justify-center mt-8">
-          <Text className="text-white text-lg font-bold">{loading ? 'Confirming...' : 'Confirm Ride'}</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            onPress={confirm}
+            disabled={loading || !pickupLocation || !dropoffLocation}
+            className={`h-16 rounded-3xl items-center justify-center shadow-lg mb-10 ${loading || !pickupLocation || !dropoffLocation ? 'bg-muted shadow-none' : 'bg-primary shadow-primary/30'}`}
+          >
+            <Text className="text-white text-lg font-black uppercase tracking-widest">
+              {loading ? t('book_ride.confirming', 'Confirming...') : t('book_ride.confirm_ride', 'Confirm Ride')}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

@@ -4,7 +4,7 @@ import { getStoredUser } from '../lib/api';
 import { SplashScreen } from '../components/SplashScreen';
 
 export default function IndexRoute() {
-  const [target, setTarget] = useState<'/(auth)/login' | '/(tabs)/trips' | null>(null);
+  const [target, setTarget] = useState<'/(auth)/login' | '/(tabs)/home' | null>(null);
   const [animationFinished, setAnimationFinished] = useState(false);
   const [dataLoaded, setDataLoaded] = useState(false);
 
@@ -15,7 +15,7 @@ export default function IndexRoute() {
       try {
         const user = await getStoredUser();
         if (mounted) {
-          setTarget(user ? '/(tabs)/trips' : '/(auth)/login');
+          setTarget(user ? '/(tabs)/home' : '/(auth)/login');
           setDataLoaded(true);
         }
       } catch (error) {

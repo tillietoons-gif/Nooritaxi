@@ -1,4 +1,5 @@
 "use client"
+import Image from "next/image"
 
 import Link from "next/link"
 import { motion, useScroll, useTransform } from "framer-motion"
@@ -51,10 +52,18 @@ export default function LandingPage() {
       description: "AI-optimized routing for maximum efficiency and sub-30 minute delivery times.",
       icon: <Car className="h-6 w-6" />,
       size: "large" as const,
-      header: <div className="h-full w-full bg-primary/5 rounded-2xl flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 opacity-10"><PatternOverlay /></div>
-        <Car className="h-20 w-20 text-primary/30" />
-      </div>
+      header: (
+        <div className="h-full w-full relative rounded-2xl overflow-hidden min-h-[240px]">
+          <Image
+            src="/images/fleet-hero.webp"
+            alt="Intelligent Fleet"
+            fill
+            className="object-cover transition-transform duration-700 group-hover:scale-110"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+        </div>
+      )
     },
     {
       title: "Global Logistics",

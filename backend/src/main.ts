@@ -10,7 +10,9 @@ import * as helmet from 'helmet';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
-  const allowedOrigins = getConfiguredCorsOrigins(configService.get<string>('CORS_ORIGIN'));
+  const allowedOrigins = getConfiguredCorsOrigins(
+    configService.get<string>('CORS_ORIGIN'),
+  );
 
   app.use((helmet as any).default?.() || (helmet as any)());
   app.enableCors({
@@ -22,7 +24,13 @@ async function bootstrap() {
   app.useWebSocketAdapter(new ConfiguredSocketIoAdapter(app, configService));
   app.setGlobalPrefix('api');
   app.useGlobalFilters(new PrismaExceptionFilter());
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
   await app.listen(configService.get<number>('PORT') ?? 3000);
 }
 bootstrap();

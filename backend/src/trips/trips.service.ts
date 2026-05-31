@@ -1,15 +1,5 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import {
-  Driver,
-  DriverStatus,
-  PaymentMethod,
-  Trip,
-  TripStatus,
-} from '@prisma/client';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { DriverStatus, PaymentMethod, Trip, TripStatus } from '@prisma/client';
 import { PrismaService } from '../prisma.service';
 import { PushService } from '../push/push.service';
 import {
@@ -37,63 +27,49 @@ export class TripsService {
       data.pickupLng,
     );
     const { baseFare, fare } = this.estimateRideFare(distance, surgeMultiplier);
+    
+    const { ride, matchedDriverTokens } = await this.prisma.$transaction(async (tx) => {
+      const createdRide = await tx.trip.create({
+        data: {
+          ...data,
+          distance,
+          baseFare,
+          fare,
+          surgeMultiplier,
+          safetyCode: data.safetyCode ?? Math.floor(1000 + Math.random() * 9000).toString(),
+        },
+      });
 
-    const { ride, matchedDriverTokens } = await this.prisma.$transaction(
-      async (tx) => {
-        const createdRide = await tx.trip.create({
-          data: {
-            ...data,
-            distance,
-            baseFare,
-            fare,
-            surgeMultiplier,
-            safetyCode:
-              data.safetyCode ??
-              Math.floor(1000 + Math.random() * 9000).toString(),
-          },
-        });
+      const matchedDriver = data.driverId
+        ? null
+        : await this.dispatch.findNearestOnlineDriver(data.pickupLat, data.pickupLng, 10, tx);
+      const assignedDriverUserId = data.driverId ?? matchedDriver?.userId;
+      const assignedVehicleId = data.vehicleId ?? matchedDriver?.vehicles[0]?.id;
 
-        const matchedDriver = data.driverId
-          ? null
-          : await this.dispatch.findNearestOnlineDriver(
-              data.pickupLat,
-              data.pickupLng,
-              10,
-              tx,
-            );
-        const assignedDriverUserId = data.driverId ?? matchedDriver?.userId;
-        const assignedVehicleId =
-          data.vehicleId ?? matchedDriver?.vehicles[0]?.id;
+      if (!assignedDriverUserId) return { ride: createdRide, matchedDriverTokens: [] };
 
-        if (!assignedDriverUserId)
-          return { ride: createdRide, matchedDriverTokens: [] };
+      const updatedRide = await tx.trip.update({
+        where: { id: createdRide.id },
+        data: {
+          driverId: assignedDriverUserId,
+          vehicleId: assignedVehicleId,
+          status: TripStatus.ACCEPTED,
+          acceptedAt: new Date(),
+        },
+      });
 
-        const updatedRide = await tx.trip.update({
-          where: { id: createdRide.id },
-          data: {
-            driverId: assignedDriverUserId,
-            vehicleId: assignedVehicleId,
-            status: TripStatus.ACCEPTED,
-            acceptedAt: new Date(),
-          },
-        });
+      await tx.driver.updateMany({
+        where: { userId: assignedDriverUserId },
+        data: { status: DriverStatus.BUSY },
+      });
 
-        await tx.driver.updateMany({
-          where: { userId: assignedDriverUserId },
-          data: { status: DriverStatus.BUSY },
-        });
+      const devices = await tx.pushDevice.findMany({
+        where: { userId: assignedDriverUserId, isActive: true },
+        select: { token: true },
+      });
 
-        const devices = await tx.pushDevice.findMany({
-          where: { userId: assignedDriverUserId, isActive: true },
-          select: { token: true },
-        });
-
-        return {
-          ride: updatedRide,
-          matchedDriverTokens: devices.map((device) => device.token),
-        };
-      },
-    );
+      return { ride: updatedRide, matchedDriverTokens: devices.map((device: any) => device.token) };
+    });
 
     if (matchedDriverTokens.length) {
       await this.push.sendToTokens(
@@ -128,7 +104,7 @@ export class TripsService {
   async updateRide(id: string, data: any) {
     const { ride, before } = await this.prisma.$transaction(async (tx) => {
       const before = await tx.trip.findUnique({ where: { id } });
-      const { actorId, ...rideData } = data;
+      const { actorId: _, ...rideData } = data;
 
       if (before && rideData.status) {
         assertTripStatusTransition(before.status, rideData.status);
@@ -216,8 +192,25 @@ export class TripsService {
   private isPointInGeoJsonPolygon(lat: number, lng: number, polygon: unknown) {
     if (!this.isGeoJsonPolygon(polygon)) return false;
     const [outerRing, ...holes] = polygon.coordinates;
-    if (!outerRing || !this.isPointInRing(lat, lng, outerRing)) return false;
+    if (!outerRing) return false;
+
+    // Performance Optimization: Bounding Box Pre-check
+    // Fast O(1) check to skip O(N) Point-in-Polygon for distant zones
+    if (!this.isPointInBoundingBox(lat, lng, outerRing)) return false;
+
+    if (!this.isPointInRing(lat, lng, outerRing)) return false;
     return !holes.some((ring) => this.isPointInRing(lat, lng, ring));
+  }
+
+  private isPointInBoundingBox(lat: number, lng: number, ring: number[][]) {
+    let minLat = Infinity, maxLat = -Infinity, minLng = Infinity, maxLng = -Infinity;
+    for (const [rLng, rLat] of ring) {
+      if (rLat < minLat) minLat = rLat;
+      if (rLat > maxLat) maxLat = rLat;
+      if (rLng < minLng) minLng = rLng;
+      if (rLng > maxLng) maxLng = rLng;
+    }
+    return lat >= minLat && lat <= maxLat && lng >= minLng && lng <= maxLng;
   }
 
   private isGeoJsonPolygon(value: unknown): value is GeoJsonPolygon {

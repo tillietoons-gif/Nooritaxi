@@ -1,118 +1,85 @@
-"use client";
+"use client"
 
-import React, { useEffect, useState } from "react";
-import Link from "next/link";
-import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
+import Link from "next/link"
+import { motion, useScroll, useTransform } from "framer-motion"
+import { Button } from "@/components/ui/button"
+import { Header } from "@/components/layout/header"
+import { Footer } from "@/components/layout/footer"
+import { NooriLogo } from "@/components/ui/noori-logo"
+import { LogisticsNetwork } from "@/components/interactive/logistics-network"
+import { Scene3D } from "@/components/interactive/scene-3d"
+import { PatternOverlay } from "@/components/ui/pattern-overlay"
+import { GlassSurface } from "@/components/ui/glass-surface"
+import { BentoGrid, BentoCard } from "@/components/ui/bento-grid"
+import { HeadingLg, HeadingMd, HeadingSm, BodyLg, BodyMd, LabelMd } from "@/components/ui/typography"
+import { Badge } from "@/components/ui/badge"
 import {
   ArrowRight,
-  Shield,
-  Clock,
-  Smartphone,
+  ChevronRight,
   Globe,
-  Star,
+  Zap,
+  Shield,
+  Activity,
+  Layers,
   Car,
   Package,
-  MapPin,
-  ChevronRight,
-  Activity,
-  Zap,
-  Layers,
-  BarChart3
-} from "lucide-react";
-
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { HeadingLg, HeadingMd, HeadingSm, BodyLg, BodyMd, LabelMd } from "@/components/ui/typography";
-import { NooriLogo } from "@/components/ui/noori-logo";
-import { PatternOverlay } from "@/components/ui/pattern-overlay";
-import { Header } from "@/components/layout/header";
-import { Footer } from "@/components/layout/footer";
-import { BentoGrid, BentoCard } from "@/components/ui/bento-grid";
-import { GlassSurface } from "@/components/ui/glass-surface";
-import { Scene3D } from "@/components/interactive/scene-3d";
-import { LogisticsNetwork } from "@/components/interactive/logistics-network";
-import { useUserBehavior } from "@/components/user-behavior-provider";
+  Utensils,
+  Heart,
+  Smartphone
+} from "lucide-react"
+import { useUserBehavior } from "@/components/user-behavior-provider"
+import { useEffect, useState } from "react"
 
 export default function LandingPage() {
-  const { behavior, updateBehavior } = useUserBehavior();
-  const { scrollY } = useScroll();
-  const y1 = useTransform(scrollY, [0, 500], [0, 200]);
-  const opacity = useTransform(scrollY, [0, 300], [1, 0]);
+  const { behavior } = useUserBehavior()
+  const { scrollY } = useScroll()
+  const opacity = useTransform(scrollY, [0, 200], [1, 0])
+  const y1 = useTransform(scrollY, [0, 500], [0, -100])
 
-  const [greeting, setGreeting] = useState("Welcome to Noori");
+  const [greeting, setGreeting] = useState("Good Morning")
 
   useEffect(() => {
-    const hours = behavior.timeOfDay;
-    if (hours === "morning") setGreeting("Good Morning");
-    else if (hours === "afternoon") setGreeting("Good Afternoon");
-    else if (hours === "evening") setGreeting("Good Evening");
-    else setGreeting("Welcome Back");
-  }, [behavior.timeOfDay]);
+    const hour = new Date().getHours()
+    if (hour < 12) setGreeting("Good Morning")
+    else if (hour < 18) setGreeting("Good Afternoon")
+    else setGreeting("Good Evening")
+  }, [])
 
   const services = [
     {
-      title: "Real-Time Tracking",
-      description: "AI-powered precision tracking for every shipment, everywhere.",
+      title: "Intelligent Fleet",
+      description: "AI-optimized routing for maximum efficiency and sub-30 minute delivery times.",
+      icon: <Car className="h-6 w-6" />,
+      size: "large" as const,
+      header: <div className="h-full w-full bg-primary/5 rounded-2xl flex items-center justify-center overflow-hidden">
+        <div className="absolute inset-0 opacity-10"><PatternOverlay /></div>
+        <Car className="h-20 w-20 text-primary/30" />
+      </div>
+    },
+    {
+      title: "Global Logistics",
+      description: "Freight management across borders with real-time customs integration.",
+      icon: <Globe className="h-6 w-6" />,
+      size: "medium" as const,
+    },
+    {
+      title: "Parcel Express",
+      description: "On-demand hyper-local delivery for businesses and individuals.",
+      icon: <Package className="h-6 w-6" />,
+      size: "medium" as const,
+    },
+    {
+      title: "Real-time Tracking",
+      description: "High-fidelity WebGL visualization of every asset in your supply chain.",
       icon: <Activity className="h-6 w-6" />,
       size: "large" as const,
-      header: <div className="h-40 w-full bg-primary/5 rounded-2xl flex items-center justify-center overflow-hidden relative">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--primary)_0%,_transparent_70%)] opacity-10" />
-        <div className="flex gap-4 items-end h-20">
-          {[40, 70, 45, 90, 65, 80, 50].map((h, i) => (
-            <motion.div
-              key={i}
-              className="w-3 bg-primary rounded-t-full"
-              initial={{ height: 0 }}
-              animate={{ height: `${h}%` }}
-              transition={{ delay: i * 0.1, repeat: Infinity, repeatType: "reverse", duration: 1.5 }}
-            />
-          ))}
-        </div>
+      header: <div className="h-full w-full bg-gold/5 rounded-2xl flex items-center justify-center overflow-hidden">
+        <div className="absolute inset-0 opacity-10"><PatternOverlay /></div>
+        <Activity className="h-20 w-20 text-gold/30" />
       </div>
-    },
-    {
-      title: "Smart Logistics",
-      description: "Route optimization that saves time and fuel.",
-      icon: <Zap className="h-6 w-6" />,
-      size: "medium" as const,
-      header: <div className="h-40 w-full bg-primary/5 rounded-2xl p-4 overflow-hidden">
-        <div className="flex flex-col gap-2">
-          <div className="h-2 w-full bg-primary/10 rounded-full overflow-hidden">
-            <motion.div className="h-full bg-primary" animate={{ x: ["-100%", "100%"] }} transition={{ duration: 2, repeat: Infinity }} />
-          </div>
-          <div className="h-2 w-3/4 bg-primary/10 rounded-full overflow-hidden">
-            <motion.div className="h-full bg-gold" animate={{ x: ["-100%", "100%"] }} transition={{ duration: 3, repeat: Infinity, delay: 0.5 }} />
-          </div>
-        </div>
-      </div>
-    },
-    {
-      title: "Global Reach",
-      description: "Connecting Afghanistan to the world via multi-modal routes.",
-      icon: <Globe className="h-6 w-6" />,
-      size: "small" as const,
-    },
-    {
-      title: "Fleet Monitoring",
-      description: "24/7 visibility into your entire transportation asset base.",
-      icon: <Car className="h-6 w-6" />,
-      size: "medium" as const,
-    },
-    {
-      title: "Deep Analytics",
-      description: "Data-driven insights to scale your operations efficiently.",
-      icon: <BarChart3 className="h-6 w-6" />,
-      size: "medium" as const,
-    },
-    {
-      title: "Security First",
-      description: "Military-grade protection for high-value cargo.",
-      icon: <Shield className="h-6 w-6" />,
-      size: "small" as const,
     }
-  ];
+  ]
 
-  // Dynamic prioritization
   const sortedServices = [...services].sort((a, b) => {
     if (behavior.preferredService === "delivery" && a.title.includes("Tracking")) return -1;
     if (behavior.preferredService === "ride" && a.title.includes("Fleet")) return -1;
@@ -263,8 +230,8 @@ export default function LandingPage() {
                         <HeadingSm>System Integrity 99.9%</HeadingSm>
                         <BodyMd>Operating at peak efficiency</BodyMd>
                       </div>
-                      <Button className="rounded-full h-12 px-8 bg-primary font-bold">
-                        View Dashboard
+                      <Button className="rounded-full h-12 px-8 bg-primary font-bold" asChild>
+                        <Link href="/dashboard">View Dashboard</Link>
                       </Button>
                    </div>
                 </div>
@@ -286,11 +253,13 @@ export default function LandingPage() {
                   Join the elite businesses and individuals scaling with Noori. Experience logistics without friction.
                 </BodyLg>
                 <div className="flex flex-col sm:flex-row gap-6 justify-center">
-                  <Button size="xl" className="h-20 px-12 rounded-full text-xl font-black shadow-2xl shadow-primary/40 group">
-                    Start Your Journey <ChevronRight className="ml-2 h-6 w-6 transition-transform group-hover:translate-x-1" />
+                  <Button size="xl" className="h-20 px-12 rounded-full text-xl font-black shadow-2xl shadow-primary/40 group" asChild>
+                    <Link href="/signup">
+                      Start Your Journey <ChevronRight className="ml-2 h-6 w-6 transition-transform group-hover:translate-x-1" />
+                    </Link>
                   </Button>
-                  <Button variant="outline" size="xl" className="h-20 px-12 rounded-full text-xl font-black glass border-primary/20">
-                    Contact Sales
+                  <Button variant="outline" size="xl" className="h-20 px-12 rounded-full text-xl font-black glass border-primary/20" asChild>
+                    <Link href="/contact">Contact Sales</Link>
                   </Button>
                 </div>
               </div>

@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Menu, Globe, User, LayoutDashboard, LogOut } from "lucide-react"
+import { Menu, Globe, User, LayoutDashboard, LogOut, ChevronDown } from "lucide-react"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { useState, useEffect } from "react"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -10,12 +10,20 @@ import { NooriLogo } from "@/components/ui/noori-logo"
 import { motion, useScroll, useMotionValueEvent, AnimatePresence } from "framer-motion"
 import { getStoredUser, clearSession } from "@/lib/auth"
 import { LabelMd } from "@/components/ui/typography"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { useTranslation } from "react-i18next"
 
 export function Header() {
   const [isOpen, setIsOpen] = useState(false)
   const { scrollY } = useScroll()
   const [isScrolled, setIsScrolled] = useState(false)
   const [user, setUser] = useState<any>(null)
+  const { i18n } = useTranslation()
 
   useEffect(() => {
     setUser(getStoredUser())
@@ -26,11 +34,17 @@ export function Header() {
   })
 
   const navigation = [
-    { name: "Solutions", href: "/#services" },
-    { name: "Logistics", href: "/#services" },
+    { name: "Services", href: "/services" },
+    { name: "Partners", href: "/partners" },
     { name: "Safety", href: "/safety" },
     { name: "About", href: "/about" },
   ]
+
+  const changeLanguage = (lng: string) => {
+    i18n.changeLanguage(lng)
+  }
+
+  const currentLang = i18n.language === 'fa' ? 'Dari' : i18n.language === 'ps' ? 'Pashto' : 'English'
 
   return (
     <header className="fixed top-0 z-50 w-full transition-all duration-500 px-4 pt-6">
@@ -68,10 +82,18 @@ export function Header() {
 
         <div className="flex items-center space-x-6">
           <div className="hidden items-center space-x-6 md:flex">
-             <div className="flex items-center gap-1 text-primary/60 hover:text-primary cursor-pointer transition-colors">
-               <Globe className="h-4 w-4" />
-               <span className="text-[10px] font-black uppercase tracking-widest">AF-EN</span>
-             </div>
+             <DropdownMenu>
+                <DropdownMenuTrigger className="flex items-center gap-1 text-primary/60 hover:text-primary cursor-pointer transition-colors outline-none">
+                  <Globe className="h-4 w-4" />
+                  <span className="text-[10px] font-black uppercase tracking-widest">{currentLang}</span>
+                  <ChevronDown className="h-3 w-3" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="glass-premium border-none min-w-[120px]">
+                  <DropdownMenuItem onClick={() => changeLanguage('en')} className="text-[10px] font-black uppercase cursor-pointer">English</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => changeLanguage('fa')} className="text-[10px] font-black uppercase cursor-pointer">Dari</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => changeLanguage('ps')} className="text-[10px] font-black uppercase cursor-pointer">Pashto</DropdownMenuItem>
+                </DropdownMenuContent>
+             </DropdownMenu>
 
              <ThemeToggle />
 
@@ -130,6 +152,11 @@ export function Header() {
 
                 <div className="mt-auto space-y-6">
                   <div className="h-[1px] w-full bg-border/50" />
+                  <div className="flex gap-4">
+                     <Button variant="outline" size="sm" onClick={() => changeLanguage('en')} className={i18n.language === 'en' ? 'border-primary text-primary' : ''}>EN</Button>
+                     <Button variant="outline" size="sm" onClick={() => changeLanguage('fa')} className={i18n.language === 'fa' ? 'border-primary text-primary' : ''}>Dari</Button>
+                     <Button variant="outline" size="sm" onClick={() => changeLanguage('ps')} className={i18n.language === 'ps' ? 'border-primary text-primary' : ''}>Pashto</Button>
+                  </div>
                   {user ? (
                     <div className="flex flex-col gap-4">
                        <Button className="w-full h-14 rounded-2xl font-black text-lg" onClick={() => { setIsOpen(false); window.location.href="/dashboard" }}>

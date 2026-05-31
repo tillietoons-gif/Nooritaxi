@@ -34,7 +34,7 @@ export const LogisticsNetwork = () => {
     return lines;
   }, [nodes]);
 
-  useFrame((state) => {
+  useFrame(() => {
     if (groupRef.current) {
       groupRef.current.rotation.y += 0.002;
       groupRef.current.rotation.x += 0.001;

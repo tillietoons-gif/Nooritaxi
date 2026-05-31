@@ -1,5 +1,8 @@
 {
   "expo": {
+    "android": {
+      "package": "com.tillietoonss.nooritaxi"
+    },
     "name": "NooriTaxi",
     "slug": "nooritaxi",
     "version": "1.0.0",

@@ -6,3 +6,6 @@ dist/
 *.log
 .env
 .env.local
+
+# Ignore local Expo build artifacts
+mobile/.expo-artifacts/

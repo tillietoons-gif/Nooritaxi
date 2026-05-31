@@ -2,7 +2,7 @@
 
 import React, { Suspense } from "react";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, PerspectiveCamera, Environment, Float, ContactShadows } from "@react-three/drei";
+import { OrbitControls, PerspectiveCamera, Environment, Float } from "@react-three/drei";
 
 interface Scene3DProps {
   children: React.ReactNode;
@@ -23,21 +23,12 @@ export const Scene3D = ({
         <Suspense fallback={null}>
           <PerspectiveCamera makeDefault position={cameraPosition} fov={50} />
           <ambientLight intensity={0.5} />
-          <pointLight position={[10, 10, 10]} intensity={1.5} />
-          <spotLight position={[-10, 10, 10]} angle={0.15} penumbra={1} intensity={1} />
-          <directionalLight position={[0, 5, 5]} intensity={0.5} />
+          <pointLight position={[10, 10, 10]} intensity={1} />
+          <spotLight position={[-10, 10, 10]} angle={0.15} penumbra={1} />
 
           <Environment preset="city" />
 
           {children}
-
-          <ContactShadows
-            position={[0, -2.5, 0]}
-            opacity={0.4}
-            scale={10}
-            blur={2}
-            far={4}
-          />
 
           {showControls && <OrbitControls enableZoom={false} enablePan={false} />}
         </Suspense>

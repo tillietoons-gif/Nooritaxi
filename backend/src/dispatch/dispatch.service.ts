@@ -7,33 +7,49 @@ export class DispatchService {
   constructor(private prisma: PrismaService) {}
 
   async findNearestOnlineDriver(pickupLat: number, pickupLng: number, maxDistanceKm = 10, tx: any = this.prisma) {
-    // 1. Fetch all online drivers
+    // 1. Spatial bounding box to leverage DB indexes (approx 111km per degree)
+    const latDelta = maxDistanceKm / 111;
+    const lngDelta = maxDistanceKm / (111 * Math.cos((pickupLat * Math.PI) / 180));
+
+    // Fetch online drivers within the bounding box
     const drivers = await tx.driver.findMany({
-      where: { status: 'ONLINE' },
+      where: {
+        status: 'ONLINE',
+        currentLat: { gte: pickupLat - latDelta, lte: pickupLat + latDelta },
+        currentLng: { gte: pickupLng - lngDelta, lte: pickupLng + lngDelta },
+      },
       include: { vehicles: { where: { isActive: true }, take: 1 } },
-      orderBy: { ratingAverage: 'desc' },
-      take: 50,
+      take: 50, // Limit to top candidates within box to reduce memory/payload
     });
 
-    // 2. Filter and sort by distance (Haversine for fast pre-filtering)
+    // 2. Exact distance calculation (Haversine) and initial sorting
     const sortedDrivers = drivers
       .map((driver: Driver & { vehicles: { id: string }[] }) => ({
         driver,
-        distance: driver.currentLat != null && driver.currentLng != null
+        distance:
+          driver.currentLat != null && driver.currentLng != null
             ? this.distanceKm(pickupLat, pickupLng, driver.currentLat, driver.currentLng)
             : Infinity,
       }))
       .filter((d: { distance: number }) => d.distance <= maxDistanceKm)
-      .sort((a: { distance: number, driver: Driver }, b: { distance: number, driver: Driver }) => {
+      .sort((a: { distance: number; driver: Driver }, b: { distance: number; driver: Driver }) => {
         if (a.distance !== b.distance) return a.distance - b.distance;
         return b.driver.ratingAverage - a.driver.ratingAverage;
       });
 
-    // 3. Simulate OSRM/Routing API check for real ETA on the top 3 drivers
+    // 3. Parallel routing distance check for the top 3 candidates to minimize latency
     const topCandidates = sortedDrivers.slice(0, 3);
-    for (const candidate of topCandidates) {
-      candidate.distance = await this.calculateRouteDistance(pickupLat, pickupLng, candidate.driver.currentLat!, candidate.driver.currentLng!);
-    }
+    await Promise.all(
+      topCandidates.map(async (candidate) => {
+        candidate.distance = await this.calculateRouteDistance(
+          pickupLat,
+          pickupLng,
+          candidate.driver.currentLat!,
+          candidate.driver.currentLng!,
+        );
+      }),
+    );
+
     topCandidates.sort((a: { distance: number }, b: { distance: number }) => a.distance - b.distance);
 
     return topCandidates[0]?.driver;

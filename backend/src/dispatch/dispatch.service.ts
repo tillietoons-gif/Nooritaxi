@@ -67,20 +67,37 @@ export class DispatchService {
   }
 
   // Mock integration with OSRM/Google Maps for actual road distance
-  private async calculateRouteDistance(fromLat: number, fromLng: number, toLat: number, toLng: number): Promise<number> {
+  private async calculateRouteDistance(
+    fromLat: number,
+    fromLng: number,
+    toLat: number,
+    toLng: number,
+  ): Promise<number> {
     const straightLine = this.distanceKm(fromLat, fromLng, toLat, toLng);
     // Road distance is typically 1.2x to 1.4x straight line distance
     const routingMultiplier = 1.3;
     return straightLine * routingMultiplier;
   }
 
-  private distanceKm(fromLat: number, fromLng: number, toLat: number, toLng: number) {
+  private distanceKm(
+    fromLat: number,
+    fromLng: number,
+    toLat: number,
+    toLng: number,
+  ) {
     const earthRadiusKm = 6371;
     const dLat = this.toRadians(toLat - fromLat);
     const dLng = this.toRadians(toLng - fromLng);
-    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(this.toRadians(fromLat)) * Math.cos(this.toRadians(toLat)) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(this.toRadians(fromLat)) *
+        Math.cos(this.toRadians(toLat)) *
+        Math.sin(dLng / 2) *
+        Math.sin(dLng / 2);
     return earthRadiusKm * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   }
 
-  private toRadians(value: number) { return (value * Math.PI) / 180; }
+  private toRadians(value: number) {
+    return (value * Math.PI) / 180;
+  }
 }

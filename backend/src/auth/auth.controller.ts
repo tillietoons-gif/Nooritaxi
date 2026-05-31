@@ -39,6 +39,7 @@ export class AuthController {
   }
 
   @Post('send-otp')
+  @Throttle({ default: { ttl: 60_000, limit: 3 } })
   async sendOtp(@Body() body: SendOtpDto) {
     await this.authService.sendOtp(body.phone);
     return { sent: true };
@@ -56,6 +57,7 @@ export class AuthController {
   }
 
   @Post('verify-phone')
+  @Throttle({ default: { ttl: 60_000, limit: 5 } })
   async verifyPhone(@Body() body: VerifyPhoneDto) {
     const verified = await this.authService.verifyOtp(body.phone, body.code);
     if (!verified) {

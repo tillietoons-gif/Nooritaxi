@@ -33,7 +33,7 @@ export function Header() {
             <Button size="sm" asChild><Link href="/signup">Sign Up</Link></Button>
           </div>
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
-            <SheetTrigger render={ <Button variant="ghost" size="icon" className="md:hidden"><Menu className="h-6 w-6" /></Button> } />
+            <SheetTrigger render={ <Button variant="ghost" size="icon" className="md:hidden" aria-label="Open menu"><Menu className="h-6 w-6" /></Button> } />
             <SheetContent side="right" className="w-[300px] sm:w-[400px]">
               <nav className="flex flex-col space-y-4 mt-8 px-4">
                 {navigation.map((item) => ( <Link key={item.name} href={item.href} onClick={() => setIsOpen(false)} className="text-lg font-medium hover:text-primary">{item.name}</Link> ))}

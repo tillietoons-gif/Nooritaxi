@@ -1,7 +1,3 @@
-# Palette UX & Accessibility Journal
-
-## Mobile UX Enhancements
-- Replaced "Coming Soon" alerts with functional screens for Safety, Language, and Help/Support.
-- Implemented Native Share API for referral codes to provide a seamless sharing experience.
-- Improved accessibility by adding proper `accessibilityLabel` to buttons and using semantic components.
-- Standardized header navigation across the mobile app for a consistent user experience.
+## 2025-05-29 - [Micro-UX: Password Toggle & Search Clear]
+**Learning:** Users often struggle with password entry errors on mobile and web when masking is mandatory. A simple visibility toggle significantly reduces friction. Additionally, icon-only buttons in navigation (like notification bells or search clear buttons) require explicit aria-labels to be accessible.
+**Action:** Always include a password visibility toggle in auth forms and ensure every icon-button has an `aria-label`.

@@ -29,6 +29,7 @@ export const BentoCard = ({
   description,
   header,
   icon,
+  background,
   size = "medium",
 }: {
   className?: string;
@@ -36,6 +37,7 @@ export const BentoCard = ({
   description?: string | React.ReactNode;
   header?: React.ReactNode;
   icon?: React.ReactNode;
+  background?: React.ReactNode;
   size?: "small" | "medium" | "large";
 }) => {
   const sizeClasses = {
@@ -54,16 +56,29 @@ export const BentoCard = ({
         className
       )}
     >
+      {background && (
+        <div className="absolute inset-0 z-0">
+          {background}
+          <div className="absolute inset-0 bg-black/40 group-hover:bg-black/50 transition-colors duration-500" />
+        </div>
+      )}
+
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
       <div className="relative z-10 flex flex-col h-full">
         {header && <div className="mb-4">{header}</div>}
         <div className="mt-auto group-hover:translate-x-1 transition-transform duration-300">
           {icon && <div className="mb-2 text-primary">{icon}</div>}
-          <div className="font-heading font-bold text-xl mb-1 text-foreground">
+          <div className={cn(
+            "font-heading font-bold text-xl mb-1",
+            background ? "text-white" : "text-foreground"
+          )}>
             {title}
           </div>
-          <div className="font-sans font-normal text-muted-foreground text-sm leading-relaxed">
+          <div className={cn(
+            "font-sans font-normal text-sm leading-relaxed",
+            background ? "text-white/80" : "text-muted-foreground"
+          )}>
             {description}
           </div>
         </div>

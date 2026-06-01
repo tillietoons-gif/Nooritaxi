@@ -19,14 +19,9 @@ import {
   ChevronRight,
   Globe,
   Zap,
-  Shield,
   Activity,
   Layers,
-  Car,
   Package,
-  Utensils,
-  Heart,
-  Smartphone
 } from "lucide-react"
 import { useUserBehavior } from "@/components/user-behavior-provider"
 import { useEffect, useState } from "react"
@@ -48,20 +43,19 @@ export default function LandingPage() {
 
   const services = [
     {
-      title: "Intelligent Fleet",
-      description: "AI-optimized routing for maximum efficiency and sub-30 minute delivery times.",
-      icon: <Car className="h-6 w-6" />,
+      title: "Intelligent Design",
+      description: "Premium engineering meets aesthetic excellence in every component of our infrastructure.",
+      icon: <Layers className="h-6 w-6" />,
       size: "large" as const,
-      header: (
-        <div className="h-full w-full relative rounded-2xl overflow-hidden min-h-[240px]">
+      background: (
+        <div className="h-full w-full relative">
           <Image
-            src="/images/fleet-hero.webp"
-            alt="Intelligent Fleet"
+            src="/images/intelligent-design.webp"
+            alt="Intelligent Design"
             fill
-            className="object-cover transition-transform duration-700 group-hover:scale-110"
+            className="object-cover transition-transform duration-700 group-hover:scale-105"
             priority
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
         </div>
       )
     },
@@ -89,9 +83,9 @@ export default function LandingPage() {
     }
   ]
 
-  const sortedServices = [...services].sort((a, b) => {
+  const sortedServices = [...services].sort((a) => {
     if (behavior.preferredService === "delivery" && a.title.includes("Tracking")) return -1;
-    if (behavior.preferredService === "ride" && a.title.includes("Fleet")) return -1;
+    if (behavior.preferredService === "ride" && a.title.includes("Design")) return -1;
     return 0;
   });
 
@@ -175,6 +169,7 @@ export default function LandingPage() {
                   description={service.description}
                   header={service.header}
                   icon={service.icon}
+                  background={service.background}
                   size={service.size}
                   className="cursor-pointer"
                 />

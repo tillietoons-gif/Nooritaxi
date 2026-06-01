@@ -81,38 +81,44 @@ export default function LoginPage() {
 
           <form onSubmit={submit} className="space-y-6">
             <div className="space-y-2">
-              <LabelMd className="text-xs font-black">Mobile Identifier</LabelMd>
+              <LabelMd htmlFor="phone" className="text-xs font-black">Mobile Identifier</LabelMd>
               <div className="relative">
                 <Phone className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40" />
                 <Input
+                  id="phone"
                   className="h-14 pl-12 rounded-2xl glass border-none focus-visible:ring-primary/30 font-bold"
                   value={phone}
                   onChange={(event) => setPhone(event.target.value)}
                   placeholder="+93 7XX XXX XXX"
                   required
+                  aria-invalid={!!message}
+                  aria-describedby={message ? "login-error" : undefined}
                 />
               </div>
             </div>
 
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <LabelMd className="text-xs font-black">Security Credential</LabelMd>
+                <LabelMd htmlFor="password" className="text-xs font-black">Security Credential</LabelMd>
                 <Link href="#" className="text-[10px] font-black uppercase text-primary/60 hover:text-primary transition-colors">Forgot Password?</Link>
               </div>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40" />
                 <Input
+                  id="password"
                   className="h-14 pl-12 pr-12 rounded-2xl glass border-none focus-visible:ring-primary/30 font-bold"
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                   placeholder="••••••••"
                   required
+                  aria-invalid={!!message}
+                  aria-describedby={message ? "login-error" : undefined}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-primary/40 hover:text-primary focus:outline-none transition-colors"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-primary/40 hover:text-primary focus-visible:ring-2 ring-primary/30 rounded-lg outline-none transition-colors"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -122,6 +128,8 @@ export default function LoginPage() {
 
             {message ? (
               <motion.div
+                id="login-error"
+                role="alert"
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 className="bg-destructive/5 text-destructive p-4 rounded-xl border border-destructive/20 text-xs font-bold"

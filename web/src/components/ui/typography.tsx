@@ -21,10 +21,26 @@ export function BodyMd({ className, children }: { className?: string, children: 
   return <p className={cn("text-base leading-relaxed text-muted-foreground", className)}>{children}</p>
 }
 
-export function LabelMd({ className, children }: { className?: string, children: React.ReactNode }) {
-  return <span className={cn("text-sm font-semibold uppercase tracking-widest text-primary/70", className)}>{children}</span>
+export function LabelMd({ className, children, htmlFor }: { className?: string, children: React.ReactNode, htmlFor?: string }) {
+  const Comp = htmlFor ? "label" : "span"
+  return (
+    <Comp
+      htmlFor={htmlFor}
+      className={cn("text-sm font-semibold uppercase tracking-widest text-primary/70", className)}
+    >
+      {children}
+    </Comp>
+  )
 }
 
-export function LabelSm({ className, children }: { className?: string, children: React.ReactNode }) {
-  return <span className={cn("text-xs font-bold uppercase tracking-[0.2em] text-primary/60", className)}>{children}</span>
+export function LabelSm({ className, children, htmlFor }: { className?: string, children: React.ReactNode, htmlFor?: string }) {
+  const Comp = htmlFor ? "label" : "span"
+  return (
+    <Comp
+      htmlFor={htmlFor}
+      className={cn("text-xs font-bold uppercase tracking-[0.2em] text-primary/60", className)}
+    >
+      {children}
+    </Comp>
+  )
 }

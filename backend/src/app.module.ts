@@ -35,6 +35,10 @@ import { AirportModule } from './airport/airport.module';
 import { SupportModule } from './support/support.module';
 import { MarketingModule } from './marketing/marketing.module';
 
+import { CMSModule } from './cms/cms.module';
+import { SubscriptionsModule } from './subscriptions/subscriptions.module';
+import { VehiclesModule } from './vehicles/vehicles.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -66,6 +70,9 @@ import { MarketingModule } from './marketing/marketing.module';
     AirportModule,
     SupportModule,
     MarketingModule,
+    CMSModule,
+    SubscriptionsModule,
+    VehiclesModule,
   ],
   providers: [
     AppService,

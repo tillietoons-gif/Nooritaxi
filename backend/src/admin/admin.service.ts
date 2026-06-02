@@ -42,9 +42,9 @@ export class AdminService {
         { id: { contains: q, mode: 'insensitive' } },
         { pickupLocation: { contains: q, mode: 'insensitive' } },
         { dropoffLocation: { contains: q, mode: 'insensitive' } },
-        { customer: { is: { name: { contains: q, mode: 'insensitive' } } } },
-        { customer: { is: { phone: { contains: q } } } },
-        { driver: { is: { name: { contains: q, mode: 'insensitive' } } } },
+        { customer: { name: { contains: q, mode: 'insensitive' } } },
+        { customer: { phone: { contains: q } } },
+        { driver: { name: { contains: q, mode: 'insensitive' } } },
       ];
     }
 
@@ -118,7 +118,7 @@ export class AdminService {
       where.OR = [
         { id: { contains: q, mode: 'insensitive' } },
         { deliveryAddress: { contains: q, mode: 'insensitive' } },
-        { restaurant: { is: { name: { contains: q, mode: 'insensitive' } } } },
+        { restaurant: { name: { contains: q, mode: 'insensitive' } } },
       ];
     }
 
@@ -204,8 +204,8 @@ export class AdminService {
     if (status) where.status = status as any;
     if (q) {
       where.OR = [
-        { user: { is: { name: { contains: q, mode: 'insensitive' } } } },
-        { user: { is: { phone: { contains: q } } } },
+        { user: { name: { contains: q, mode: 'insensitive' } } },
+        { user: { phone: { contains: q } } },
         { licenseNumber: { contains: q, mode: 'insensitive' } },
         { nationalIdNumber: { contains: q, mode: 'insensitive' } },
       ];

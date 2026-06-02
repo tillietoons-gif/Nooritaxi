@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { BodyMd, HeadingMd } from "@/components/ui/typography"
-import { Car, Headphones, Package, RefreshCw, ShieldCheck, Store, Users, ArrowRight, Activity } from "lucide-react"
+import { Car, Headphones, Package, RefreshCw, ShieldCheck, Store, Users, ArrowRight, Activity, Map, UserCheck, Award, TrendingUp, LifeBuoy } from "lucide-react"
 import { AuthGate } from "@/components/auth-gate"
 import Link from "next/link"
 import { authedFetch } from "@/lib/auth"
@@ -21,6 +21,7 @@ type Overview = {
   activeRides: number
   activeOrders: number
   activeDeliveries: number
+  pendingKyc: number
 }
 
 type SupportTicket = {
@@ -43,6 +44,7 @@ const EMPTY_OVERVIEW: Overview = {
   activeRides: 0,
   activeOrders: 0,
   activeDeliveries: 0,
+  pendingKyc: 0,
 }
 
 const TICKETS_PER_PAGE = 25
@@ -110,6 +112,11 @@ export default function AdminPage() {
     { label: "Orders", value: overview.orders, icon: Store, href: "/admin/orders" },
     { label: "Deliveries", value: overview.deliveries, icon: Package, href: "/admin/deliveries" },
     { label: "Surge Zones", value: "Control", icon: Activity, href: "/admin/surge" },
+    { label: "Live Map", value: "Real-time", icon: Map, href: "/admin/live-map" },
+    { label: "KYC Review", value: overview.pendingKyc > 0 ? `${overview.pendingKyc} pending` : "Manage", icon: UserCheck, href: "/admin/kyc" },
+    { label: "Loyalty System", value: "Configure", icon: Award, href: "/admin/loyalty" },
+    { label: "Driver Tiers", value: "Manage", icon: TrendingUp, href: "/admin/driver-tiers" },
+    { label: "Live Support", value: "Chat", icon: LifeBuoy, href: "/admin/support" },
   ]
 
   const supportCount = (keyword: string) =>

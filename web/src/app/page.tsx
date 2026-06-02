@@ -1,6 +1,4 @@
 "use client"
-import Image from "next/image"
-
 import Link from "next/link"
 import { motion, useScroll, useTransform } from "framer-motion"
 import { Button } from "@/components/ui/button"
@@ -68,6 +66,122 @@ const services = [
   }
 ]
 
+const GenAIGlobe = () => {
+  return (
+    <div className="h-full w-full bg-primary/5 rounded-2xl flex items-center justify-center overflow-hidden relative">
+      <div className="absolute inset-0 opacity-20"><PatternOverlay /></div>
+      <motion.div 
+        animate={{ rotate: 360 }} 
+        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+        className="relative w-40 h-40"
+      >
+        <div className="absolute inset-0 border-2 border-gold/20 rounded-full" style={{ transform: 'rotateX(60deg)' }} />
+        <div className="absolute inset-0 border-2 border-primary/20 rounded-full" style={{ transform: 'rotateY(60deg)' }} />
+        <div className="absolute inset-0 border-2 border-gold/10 rounded-full" style={{ transform: 'rotateZ(45deg) rotateX(45deg)' }} />
+      </motion.div>
+      <Globe className="absolute h-12 w-12 text-primary/50" />
+      {[...Array(6)].map((_, i) => (
+        <motion.div
+          key={i}
+          className="absolute w-2 h-2 bg-gold/60 rounded-full blur-[1px]"
+          animate={{ 
+            y: [-30, 30, -30],
+            x: [-30, 30, -30],
+            opacity: [0.2, 1, 0.2] 
+          }}
+          transition={{ duration: 4 + i, repeat: Infinity, delay: i * 0.5, ease: "easeInOut" }}
+          style={{ 
+            top: `${30 + Math.random() * 40}%`, 
+            left: `${30 + Math.random() * 40}%` 
+          }}
+        />
+      ))}
+    </div>
+  )
+}
+
+const GenAIParcelFlow = () => {
+  return (
+    <div className="h-full w-full bg-primary/5 rounded-2xl flex items-center justify-center overflow-hidden relative">
+      <div className="absolute inset-0 opacity-10"><PatternOverlay /></div>
+      <div className="relative w-full h-full flex items-center justify-center">
+        <div className="absolute w-full h-[1px] bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+        <div className="absolute h-full w-[1px] bg-gradient-to-b from-transparent via-primary/30 to-transparent" />
+        
+        <motion.div 
+          className="absolute w-24 h-[2px] bg-gold/80 shadow-[0_0_15px_rgba(255,215,0,0.8)]"
+          animate={{ x: ['-300%', '300%'] }}
+          transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }}
+        />
+        <motion.div 
+          className="absolute h-24 w-[2px] bg-primary/80 shadow-[0_0_15px_rgba(0,105,71,0.8)]"
+          animate={{ y: ['-300%', '300%'] }}
+          transition={{ duration: 3, repeat: Infinity, ease: "linear", delay: 1 }}
+        />
+        
+        <div className="relative z-10 bg-background/80 backdrop-blur-md rounded-xl p-3 border border-primary/10 shadow-xl shadow-primary/5">
+          <Package className="h-10 w-10 text-primary/70" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const GenAILayers = () => {
+  return (
+    <div className="h-full w-full bg-primary/5 rounded-2xl flex items-center justify-center overflow-hidden relative group">
+      <div className="absolute inset-0 opacity-10"><PatternOverlay /></div>
+      <div className="relative w-48 h-48">
+        {[0, 1, 2].map((i) => (
+          <motion.div
+            key={i}
+            className="absolute inset-0 bg-gradient-to-br from-primary/10 to-gold/5 backdrop-blur-xl border border-primary/20 rounded-2xl shadow-[0_0_30px_rgba(0,105,71,0.1)]"
+            animate={{ 
+              y: [0, -15 + i * 8, 0],
+              rotate: [0, -3 + i * 3, 0],
+              scale: [1, 1.05 - i * 0.02, 1]
+            }}
+            transition={{ duration: 5, repeat: Infinity, delay: i * 0.3, ease: "easeInOut" }}
+            style={{ zIndex: 3 - i, transformOrigin: 'bottom center' }}
+          />
+        ))}
+        <div className="absolute inset-0 m-auto h-16 w-16 bg-background/50 rounded-full flex items-center justify-center backdrop-blur-sm z-10 border border-gold/10">
+          <Layers className="h-8 w-8 text-gold/70" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const GenAITracking = () => {
+  return (
+    <div className="h-full w-full bg-gold/5 rounded-2xl flex items-center justify-center overflow-hidden relative">
+      <div className="absolute inset-0 opacity-10"><PatternOverlay /></div>
+      
+      <motion.div 
+        className="absolute inset-0 rounded-full border-r-2 border-t-2 border-primary/30 origin-center"
+        style={{ width: '250%', height: '250%', top: '-75%', left: '-75%' }}
+        animate={{ rotate: 360 }}
+        transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+      >
+         <div className="w-1/2 h-1/2 bg-gradient-to-tr from-transparent to-primary/10 rounded-tr-full" />
+      </motion.div>
+      
+      <div className="absolute w-40 h-40 border border-primary/20 rounded-full" />
+      <div className="absolute w-64 h-64 border border-primary/10 rounded-full" />
+      <div className="absolute w-80 h-80 border border-gold/5 rounded-full" />
+      
+      <motion.div
+        animate={{ scale: [1, 1.1, 1], opacity: [0.7, 1, 0.7] }}
+        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+        className="relative z-10 bg-background/80 rounded-full p-4 border border-gold/20 shadow-[0_0_30px_rgba(255,215,0,0.15)]"
+      >
+        <Activity className="h-12 w-12 text-gold/80" />
+      </motion.div>
+    </div>
+  )
+}
+
 export default function LandingPage() {
   const { behavior } = useUserBehavior()
   const { scrollY } = useScroll()
@@ -82,19 +196,42 @@ export default function LandingPage() {
         ? "Good Evening"
         : "Good Night";
 
-  const sortedServices = useMemo(() => {
-    return [...services].sort((a, b) => {
-      if (behavior.preferredService === "delivery") {
-        if (a.title.includes("Tracking") && !b.title.includes("Tracking")) return -1;
-        if (!a.title.includes("Tracking") && b.title.includes("Tracking")) return 1;
-      }
-      if (behavior.preferredService === "ride") {
-        if (a.title.includes("Design") && !b.title.includes("Design")) return -1;
-        if (!a.title.includes("Design") && b.title.includes("Design")) return 1;
-      }
-      return 0;
-    });
-  }, [behavior.preferredService]);
+  const services = [
+    {
+      title: "Intelligent Design",
+      description: "Premium engineering meets aesthetic excellence in every component of our infrastructure.",
+      icon: <Layers className="h-6 w-6" />,
+      size: "large" as const,
+      header: <GenAILayers />
+    },
+    {
+      title: "Global Logistics",
+      description: "Freight management across borders with real-time customs integration.",
+      icon: <Globe className="h-6 w-6" />,
+      size: "medium" as const,
+      header: <GenAIGlobe />
+    },
+    {
+      title: "Parcel Express",
+      description: "On-demand hyper-local delivery for businesses and individuals.",
+      icon: <Package className="h-6 w-6" />,
+      size: "medium" as const,
+      header: <GenAIParcelFlow />
+    },
+    {
+      title: "Real-time Tracking",
+      description: "High-fidelity WebGL visualization of every asset in your supply chain.",
+      icon: <Activity className="h-6 w-6" />,
+      size: "large" as const,
+      header: <GenAITracking />
+    }
+  ]
+
+  const sortedServices = [...services].sort((a) => {
+    if (behavior.preferredService === "delivery" && a.title.includes("Tracking")) return -1;
+    if (behavior.preferredService === "ride" && a.title.includes("Design")) return -1;
+    return 0;
+  });
 
   return (
     <div className="flex flex-col min-h-screen selection:bg-primary/20 selection:text-primary">

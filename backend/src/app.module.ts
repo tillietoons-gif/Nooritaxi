@@ -27,6 +27,7 @@ import { DriverTiersModule } from './driver-tiers/driver-tiers.module';
 import { RolesModule } from './roles/roles.module';
 import { FleetsModule } from './fleets/fleets.module';
 import { FinanceModule } from './finance/finance.module';
+import { FraudModule } from './fraud/fraud.module';
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { FinanceModule } from './finance/finance.module';
     RolesModule,
     FleetsModule,
     FinanceModule,
+    FraudModule,
   ],
   providers: [
     AppService,

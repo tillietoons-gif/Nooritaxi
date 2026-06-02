@@ -251,6 +251,9 @@ model User {
   broadcastsSent      CommunicationBroadcast[] @relation("BroadcastsSent")
   operationsAuditLogs OperationsAuditLog[]     @relation("AdminOperationsAuditLogs")
 
+  // Corporate
+  employeeProfile Employee? @relation("UserEmployee")
+
   @@index([role, status])
   @@index([createdAt])
 }
@@ -392,6 +395,7 @@ model Trip {
   loyaltyTransaction LoyaltyTransaction?
   refundRequests     RefundRequest[]
   incidents          Incident[]          @relation("TripIncidents")
+  travelApprovals    TravelApproval[]    @relation("TripTravelApproval")
 
   @@index([customerId, status, createdAt])
   @@index([driverId, status, createdAt])
@@ -1324,4 +1328,258 @@ model OperationsAuditLog {
   createdAt  DateTime @default(now())
 
   admin User @relation("AdminOperationsAuditLogs", fields: [adminId], references: [id])
+}
+
+// ==========================================
+// CORPORATE & BUSINESS TRAVEL
+// ==========================================
+
+enum OrganizationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+enum EmployeeStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum InvoiceStatus {
+  DRAFT
+  ISSUED
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+model Organization {
+  id              String             @id @default(cuid())
+  companyName     String
+  legalName       String?
+  industry        String?
+  companySize     String?
+  taxNumber       String?
+  businessLicense String?
+  email           String             @unique
+  phone           String?
+  address         String?
+  city            String?
+  country         String?
+  logo            String?
+  status          OrganizationStatus @default(PENDING)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  branches    OrganizationBranch[]
+  departments Department[]
+  employees   Employee[]
+  policies    CorporatePolicy[]
+  budgets     Budget[]
+  costCenters CostCenter[]
+  invoices    Invoice[]
+  wallet      CorporateWallet?
+  contracts   Contract[]
+  discounts   CorporateDiscount[]
+  auditLogs   CorporateAuditLog[]
+}
+
+model OrganizationBranch {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  address        String?
+  city           String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  employees    Employee[]
+}
+
+model Department {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  employees    Employee[]
+  budgets      Budget[]
+}
+
+enum CorporateRoleType {
+  OWNER
+  ADMIN
+  FINANCE_MANAGER
+  TRAVEL_MANAGER
+  DEPARTMENT_MANAGER
+  EMPLOYEE
+}
+
+model Employee {
+  id             String            @id @default(cuid())
+  organizationId String
+  userId         String?           @unique
+  branchId       String?
+  departmentId   String?
+  employeeId     String?
+  name           String
+  email          String            @unique
+  phone          String?
+  jobTitle       String?
+  role           CorporateRoleType @default(EMPLOYEE)
+  status         EmployeeStatus    @default(ACTIVE)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  organization     Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user             User?               @relation("UserEmployee", fields: [userId], references: [id])
+  branch           OrganizationBranch? @relation(fields: [branchId], references: [id])
+  department       Department?         @relation(fields: [departmentId], references: [id])
+  approvals        TravelApproval[]    @relation("EmployeeApprovals")
+  managerApprovals TravelApproval[]    @relation("ManagerApprovals")
+}
+
+model CorporatePolicy {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  description    String?
+  rules          Json
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+model TravelApproval {
+  id         String         @id @default(cuid())
+  employeeId String
+  managerId  String?
+  tripId     String?
+  status     ApprovalStatus @default(PENDING)
+  reason     String?
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  employee Employee  @relation("EmployeeApprovals", fields: [employeeId], references: [id])
+  manager  Employee? @relation("ManagerApprovals", fields: [managerId], references: [id])
+  trip     Trip?     @relation("TripTravelApproval", fields: [tripId], references: [id])
+}
+
+model Budget {
+  id             String   @id @default(cuid())
+  organizationId String
+  departmentId   String?
+  amount         Decimal  @db.Decimal(12, 2)
+  spent          Decimal  @default(0) @db.Decimal(12, 2)
+  period         String // DAILY, WEEKLY, MONTHLY, YEARLY
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  department   Department?  @relation(fields: [departmentId], references: [id])
+}
+
+model CostCenter {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  code           String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+model Invoice {
+  id             String        @id @default(cuid())
+  organizationId String
+  invoiceNumber  String        @unique
+  periodStart    DateTime
+  periodEnd      DateTime
+  subtotal       Decimal       @default(0) @db.Decimal(12, 2)
+  taxes          Decimal       @default(0) @db.Decimal(12, 2)
+  total          Decimal       @default(0) @db.Decimal(12, 2)
+  status         InvoiceStatus @default(DRAFT)
+  dueDate        DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  lines        InvoiceLine[]
+}
+
+model InvoiceLine {
+  id          String   @id @default(cuid())
+  invoiceId   String
+  tripId      String?
+  description String
+  amount      Decimal  @db.Decimal(10, 2)
+  createdAt   DateTime @default(now())
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+}
+
+model CorporateWallet {
+  id             String   @id @default(cuid())
+  organizationId String   @unique
+  balance        Decimal  @default(0) @db.Decimal(12, 2)
+  creditLimit    Decimal  @default(0) @db.Decimal(12, 2)
+  currency       String   @default("AFN")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+model Contract {
+  id             String   @id @default(cuid())
+  organizationId String
+  title          String
+  startDate      DateTime
+  endDate        DateTime
+  documentUrl    String?
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+model CorporateDiscount {
+  id             String   @id @default(cuid())
+  organizationId String
+  type           String // FIXED, PERCENTAGE
+  value          Decimal  @db.Decimal(10, 2)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+model CorporateAuditLog {
+  id             String   @id @default(cuid())
+  organizationId String
+  actorId        String
+  action         String
+  details        Json?
+  ipAddress      String?
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 }

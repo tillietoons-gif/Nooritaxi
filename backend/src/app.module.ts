@@ -29,6 +29,7 @@ import { FleetsModule } from './fleets/fleets.module';
 import { FinanceModule } from './finance/finance.module';
 import { FraudModule } from './fraud/fraud.module';
 import { OperationsModule } from './operations/operations.module';
+import { CorporateModule } from './corporate/corporate.module';
 
 @Module({
   imports: [
@@ -57,6 +58,7 @@ import { OperationsModule } from './operations/operations.module';
     FinanceModule,
     FraudModule,
     OperationsModule,
+    CorporateModule,
   ],
   providers: [
     AppService,

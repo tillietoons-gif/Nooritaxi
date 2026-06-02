@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { BodyMd, HeadingMd } from "@/components/ui/typography"
-import { Car, Headphones, Package, RefreshCw, ShieldCheck, Store, Users, ArrowRight, Activity, Map, UserCheck, Award, TrendingUp, LifeBuoy, Shield, KeySquare, ShieldAlert, Banknote, HandCoins, Undo2, AlertTriangle, Network } from "lucide-react"
+import { Car, Headphones, Package, RefreshCw, ShieldCheck, Store, Users, ArrowRight, Activity, Map, UserCheck, Award, TrendingUp, LifeBuoy, Shield, KeySquare, ShieldAlert, Banknote, HandCoins, Undo2, AlertTriangle, Network, Building2 } from "lucide-react"
 import { AuthGate } from "@/components/auth-gate"
 import Link from "next/link"
 import { authedFetch } from "@/lib/auth"
@@ -123,6 +123,7 @@ export default function AdminPage() {
     { label: "Cash Finance", value: "Center", icon: Banknote, href: "/admin/finance" },
     { label: "Cash Collections", value: "Receivables", icon: HandCoins, href: "/admin/cash-collections" },
     { label: "Refunds", value: "Requests", icon: Undo2, href: "/admin/refunds" },
+    { label: "Corporate", value: "B2B Accounts", icon: Building2, href: "/admin/corporate" },
     { label: "OCC Console", value: "Mission Control", icon: Network, href: "/admin/operations" },
     { label: "Fraud Center", value: "Dashboard", icon: AlertTriangle, href: "/admin/fraud" },
     { label: "Fraud Alerts", value: "Live Feed", icon: ShieldAlert, href: "/admin/fraud/alerts" },

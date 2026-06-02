@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { Lock, Phone, User, Eye, EyeOff, ShieldCheck, ArrowLeft, Zap } from "lucide-react"
+import { Lock, Phone, User, Eye, EyeOff, ShieldCheck, Zap } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { GlassSurface } from "@/components/ui/glass-surface"
 import { Input } from "@/components/ui/input"

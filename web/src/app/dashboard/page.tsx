@@ -2,19 +2,19 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { } from "@/components/ui/card"
 import { HeadingMd, BodyMd, HeadingSm, LabelMd } from "@/components/ui/typography"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { GlassSurface } from "@/components/ui/glass-surface"
 import {
-  TrendingUp,
+
   Car,
   Package,
   DollarSign,
-  ArrowUpRight,
+
   MapPin,
-  Clock,
+
   Activity,
   Box,
   LayoutGrid

@@ -3,7 +3,7 @@
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { motion } from "framer-motion"
-import { HeadingLg, HeadingMd, BodyMd, LabelMd } from "@/components/ui/typography"
+import { HeadingLg, BodyMd, LabelMd } from "@/components/ui/typography"
 import { PatternOverlay } from "@/components/ui/pattern-overlay"
 import { BentoGrid, BentoCard } from "@/components/ui/bento-grid"
 import { Car, Package, Utensils, Heart, Shield } from "lucide-react"

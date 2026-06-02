@@ -22,49 +22,6 @@ import {
   Package,
 } from "lucide-react"
 import { useUserBehavior } from "@/components/user-behavior-provider"
-import { useMemo } from "react"
-
-const services = [
-  {
-    title: "Intelligent Design",
-    description: "Premium engineering meets aesthetic excellence in every component of our infrastructure.",
-    icon: <Layers className="h-6 w-6" />,
-    size: "large" as const,
-    background: (
-      <div className="h-full w-full relative">
-        <Image
-          src="/images/intelligent-design.webp"
-          alt="Intelligent Design"
-          fill
-          className="object-cover transition-transform duration-700 group-hover:scale-105"
-          priority
-        />
-      </div>
-    )
-  },
-  {
-    title: "Global Logistics",
-    description: "Freight management across borders with real-time customs integration.",
-    icon: <Globe className="h-6 w-6" />,
-    size: "medium" as const,
-  },
-  {
-    title: "Parcel Express",
-    description: "On-demand hyper-local delivery for businesses and individuals.",
-    icon: <Package className="h-6 w-6" />,
-    size: "medium" as const,
-  },
-  {
-    title: "Real-time Tracking",
-    description: "High-fidelity WebGL visualization of every asset in your supply chain.",
-    icon: <Activity className="h-6 w-6" />,
-    size: "large" as const,
-    header: <div className="h-full w-full bg-gold/5 rounded-2xl flex items-center justify-center overflow-hidden">
-      <div className="absolute inset-0 opacity-10"><PatternOverlay /></div>
-      <Activity className="h-20 w-20 text-gold/30" />
-    </div>
-  }
-]
 
 const GenAIGlobe = () => {
   return (

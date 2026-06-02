@@ -2,7 +2,7 @@
 
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
-import { ShieldCheck, Eye, Phone, MapPin, Shield, Lock, Zap, Activity } from "lucide-react"
+import { ShieldCheck, Eye, MapPin, Shield, Lock, Zap, Activity } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { motion } from "framer-motion"
 import { PatternOverlay } from "@/components/ui/pattern-overlay"

@@ -24,6 +24,8 @@ import { AdminTrackingModule } from './admin-tracking/admin-tracking.module';
 import { KycModule } from './kyc/kyc.module';
 import { LoyaltyModule } from './loyalty/loyalty.module';
 import { DriverTiersModule } from './driver-tiers/driver-tiers.module';
+import { RolesModule } from './roles/roles.module';
+import { FleetsModule } from './fleets/fleets.module';
 
 @Module({
   imports: [
@@ -47,6 +49,8 @@ import { DriverTiersModule } from './driver-tiers/driver-tiers.module';
     KycModule,
     LoyaltyModule,
     DriverTiersModule,
+    RolesModule,
+    FleetsModule,
   ],
   providers: [
     AppService,

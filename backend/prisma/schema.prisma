@@ -80,6 +80,7 @@ enum WalletType {
   CUSTOMER
   DRIVER
   MERCHANT
+  FLEET
 }
 
 enum TransactionType {
@@ -204,6 +205,7 @@ model User {
   referrals            User[]                @relation("UserReferrals")
   riderProfile         Rider?
   driverProfile        Driver?
+  fleetManager         FleetManager?
   wallets              Wallet[]
   restaurants          Restaurant[]          @relation("RestaurantOwner")
   tripsAsCustomer      Trip[]                @relation("CustomerTrips")
@@ -264,6 +266,8 @@ model Driver {
   updatedAt           DateTime     @updatedAt
 
   user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fleetId   String?
+  fleet     Fleet?           @relation(fields: [fleetId], references: [id])
   vehicles  Vehicle[]
   documents DriverDocument[]
 
@@ -271,26 +275,40 @@ model Driver {
   @@index([currentLat, currentLng])
 }
 
-model Vehicle {
-  id          String      @id @default(cuid())
-  driverId    String
-  type        VehicleType
-  make        String?
-  model       String?
-  year        Int?
-  plateNumber String      @unique
-  color       String?
-  capacity    Int         @default(4)
-  isActive    Boolean     @default(true)
-  documents   Json?
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+enum VehicleStatus {
+  ACTIVE
+  MAINTENANCE
+  SUSPENDED
+  EXPIRED
+}
 
-  driver     Driver     @relation(fields: [driverId], references: [id], onDelete: Cascade)
-  trips      Trip[]
-  deliveries Delivery[]
+model Vehicle {
+  id                 String        @id @default(cuid())
+  driverId           String?
+  fleetId            String?
+  type               VehicleType
+  make               String?
+  model              String?
+  year               Int?
+  plateNumber        String        @unique
+  color              String?
+  capacity           Int           @default(4)
+  isActive           Boolean       @default(true)
+  status             VehicleStatus @default(ACTIVE)
+  registrationExpiry DateTime?
+  insuranceExpiry    DateTime?
+  documents          Json?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  driver      Driver?              @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  fleet       Fleet?               @relation(fields: [fleetId], references: [id], onDelete: Cascade)
+  trips       Trip[]
+  deliveries  Delivery[]
+  maintenance VehicleMaintenance[]
 
   @@index([driverId, isActive])
+  @@index([fleetId, status])
   @@index([type])
 }
 
@@ -829,4 +847,106 @@ model AdminRole {
   role  Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
   @@id([adminId, roleId])
+}
+
+// ==========================================
+// FLEET MANAGEMENT SYSTEM
+// ==========================================
+
+enum FleetStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+model Fleet {
+  id              String      @id @default(cuid())
+  companyName     String
+  ownerName       String
+  email           String      @unique
+  phone           String      @unique
+  address         String
+  taxNumber       String?
+  businessLicense String?
+  logo            String?
+  status          FleetStatus @default(PENDING)
+  cityId          String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  drivers         Driver[]
+  vehicles        Vehicle[]
+  managers        FleetManager[]
+  commissionRules FleetCommissionRule[]
+  payoutRequests  FleetPayoutRequest[]
+}
+
+model FleetManager {
+  id                String   @id @default(cuid())
+  fleetId           String
+  userId            String   @unique
+  canManageDrivers  Boolean  @default(false)
+  canManageVehicles Boolean  @default(false)
+  canViewEarnings   Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  fleet Fleet @relation(fields: [fleetId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VehicleMaintenance {
+  id          String   @id @default(cuid())
+  vehicleId   String
+  serviceDate DateTime
+  mileage     Int?
+  cost        Decimal  @db.Decimal(10, 2)
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+}
+
+model FleetCommissionRule {
+  id        String   @id @default(cuid())
+  fleetId   String
+  type      String // PERCENTAGE, FLAT, TIERED
+  value     Decimal  @db.Decimal(10, 2)
+  minTrips  Int? // For TIERED
+  maxTrips  Int? // For TIERED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  fleet Fleet @relation(fields: [fleetId], references: [id], onDelete: Cascade)
+}
+
+enum PayoutMethod {
+  BANK_TRANSFER
+  MOBILE_MONEY
+  CASH
+}
+
+enum PayoutStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  COMPLETED
+}
+
+model FleetPayoutRequest {
+  id             String       @id @default(cuid())
+  fleetId        String
+  amount         Decimal      @db.Decimal(12, 2)
+  method         PayoutMethod
+  accountDetails String?
+  status         PayoutStatus @default(PENDING)
+  notes          String?
+  processedAt    DateTime?
+  processedBy    String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  fleet Fleet @relation(fields: [fleetId], references: [id], onDelete: Cascade)
 }

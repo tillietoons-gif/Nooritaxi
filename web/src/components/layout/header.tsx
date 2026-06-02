@@ -1,6 +1,8 @@
 "use client"
 
 import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Menu, Globe, User, LayoutDashboard, LogOut, ChevronDown } from "lucide-react"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
@@ -45,6 +47,7 @@ export function Header() {
   }
 
   const currentLang = i18n.language === 'fa' ? 'Dari' : i18n.language === 'ps' ? 'Pashto' : 'English'
+  const pathname = usePathname()
 
   return (
     <header className="fixed top-0 z-50 w-full transition-all duration-500 px-4 pt-6">
@@ -67,16 +70,25 @@ export function Header() {
           </Link>
 
           <nav className="hidden lg:flex items-center space-x-10">
-            {navigation.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground hover:text-primary transition-all relative group"
-              >
-                {item.name}
-                <span className="absolute -bottom-1 left-0 w-0 h-[1.5px] bg-primary transition-all duration-500 group-hover:w-full" />
-              </Link>
-            ))}
+            {navigation.map((item) => {
+              const isActive = pathname.startsWith(item.href)
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={cn(
+                    "text-xs font-black uppercase tracking-[0.2em] transition-all relative group",
+                    isActive ? "text-primary" : "text-muted-foreground hover:text-primary"
+                  )}
+                >
+                  {item.name}
+                  <span className={cn(
+                    "absolute -bottom-1 left-0 h-[1.5px] bg-primary transition-all duration-500 group-hover:w-full",
+                    isActive ? "w-full" : "w-0"
+                  )} />
+                </Link>
+              )
+            })}
           </nav>
         </div>
 
@@ -132,22 +144,28 @@ export function Header() {
                 </div>
 
                 <nav className="flex flex-col space-y-8">
-                  {navigation.map((item, i) => (
-                    <motion.div
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.1 }}
-                      key={item.name}
-                    >
-                      <Link
-                        href={item.href}
-                        onClick={() => setIsOpen(false)}
-                        className="text-4xl font-black hover:text-primary transition-colors font-heading"
+                  {navigation.map((item, i) => {
+                    const isActive = pathname.startsWith(item.href)
+                    return (
+                      <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: i * 0.1 }}
+                        key={item.name}
                       >
-                        {item.name}
-                      </Link>
-                    </motion.div>
-                  ))}
+                        <Link
+                          href={item.href}
+                          onClick={() => setIsOpen(false)}
+                          className={cn(
+                            "text-4xl font-black transition-colors font-heading",
+                            isActive ? "text-primary" : "hover:text-primary"
+                          )}
+                        >
+                          {item.name}
+                        </Link>
+                      </motion.div>
+                    )
+                  })}
                 </nav>
 
                 <div className="mt-auto space-y-6">

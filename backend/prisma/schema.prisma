@@ -254,6 +254,10 @@ model User {
   // Corporate
   employeeProfile Employee? @relation("UserEmployee")
 
+  // Airport
+  airportBookings  AirportBooking[]  @relation("UserAirportBookings")
+  airportAuditLogs AirportAuditLog[] @relation("AdminAirportAuditLogs")
+
   @@index([role, status])
   @@index([createdAt])
 }
@@ -291,15 +295,17 @@ model Driver {
   createdAt           DateTime     @default(now())
   updatedAt           DateTime     @updatedAt
 
-  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  fleetId     String?
-  fleet       Fleet?           @relation(fields: [fleetId], references: [id])
-  vehicles    Vehicle[]
-  documents   DriverDocument[]
-  fraudScore  FraudScore?      @relation("DriverFraudScore")
-  fraudCases  FraudCase[]      @relation("DriverFraudCases")
-  fraudAlerts FraudAlert[]     @relation("DriverFraudAlerts")
-  incidents   Incident[]       @relation("DriverIncidents")
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fleetId         String?
+  fleet           Fleet?           @relation(fields: [fleetId], references: [id])
+  vehicles        Vehicle[]
+  documents       DriverDocument[]
+  fraudScore      FraudScore?      @relation("DriverFraudScore")
+  fraudCases      FraudCase[]      @relation("DriverFraudCases")
+  fraudAlerts     FraudAlert[]     @relation("DriverFraudAlerts")
+  incidents       Incident[]       @relation("DriverIncidents")
+  airportQueues   AirportQueue[]   @relation("DriverAirportQueues")
+  airportBookings AirportBooking[] @relation("DriverAirportBookings")
 
   @@index([status, tier])
   @@index([currentLat, currentLng])
@@ -331,11 +337,12 @@ model Vehicle {
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt
 
-  driver      Driver?              @relation(fields: [driverId], references: [id], onDelete: Cascade)
-  fleet       Fleet?               @relation(fields: [fleetId], references: [id], onDelete: Cascade)
-  trips       Trip[]
-  deliveries  Delivery[]
-  maintenance VehicleMaintenance[]
+  driver        Driver?              @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  fleet         Fleet?               @relation(fields: [fleetId], references: [id], onDelete: Cascade)
+  trips         Trip[]
+  deliveries    Delivery[]
+  maintenance   VehicleMaintenance[]
+  airportQueues AirportQueue[]
 
   @@index([driverId, isActive])
   @@index([fleetId, status])
@@ -396,6 +403,7 @@ model Trip {
   refundRequests     RefundRequest[]
   incidents          Incident[]          @relation("TripIncidents")
   travelApprovals    TravelApproval[]    @relation("TripTravelApproval")
+  airportBooking     AirportBooking?     @relation("TripAirportBooking")
 
   @@index([customerId, status, createdAt])
   @@index([driverId, status, createdAt])
@@ -1582,4 +1590,132 @@ model CorporateAuditLog {
   createdAt      DateTime @default(now())
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+// ==========================================
+// AIRPORT OPERATIONS SYSTEM
+// ==========================================
+
+enum AirportStatus {
+  ACTIVE
+  INACTIVE
+  MAINTENANCE
+}
+
+enum AirportZoneType {
+  PICKUP
+  DROPOFF
+  WAITING
+  VIP
+  COMMERCIAL
+}
+
+enum QueueStatus {
+  WAITING
+  ASSIGNED
+  LEFT
+  SUSPENDED
+}
+
+enum FlightStatus {
+  SCHEDULED
+  ON_TIME
+  DELAYED
+  LANDED
+  CANCELLED
+}
+
+model Airport {
+  id          String        @id @default(cuid())
+  name        String
+  city        String
+  country     String
+  iataCode    String        @unique
+  icaoCode    String        @unique
+  locationLat Float?
+  locationLng Float?
+  terminals   String[]
+  status      AirportStatus @default(ACTIVE)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  zones     AirportZone[]
+  flights   Flight[]
+  bookings  AirportBooking[]
+  auditLogs AirportAuditLog[]
+}
+
+model AirportZone {
+  id          String          @id @default(cuid())
+  airportId   String
+  name        String
+  type        AirportZoneType
+  coordinates Json? // Geo-fence polygon
+  maxCapacity Int             @default(100)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  airport Airport        @relation(fields: [airportId], references: [id], onDelete: Cascade)
+  queues  AirportQueue[]
+}
+
+model AirportQueue {
+  id            String      @id @default(cuid())
+  airportZoneId String
+  driverId      String
+  vehicleId     String?
+  vehicleType   VehicleType @default(CAR)
+  queuePosition Int         @default(0)
+  entryTime     DateTime    @default(now())
+  status        QueueStatus @default(WAITING)
+
+  zone    AirportZone @relation(fields: [airportZoneId], references: [id], onDelete: Cascade)
+  driver  Driver      @relation("DriverAirportQueues", fields: [driverId], references: [id], onDelete: Cascade)
+  vehicle Vehicle?    @relation(fields: [vehicleId], references: [id])
+}
+
+model Flight {
+  id                      String       @id @default(cuid())
+  airportId               String
+  flightNumber            String
+  airline                 String
+  arrivalTime             DateTime
+  departureTime           DateTime?
+  status                  FlightStatus @default(SCHEDULED)
+  estimatedPassengerCount Int?
+  createdAt               DateTime     @default(now())
+  updatedAt               DateTime     @updatedAt
+
+  airport Airport @relation(fields: [airportId], references: [id], onDelete: Cascade)
+}
+
+model AirportBooking {
+  id           String   @id @default(cuid())
+  airportId    String
+  tripId       String?  @unique
+  flightNumber String?
+  userId       String
+  driverId     String?
+  type         String // PICKUP, DROPOFF
+  isVIP        Boolean  @default(false)
+  status       String   @default("PENDING")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  airport Airport @relation(fields: [airportId], references: [id])
+  trip    Trip?   @relation("TripAirportBooking", fields: [tripId], references: [id])
+  user    User    @relation("UserAirportBookings", fields: [userId], references: [id])
+  driver  Driver? @relation("DriverAirportBookings", fields: [driverId], references: [id])
+}
+
+model AirportAuditLog {
+  id        String   @id @default(cuid())
+  airportId String
+  adminId   String
+  action    String
+  details   Json?
+  createdAt DateTime @default(now())
+
+  airport Airport @relation(fields: [airportId], references: [id], onDelete: Cascade)
+  admin   User    @relation("AdminAirportAuditLogs", fields: [adminId], references: [id])
 }

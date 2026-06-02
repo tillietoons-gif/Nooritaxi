@@ -43,9 +43,9 @@ export class KycController {
 
     const userId = req.user.id;
     return this.kycService.createDriverDocument(
-      file,
       userId,
-      createDocumentDto,
+      createDocumentDto.documentType,
+      file.filename || file.originalname,
     );
   }
 }

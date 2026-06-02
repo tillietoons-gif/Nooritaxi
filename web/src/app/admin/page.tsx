@@ -123,6 +123,8 @@ export default function AdminPage() {
     { label: "Cash Finance", value: "Center", icon: Banknote, href: "/admin/finance" },
     { label: "Cash Collections", value: "Receivables", icon: HandCoins, href: "/admin/cash-collections" },
     { label: "Refunds", value: "Requests", icon: Undo2, href: "/admin/refunds" },
+    { label: "Deliveries", value: "Food & Parcel", icon: Package, href: "/admin/deliveries" },
+    { label: "Ratings & Reviews", value: "Moderation", icon: Star, href: "/admin/reviews" },
     { label: "Corporate", value: "B2B Accounts", icon: Building2, href: "/admin/corporate" },
     { label: "Airport", value: "Ops & Queues", icon: PlaneTakeoff, href: "/admin/airport" },
     { label: "Promo & Marketing", value: "Campaigns", icon: Tag, href: "/admin/marketing" },

@@ -39,6 +39,9 @@ import { CMSModule } from './cms/cms.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { VehiclesModule } from './vehicles/vehicles.module';
 
+import { NotificationsModule } from './notifications/notifications.module';
+import { AIModule } from './ai/ai.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -73,6 +76,8 @@ import { VehiclesModule } from './vehicles/vehicles.module';
     CMSModule,
     SubscriptionsModule,
     VehiclesModule,
+    NotificationsModule,
+    AIModule,
   ],
   providers: [
     AppService,

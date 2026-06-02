@@ -270,7 +270,6 @@ export default function LandingPage() {
                   description={service.description}
                   header={service.header}
                   icon={service.icon}
-                  background={service.background}
                   size={service.size}
                   className="cursor-pointer"
                 />

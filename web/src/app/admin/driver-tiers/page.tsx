@@ -26,7 +26,7 @@ export default function DriverTiersPage() {
   }, [])
 
   return (
-    <AuthGate requiredRole="ADMIN">
+    <AuthGate roles={["ADMIN"]}>
       <div className="flex flex-col min-h-screen bg-background/50">
         <Header />
         <main className="flex-1 container py-8">

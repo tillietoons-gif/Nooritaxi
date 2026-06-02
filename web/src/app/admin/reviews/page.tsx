@@ -60,7 +60,7 @@ export default function ReviewsPage() {
                           <Star className="h-4 w-4 fill-current mr-1" /> {r.rating}.0
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-muted-foreground italic text-xs max-w-[200px] truncate">"{r.comment}"</td>
+                      <td className="px-6 py-4 text-muted-foreground italic text-xs max-w-[200px] truncate">&quot;{r.comment}&quot;</td>
                       <td className="px-6 py-4">
                         <Badge variant={r.status === 'REPORTED' || r.status === 'PENDING_REVIEW' ? 'destructive' : 'default'} className="text-[10px]">
                           {r.status}

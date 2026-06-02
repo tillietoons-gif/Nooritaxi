@@ -5,7 +5,6 @@ import { AuthGate } from "@/components/auth-gate"
 import { Header } from "@/components/layout/header"
 import { HeadingLg, BodyMd, HeadingSm } from "@/components/ui/typography"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { TrendingUp, Car, Star, CheckCircle, AlertTriangle } from "lucide-react"
 
 export default function DriverTiersPage() {

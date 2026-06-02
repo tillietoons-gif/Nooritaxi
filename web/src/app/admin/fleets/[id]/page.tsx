@@ -2,11 +2,11 @@
 
 import { AuthGate } from "@/components/auth-gate"
 import { Header } from "@/components/layout/header"
-import { HeadingLg, HeadingSm, BodyMd } from "@/components/ui/typography"
+import { HeadingLg, HeadingSm } from "@/components/ui/typography"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Building2, Users, Car, Map, Banknote, ShieldAlert } from "lucide-react"
+import { Users, Car, Map, Banknote, ShieldAlert } from "lucide-react"
 
 export default function FleetDetailPage() {
   return (

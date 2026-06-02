@@ -1,16 +1,16 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { AuthGate } from "@/components/auth-gate"
 import { Header } from "@/components/layout/header"
-import { HeadingLg, BodyMd, HeadingSm } from "@/components/ui/typography"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { HeadingLg, BodyMd } from "@/components/ui/typography"
+import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Shield, Plus, Edit2, Trash2, Key, Users } from "lucide-react"
 
 export default function RolesAdminPage() {
-  const [roles, setRoles] = useState([
+  const [roles] = useState([
     { id: "1", name: "Super Admin", description: "Full access to everything.", isSystem: true, admins: 2, perms: "All" },
     { id: "2", name: "Operations Admin", description: "Manage trips, drivers, live tracking.", isSystem: true, admins: 5, perms: "8" },
     { id: "3", name: "Finance Admin", description: "Manage wallets and settlements.", isSystem: true, admins: 3, perms: "6" },

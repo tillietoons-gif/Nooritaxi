@@ -4,14 +4,13 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { Menu, Globe, User, LayoutDashboard, LogOut, ChevronDown } from "lucide-react"
+import { Menu, Globe, User, LayoutDashboard, ChevronDown } from "lucide-react"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { useState, useEffect } from "react"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { NooriLogo } from "@/components/ui/noori-logo"
-import { motion, useScroll, useMotionValueEvent, AnimatePresence } from "framer-motion"
+import { motion, useScroll, useMotionValueEvent } from "framer-motion"
 import { getStoredUser, clearSession } from "@/lib/auth"
-import { LabelMd } from "@/components/ui/typography"
 import {
   DropdownMenu,
   DropdownMenuContent,

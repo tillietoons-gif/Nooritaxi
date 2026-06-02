@@ -6,7 +6,7 @@ import { HeadingLg, BodyMd } from "@/components/ui/typography"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { AlertTriangle, CheckCircle, Search, ShieldAlert } from "lucide-react"
+import { AlertTriangle, CheckCircle, ShieldAlert } from "lucide-react"
 
 export default function FraudAlertsPage() {
   const alerts = [

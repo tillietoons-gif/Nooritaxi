@@ -3,10 +3,8 @@
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { ShieldCheck, Eye, MapPin, Shield, Lock, Zap, Activity } from "lucide-react"
-import { useTranslation } from "react-i18next"
 import { motion } from "framer-motion"
 import { PatternOverlay } from "@/components/ui/pattern-overlay"
-import { NooriLogo } from "@/components/ui/noori-logo"
 import { HeadingLg, HeadingMd, BodyMd, LabelMd } from "@/components/ui/typography"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -14,8 +12,6 @@ import { GlassSurface } from "@/components/ui/glass-surface"
 import { BentoGrid, BentoCard } from "@/components/ui/bento-grid"
 
 export default function SafetyPage() {
-  const { t } = useTranslation()
-
   const safetyFeatures = [
     {
       title: "Encrypted Node Verification",

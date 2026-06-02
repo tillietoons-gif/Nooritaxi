@@ -6,7 +6,7 @@ import { HeadingLg, BodyMd } from "@/components/ui/typography"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Car, FileText, Plus, ShieldCheck } from "lucide-react"
+import { Car, Plus, ShieldCheck } from "lucide-react"
 
 export default function VehiclesPage() {
   const vehicles = [

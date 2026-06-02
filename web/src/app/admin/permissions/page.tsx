@@ -20,7 +20,7 @@ export default function PermissionsMatrixPage() {
 
   const roles = ["Super Admin", "Operations", "Support", "Finance"]
 
-  const hasPermission = (role: string, mod: string, action: string) => {
+  const hasPermission = (role: string, mod: string, _action: string) => {
     if (role === "Super Admin") return true;
     if (role === "Operations" && ["Dashboard", "Drivers", "Trips"].includes(mod)) return true;
     if (role === "Support" && ["Dashboard", "Support", "Users"].includes(mod)) return true;
@@ -56,7 +56,7 @@ export default function PermissionsMatrixPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {modules.flatMap((mod, mIdx) => 
+                  {modules.flatMap((mod) => 
                     mod.actions.map((act, aIdx) => (
                       <tr key={`${mod.name}-${act}`} className="border-b border-primary/5 hover:bg-muted/30">
                         {aIdx === 0 ? (

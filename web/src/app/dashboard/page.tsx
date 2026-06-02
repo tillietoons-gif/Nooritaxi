@@ -20,7 +20,6 @@ import {
   LayoutGrid
 } from "lucide-react"
 import { authedFetch, apiUrl, getStoredUser, type AuthUser } from "@/lib/auth"
-import { useSocket } from "@/lib/use-socket"
 import { useUserBehavior } from "@/components/user-behavior-provider"
 
 type ActivityItem = {
@@ -41,12 +40,9 @@ export default function DashboardPage() {
   const [walletBalance, setWalletBalance] = useState<string>("0")
   const [rides, setRides] = useState<any[]>([])
   const [orders, setOrders] = useState<any[]>([])
-  const [driverLocation, setDriverLocation] = useState<any>(null)
-  const [error, setError] = useState("")
-  const { socket, connected } = useSocket(Boolean(user?.id))
 
   // Initial order for widgets
-  const defaultWidgets = ["stats", "activity", "map"]
+  const defaultWidgets = useMemo(() => ["stats", "activity", "map"], [])
   const [widgetOrder, setWidgetOrder] = useState(defaultWidgets)
 
   useEffect(() => {
@@ -57,7 +53,7 @@ export default function DashboardPage() {
       return usageB - usageA
     })
     setWidgetOrder(sorted)
-  }, [behavior.featureUsage])
+  }, [behavior.featureUsage, defaultWidgets])
 
   useEffect(() => {
     if (!user?.id) return
@@ -74,7 +70,7 @@ export default function DashboardPage() {
       setCounts({ rides: ridesData.length, deliveries: deliveries.length, restaurants: restaurants.length })
       setWalletBalance(wallet?.balance ? Number(wallet.balance).toLocaleString() : "0")
     }
-    load().catch((err) => setError(err.message))
+    load().catch((err) => console.error(err.message))
   }, [user?.id])
 
   const activity = useMemo<ActivityItem[]>(() => {

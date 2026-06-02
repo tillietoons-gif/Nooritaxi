@@ -3,17 +3,13 @@
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { motion } from "framer-motion"
-import { useTranslation } from "react-i18next"
 import { PatternOverlay } from "@/components/ui/pattern-overlay"
 import { HeadingLg, HeadingMd, BodyMd, LabelMd } from "@/components/ui/typography"
-import { Badge } from "@/components/ui/badge"
 import { GlassSurface } from "@/components/ui/glass-surface"
 import { BentoGrid, BentoCard } from "@/components/ui/bento-grid"
 import { Globe, Users, Target, Rocket } from "lucide-react"
 
 export default function AboutPage() {
-  const { t } = useTranslation()
-
   const missionItems = [
     {
       title: "Our Mission",

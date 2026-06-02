@@ -4,7 +4,7 @@ import { AuthGate } from "@/components/auth-gate"
 import { Header } from "@/components/layout/header"
 import { HeadingLg, BodyMd } from "@/components/ui/typography"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { PlaneTakeoff, Users, ListOrdered, Navigation, Clock, PlaneLanding, Settings2 } from "lucide-react"
+import { PlaneTakeoff, Users, ListOrdered, Clock, PlaneLanding, Settings2 } from "lucide-react"
 import Link from "next/link"
 
 export default function AirportDashboardPage() {

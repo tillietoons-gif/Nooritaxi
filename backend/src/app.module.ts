@@ -32,6 +32,9 @@ import { OperationsModule } from './operations/operations.module';
 import { CorporateModule } from './corporate/corporate.module';
 import { AirportModule } from './airport/airport.module';
 
+import { SupportModule } from './support/support.module';
+import { MarketingModule } from './marketing/marketing.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -61,6 +64,8 @@ import { AirportModule } from './airport/airport.module';
     OperationsModule,
     CorporateModule,
     AirportModule,
+    SupportModule,
+    MarketingModule,
   ],
   providers: [
     AppService,

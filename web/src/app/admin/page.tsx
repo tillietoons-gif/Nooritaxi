@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { BodyMd, HeadingMd } from "@/components/ui/typography"
-import { Car, Headphones, Package, RefreshCw, ShieldCheck, Store, Users, ArrowRight, Activity, Map, UserCheck, Award, TrendingUp, LifeBuoy } from "lucide-react"
+import { Car, Headphones, Package, RefreshCw, ShieldCheck, Store, Users, ArrowRight, Activity, Map, UserCheck, Award, TrendingUp, LifeBuoy, Shield, KeySquare, ShieldAlert } from "lucide-react"
 import { AuthGate } from "@/components/auth-gate"
 import Link from "next/link"
 import { authedFetch } from "@/lib/auth"
@@ -117,6 +117,9 @@ export default function AdminPage() {
     { label: "Loyalty System", value: "Configure", icon: Award, href: "/admin/loyalty" },
     { label: "Driver Tiers", value: "Manage", icon: TrendingUp, href: "/admin/driver-tiers" },
     { label: "Live Support", value: "Chat", icon: LifeBuoy, href: "/admin/support" },
+    { label: "Roles", value: "RBAC", icon: Shield, href: "/admin/roles" },
+    { label: "Permissions", value: "Matrix", icon: KeySquare, href: "/admin/permissions" },
+    { label: "Admin Users", value: "Directory", icon: ShieldAlert, href: "/admin/admin-users" },
   ]
 
   const supportCount = (keyword: string) =>

@@ -224,6 +224,7 @@ model User {
   verifiedDocuments    DriverDocument[]      @relation("DocumentVerifier")
   trustedContacts      TrustedContact[]      @relation("UserTrustedContacts")
   sosAlerts            SosAlert[]            @relation("UserSosAlerts")
+  adminRoles           AdminRole[]           @relation("UserAdminRoles")
 
   @@index([role, status])
   @@index([createdAt])
@@ -778,4 +779,54 @@ model SosAlert {
   @@index([userId, status, createdAt])
   @@index([status, createdAt])
   @@index([tripId])
+}
+
+// ==========================================
+// RBAC SYSTEM (Enterprise Permissions)
+// ==========================================
+
+model Role {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  isSystem    Boolean  @default(false) // System roles cannot be deleted
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  permissions RolePermission[]
+  admins      AdminRole[]
+}
+
+model Permission {
+  id          String   @id @default(cuid())
+  name        String   @unique // e.g., "drivers.view"
+  module      String // e.g., "drivers"
+  action      String // e.g., "view"
+  description String?
+  createdAt   DateTime @default(now())
+
+  roles RolePermission[]
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  createdAt    DateTime @default(now())
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+}
+
+model AdminRole {
+  adminId   String
+  roleId    String
+  cityScope String? // Optional city restriction, e.g., "Kabul"
+  createdAt DateTime @default(now())
+
+  admin User @relation("UserAdminRoles", fields: [adminId], references: [id], onDelete: Cascade)
+  role  Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([adminId, roleId])
 }

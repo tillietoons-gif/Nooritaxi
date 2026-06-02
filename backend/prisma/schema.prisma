@@ -245,6 +245,12 @@ model User {
   addedBlacklists    Blacklist[]         @relation("BlacklistAddedBy")
   addedWhitelists    Whitelist[]         @relation("WhitelistAddedBy")
 
+  // Operations
+  assignedIncidents   Incident[]               @relation("AssignedIncidents")
+  reportedIncidents   Incident[]               @relation("UserIncidents")
+  broadcastsSent      CommunicationBroadcast[] @relation("BroadcastsSent")
+  operationsAuditLogs OperationsAuditLog[]     @relation("AdminOperationsAuditLogs")
+
   @@index([role, status])
   @@index([createdAt])
 }
@@ -290,6 +296,7 @@ model Driver {
   fraudScore  FraudScore?      @relation("DriverFraudScore")
   fraudCases  FraudCase[]      @relation("DriverFraudCases")
   fraudAlerts FraudAlert[]     @relation("DriverFraudAlerts")
+  incidents   Incident[]       @relation("DriverIncidents")
 
   @@index([status, tier])
   @@index([currentLat, currentLng])
@@ -384,6 +391,7 @@ model Trip {
   transactions       Transaction[]
   loyaltyTransaction LoyaltyTransaction?
   refundRequests     RefundRequest[]
+  incidents          Incident[]          @relation("TripIncidents")
 
   @@index([customerId, status, createdAt])
   @@index([driverId, status, createdAt])
@@ -1238,4 +1246,82 @@ model FraudRule {
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+// ==========================================
+// OPERATIONS COMMAND CENTER (OCC)
+// ==========================================
+
+enum IncidentType {
+  SAFETY
+  VEHICLE_BREAKDOWN
+  FRAUD
+  PAYMENT_ISSUE
+  SERVICE_DISRUPTION
+  SUPPORT_ESCALATION
+}
+
+enum IncidentStatus {
+  OPEN
+  INVESTIGATING
+  ASSIGNED
+  RESOLVED
+  CLOSED
+}
+
+model Incident {
+  id           String         @id @default(cuid())
+  type         IncidentType
+  status       IncidentStatus @default(OPEN)
+  title        String
+  description  String?
+  assignedToId String?
+  tripId       String?
+  driverId     String?
+  userId       String?
+  cityId       String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  assignedTo User?   @relation("AssignedIncidents", fields: [assignedToId], references: [id])
+  trip       Trip?   @relation("TripIncidents", fields: [tripId], references: [id])
+  driver     Driver? @relation("DriverIncidents", fields: [driverId], references: [id])
+  user       User?   @relation("UserIncidents", fields: [userId], references: [id])
+}
+
+model CommunicationBroadcast {
+  id             String   @id @default(cuid())
+  title          String
+  message        String
+  targetAudience String // DRIVERS, RIDERS, MERCHANTS, FLEETS, ALL
+  channels       String[] // PUSH, SMS, EMAIL, IN_APP
+  cityId         String?
+  sentById       String
+  createdAt      DateTime @default(now())
+
+  sentBy User @relation("BroadcastsSent", fields: [sentById], references: [id])
+}
+
+model OperationsAlert {
+  id         String        @id @default(cuid())
+  title      String
+  message    String
+  severity   AlertSeverity
+  type       String // SYSTEM, FLEET, DRIVER, DEMAND, SURGE
+  isResolved Boolean       @default(false)
+  cityId     String?
+  createdAt  DateTime      @default(now())
+}
+
+model OperationsAuditLog {
+  id         String   @id @default(cuid())
+  adminId    String
+  action     String
+  targetId   String?
+  targetType String?
+  details    Json?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  admin User @relation("AdminOperationsAuditLogs", fields: [adminId], references: [id])
 }

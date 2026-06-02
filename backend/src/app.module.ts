@@ -28,6 +28,7 @@ import { RolesModule } from './roles/roles.module';
 import { FleetsModule } from './fleets/fleets.module';
 import { FinanceModule } from './finance/finance.module';
 import { FraudModule } from './fraud/fraud.module';
+import { OperationsModule } from './operations/operations.module';
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { FraudModule } from './fraud/fraud.module';
     FleetsModule,
     FinanceModule,
     FraudModule,
+    OperationsModule,
   ],
   providers: [
     AppService,

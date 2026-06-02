@@ -24,7 +24,49 @@ import {
   Package,
 } from "lucide-react"
 import { useUserBehavior } from "@/components/user-behavior-provider"
-import { useEffect, useState } from "react"
+import { useMemo } from "react"
+
+const services = [
+  {
+    title: "Intelligent Design",
+    description: "Premium engineering meets aesthetic excellence in every component of our infrastructure.",
+    icon: <Layers className="h-6 w-6" />,
+    size: "large" as const,
+    background: (
+      <div className="h-full w-full relative">
+        <Image
+          src="/images/intelligent-design.webp"
+          alt="Intelligent Design"
+          fill
+          className="object-cover transition-transform duration-700 group-hover:scale-105"
+          priority
+        />
+      </div>
+    )
+  },
+  {
+    title: "Global Logistics",
+    description: "Freight management across borders with real-time customs integration.",
+    icon: <Globe className="h-6 w-6" />,
+    size: "medium" as const,
+  },
+  {
+    title: "Parcel Express",
+    description: "On-demand hyper-local delivery for businesses and individuals.",
+    icon: <Package className="h-6 w-6" />,
+    size: "medium" as const,
+  },
+  {
+    title: "Real-time Tracking",
+    description: "High-fidelity WebGL visualization of every asset in your supply chain.",
+    icon: <Activity className="h-6 w-6" />,
+    size: "large" as const,
+    header: <div className="h-full w-full bg-gold/5 rounded-2xl flex items-center justify-center overflow-hidden">
+      <div className="absolute inset-0 opacity-10"><PatternOverlay /></div>
+      <Activity className="h-20 w-20 text-gold/30" />
+    </div>
+  }
+]
 
 export default function LandingPage() {
   const { behavior } = useUserBehavior()
@@ -32,62 +74,27 @@ export default function LandingPage() {
   const opacity = useTransform(scrollY, [0, 200], [1, 0])
   const y1 = useTransform(scrollY, [0, 500], [0, -100])
 
-  const [greeting, setGreeting] = useState("Good Morning")
+  const greeting = behavior.timeOfDay === "morning"
+    ? "Good Morning"
+    : behavior.timeOfDay === "afternoon"
+      ? "Good Afternoon"
+      : behavior.timeOfDay === "evening"
+        ? "Good Evening"
+        : "Good Night";
 
-  useEffect(() => {
-    const hour = new Date().getHours()
-    if (hour < 12) setGreeting("Good Morning")
-    else if (hour < 18) setGreeting("Good Afternoon")
-    else setGreeting("Good Evening")
-  }, [])
-
-  const services = [
-    {
-      title: "Intelligent Design",
-      description: "Premium engineering meets aesthetic excellence in every component of our infrastructure.",
-      icon: <Layers className="h-6 w-6" />,
-      size: "large" as const,
-      background: (
-        <div className="h-full w-full relative">
-          <Image
-            src="/images/intelligent-design.webp"
-            alt="Intelligent Design"
-            fill
-            className="object-cover transition-transform duration-700 group-hover:scale-105"
-            priority
-          />
-        </div>
-      )
-    },
-    {
-      title: "Global Logistics",
-      description: "Freight management across borders with real-time customs integration.",
-      icon: <Globe className="h-6 w-6" />,
-      size: "medium" as const,
-    },
-    {
-      title: "Parcel Express",
-      description: "On-demand hyper-local delivery for businesses and individuals.",
-      icon: <Package className="h-6 w-6" />,
-      size: "medium" as const,
-    },
-    {
-      title: "Real-time Tracking",
-      description: "High-fidelity WebGL visualization of every asset in your supply chain.",
-      icon: <Activity className="h-6 w-6" />,
-      size: "large" as const,
-      header: <div className="h-full w-full bg-gold/5 rounded-2xl flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 opacity-10"><PatternOverlay /></div>
-        <Activity className="h-20 w-20 text-gold/30" />
-      </div>
-    }
-  ]
-
-  const sortedServices = [...services].sort((a) => {
-    if (behavior.preferredService === "delivery" && a.title.includes("Tracking")) return -1;
-    if (behavior.preferredService === "ride" && a.title.includes("Design")) return -1;
-    return 0;
-  });
+  const sortedServices = useMemo(() => {
+    return [...services].sort((a, b) => {
+      if (behavior.preferredService === "delivery") {
+        if (a.title.includes("Tracking") && !b.title.includes("Tracking")) return -1;
+        if (!a.title.includes("Tracking") && b.title.includes("Tracking")) return 1;
+      }
+      if (behavior.preferredService === "ride") {
+        if (a.title.includes("Design") && !b.title.includes("Design")) return -1;
+        if (!a.title.includes("Design") && b.title.includes("Design")) return 1;
+      }
+      return 0;
+    });
+  }, [behavior.preferredService]);
 
   return (
     <div className="flex flex-col min-h-screen selection:bg-primary/20 selection:text-primary">

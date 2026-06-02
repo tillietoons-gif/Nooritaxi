@@ -184,110 +184,110 @@ enum DocumentStatus {
 }
 
 model User {
-  id                   String              @id @default(cuid())
-  phone                String              @unique
-  email                String?             @unique
-  name                 String?
-  password             String
-  role                 UserRole            @default(RIDER)
-  status               UserStatus          @default(PENDING_VERIFICATION)
-  isVerified           Boolean             @default(false)
-  locale               String              @default("fa-AF")
-  preferredLanguage    String              @default("fa")
-  referralCode         String              @unique
-  referredById         String?
-  lastSeenAt           DateTime?
-  createdAt            DateTime            @default(now())
-  updatedAt            DateTime            @updatedAt
+  id                String     @id @default(cuid())
+  phone             String     @unique
+  email             String?    @unique
+  name              String?
+  password          String
+  role              UserRole   @default(RIDER)
+  status            UserStatus @default(PENDING_VERIFICATION)
+  isVerified        Boolean    @default(false)
+  locale            String     @default("fa-AF")
+  preferredLanguage String     @default("fa")
+  referralCode      String     @unique
+  referredById      String?
+  lastSeenAt        DateTime?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
 
-  referredBy           User?               @relation("UserReferrals", fields: [referredById], references: [id])
-  referrals            User[]              @relation("UserReferrals")
+  referredBy           User?                 @relation("UserReferrals", fields: [referredById], references: [id])
+  referrals            User[]                @relation("UserReferrals")
   riderProfile         Rider?
   driverProfile        Driver?
   wallets              Wallet[]
-  restaurants          Restaurant[]        @relation("RestaurantOwner")
-  tripsAsCustomer      Trip[]              @relation("CustomerTrips")
-  tripsAsDriver        Trip[]              @relation("DriverTrips")
+  restaurants          Restaurant[]          @relation("RestaurantOwner")
+  tripsAsCustomer      Trip[]                @relation("CustomerTrips")
+  tripsAsDriver        Trip[]                @relation("DriverTrips")
   orders               Order[]
-  deliveriesAsSender   Delivery[]          @relation("DeliverySender")
-  deliveriesAsDriver   Delivery[]          @relation("DeliveryDriver")
-  reviewsAuthored      Review[]            @relation("ReviewsAuthored")
+  deliveriesAsSender   Delivery[]            @relation("DeliverySender")
+  deliveriesAsDriver   Delivery[]            @relation("DeliveryDriver")
+  reviewsAuthored      Review[]              @relation("ReviewsAuthored")
   notifications        Notification[]
-  supportTickets       SupportTicket[]     @relation("TicketRequester")
-  assignedTickets      SupportTicket[]     @relation("TicketAssignee")
+  supportTickets       SupportTicket[]       @relation("TicketRequester")
+  assignedTickets      SupportTicket[]       @relation("TicketAssignee")
   loyaltyAccount       LoyaltyAccount?
   promotionRedemptions PromotionRedemption[]
   pushDevices          PushDevice[]
   supportMessages      SupportMessage[]
   auditLogs            AuditLog[]
   refreshTokens        RefreshToken[]
-  verifiedDocuments    DriverDocument[]    @relation("DocumentVerifier")
-  trustedContacts      TrustedContact[]    @relation("UserTrustedContacts")
-  sosAlerts            SosAlert[]          @relation("UserSosAlerts")
+  verifiedDocuments    DriverDocument[]      @relation("DocumentVerifier")
+  trustedContacts      TrustedContact[]      @relation("UserTrustedContacts")
+  sosAlerts            SosAlert[]            @relation("UserSosAlerts")
 
   @@index([role, status])
   @@index([createdAt])
 }
 
 model Rider {
-  id              String   @id @default(cuid())
-  userId          String   @unique
-  savedPlaces     Json?
-  accessibility   Json?
-  totalTrips      Int      @default(0)
-  ratingAverage   Float    @default(5)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  savedPlaces   Json?
+  accessibility Json?
+  totalTrips    Int      @default(0)
+  ratingAverage Float    @default(5)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([ratingAverage])
 }
 
 model Driver {
-  id                  String        @id @default(cuid())
-  userId              String        @unique
+  id                  String       @id @default(cuid())
+  userId              String       @unique
   nationalIdNumber    String?
   licenseNumber       String?
-  status              DriverStatus  @default(OFFLINE)
-  tier                DriverTier    @default(BRONZE)
+  status              DriverStatus @default(OFFLINE)
+  tier                DriverTier   @default(BRONZE)
   currentLat          Float?
   currentLng          Float?
-  ratingAverage       Float         @default(5)
-  completedTrips      Int           @default(0)
-  completedDeliveries Int           @default(0)
-  acceptsCash         Boolean       @default(true)
-  acceptsWallet       Boolean       @default(true)
+  ratingAverage       Float        @default(5)
+  completedTrips      Int          @default(0)
+  completedDeliveries Int          @default(0)
+  acceptsCash         Boolean      @default(true)
+  acceptsWallet       Boolean      @default(true)
   verifiedAt          DateTime?
-  createdAt           DateTime      @default(now())
-  updatedAt           DateTime      @updatedAt
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
 
-  user                User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  vehicles            Vehicle[]
-  documents           DriverDocument[]
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vehicles  Vehicle[]
+  documents DriverDocument[]
 
   @@index([status, tier])
   @@index([currentLat, currentLng])
 }
 
 model Vehicle {
-  id            String      @id @default(cuid())
-  driverId      String
-  type          VehicleType
-  make          String?
-  model         String?
-  year          Int?
-  plateNumber   String      @unique
-  color         String?
-  capacity      Int         @default(4)
-  isActive      Boolean     @default(true)
-  documents     Json?
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  id          String      @id @default(cuid())
+  driverId    String
+  type        VehicleType
+  make        String?
+  model       String?
+  year        Int?
+  plateNumber String      @unique
+  color       String?
+  capacity    Int         @default(4)
+  isActive    Boolean     @default(true)
+  documents   Json?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 
-  driver        Driver      @relation(fields: [driverId], references: [id], onDelete: Cascade)
-  trips         Trip[]
-  deliveries    Delivery[]
+  driver     Driver     @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  trips      Trip[]
+  deliveries Delivery[]
 
   @@index([driverId, isActive])
   @@index([type])
@@ -304,8 +304,8 @@ model DriverDocument {
   createdAt  DateTime       @default(now())
   updatedAt  DateTime       @updatedAt
 
-  driver     Driver         @relation(fields: [driverId], references: [userId], onDelete: Cascade)
-  admin      User?          @relation("DocumentVerifier", fields: [verifiedBy], references: [id])
+  driver Driver @relation(fields: [driverId], references: [userId], onDelete: Cascade)
+  admin  User?  @relation("DocumentVerifier", fields: [verifiedBy], references: [id])
 
   @@index([driverId, status])
 }
@@ -334,62 +334,64 @@ model Trip {
   acceptedAt      DateTime?
   completedAt     DateTime?
   cancelledAt     DateTime?
+  scheduledFor    DateTime?
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
-  customer        User          @relation("CustomerTrips", fields: [customerId], references: [id])
-  driver          User?         @relation("DriverTrips", fields: [driverId], references: [id])
-  vehicle         Vehicle?      @relation(fields: [vehicleId], references: [id])
-  reviews         Review[]
-  transactions    Transaction[]
+  customer           User                @relation("CustomerTrips", fields: [customerId], references: [id])
+  driver             User?               @relation("DriverTrips", fields: [driverId], references: [id])
+  vehicle            Vehicle?            @relation(fields: [vehicleId], references: [id])
+  reviews            Review[]
+  transactions       Transaction[]
+  loyaltyTransaction LoyaltyTransaction?
 
   @@index([customerId, status, createdAt])
   @@index([driverId, status, createdAt])
 }
 
 model Restaurant {
-  id              String            @id @default(cuid())
-  ownerId         String
-  name            String
-  description     String?
-  phone           String?
-  address         String
-  lat             Float?
-  lng             Float?
-  cuisineTypes    String[]
-  status          RestaurantStatus  @default(PENDING)
-  openingHours    Json?
-  deliveryRadius  Float?
-  avgPrepMinutes  Int               @default(25)
-  ratingAverage   Float             @default(5)
+  id               String           @id @default(cuid())
+  ownerId          String
+  name             String
+  description      String?
+  phone            String?
+  address          String
+  lat              Float?
+  lng              Float?
+  cuisineTypes     String[]
+  status           RestaurantStatus @default(PENDING)
+  openingHours     Json?
+  deliveryRadius   Float?
+  avgPrepMinutes   Int              @default(25)
+  ratingAverage    Float            @default(5)
   lowBandwidthMenu Boolean          @default(true)
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
 
-  owner           User              @relation("RestaurantOwner", fields: [ownerId], references: [id])
-  menuItems       MenuItem[]
-  orders          Order[]
-  reviews         Review[]
+  owner     User       @relation("RestaurantOwner", fields: [ownerId], references: [id])
+  menuItems MenuItem[]
+  orders    Order[]
+  reviews   Review[]
 
   @@index([status, ratingAverage])
   @@index([ownerId])
 }
 
 model MenuItem {
-  id             String      @id @default(cuid())
+  id             String   @id @default(cuid())
   restaurantId   String
   name           String
   description    String?
-  price          Decimal     @db.Decimal(10, 2)
+  price          Decimal  @db.Decimal(10, 2)
   imageUrl       String?
   category       String?
-  isAvailable    Boolean     @default(true)
+  isAvailable    Boolean  @default(true)
   preparationMin Int?
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  restaurant     Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-  orderItems     OrderItem[]
+  restaurant Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  orderItems OrderItem[]
 
   @@index([restaurantId, isAvailable])
   @@index([category])
@@ -414,27 +416,27 @@ model Order {
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
-  rider           User          @relation(fields: [riderId], references: [id])
-  restaurant      Restaurant    @relation(fields: [restaurantId], references: [id])
-  items           OrderItem[]
-  delivery        Delivery?
-  reviews         Review[]
-  transactions    Transaction[]
+  rider        User          @relation(fields: [riderId], references: [id])
+  restaurant   Restaurant    @relation(fields: [restaurantId], references: [id])
+  items        OrderItem[]
+  delivery     Delivery?
+  reviews      Review[]
+  transactions Transaction[]
 
   @@index([riderId, status, createdAt])
   @@index([restaurantId, status, createdAt])
 }
 
 model OrderItem {
-  id         String   @id @default(cuid())
+  id         String  @id @default(cuid())
   orderId    String
   menuItemId String
-  quantity   Int      @default(1)
-  unitPrice  Decimal  @db.Decimal(10, 2)
+  quantity   Int     @default(1)
+  unitPrice  Decimal @db.Decimal(10, 2)
   notes      String?
 
-  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
+  order    Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItem MenuItem @relation(fields: [menuItemId], references: [id])
 }
 
 model Delivery {
@@ -462,26 +464,26 @@ model Delivery {
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
 
-  order           Order?         @relation(fields: [orderId], references: [id])
-  sender          User?          @relation("DeliverySender", fields: [senderId], references: [id])
-  driver          User?          @relation("DeliveryDriver", fields: [driverId], references: [id])
-  vehicle         Vehicle?       @relation(fields: [vehicleId], references: [id])
-  reviews         Review[]
-  transactions    Transaction[]
+  order        Order?        @relation(fields: [orderId], references: [id])
+  sender       User?         @relation("DeliverySender", fields: [senderId], references: [id])
+  driver       User?         @relation("DeliveryDriver", fields: [driverId], references: [id])
+  vehicle      Vehicle?      @relation(fields: [vehicleId], references: [id])
+  reviews      Review[]
+  transactions Transaction[]
 
   @@index([driverId, status, createdAt])
   @@index([senderId, status, createdAt])
 }
 
 model Wallet {
-  id           String        @id @default(cuid())
-  userId       String
-  type         WalletType    @default(CUSTOMER)
-  currency     String        @default("AFN")
-  balance      Decimal       @default(0) @db.Decimal(12, 2)
-  isFrozen     Boolean       @default(false)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  id        String     @id @default(cuid())
+  userId    String
+  type      WalletType @default(CUSTOMER)
+  currency  String     @default("AFN")
+  balance   Decimal    @default(0) @db.Decimal(12, 2)
+  isFrozen  Boolean    @default(false)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
 
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   transactions Transaction[]
@@ -491,85 +493,85 @@ model Wallet {
 }
 
 model Transaction {
-  id              String            @id @default(cuid())
-  walletId        String
-  tripId          String?
-  orderId         String?
-  deliveryId      String?
-  amount          Decimal           @db.Decimal(12, 2)
-  type            TransactionType
-  status          TransactionStatus @default(COMPLETED)
-  provider        String?
-  providerRef     String?
-  idempotencyKey  String?           @unique
-  description     String?
-  metadata        Json?
-  createdAt       DateTime          @default(now())
+  id             String            @id @default(cuid())
+  walletId       String
+  tripId         String?
+  orderId        String?
+  deliveryId     String?
+  amount         Decimal           @db.Decimal(12, 2)
+  type           TransactionType
+  status         TransactionStatus @default(COMPLETED)
+  provider       String?
+  providerRef    String?
+  idempotencyKey String?           @unique
+  description    String?
+  metadata       Json?
+  createdAt      DateTime          @default(now())
 
-  wallet          Wallet            @relation(fields: [walletId], references: [id])
-  trip            Trip?             @relation(fields: [tripId], references: [id])
-  order           Order?            @relation(fields: [orderId], references: [id])
-  delivery        Delivery?         @relation(fields: [deliveryId], references: [id])
+  wallet   Wallet    @relation(fields: [walletId], references: [id])
+  trip     Trip?     @relation(fields: [tripId], references: [id])
+  order    Order?    @relation(fields: [orderId], references: [id])
+  delivery Delivery? @relation(fields: [deliveryId], references: [id])
 
   @@index([walletId, createdAt])
   @@index([type, status, createdAt])
 }
 
 model Review {
-  id             String           @id @default(cuid())
-  authorId       String
-  targetType     ReviewTargetType
-  targetUserId   String?
-  restaurantId   String?
-  tripId         String?
-  orderId        String?
-  deliveryId     String?
-  rating         Int
-  comment        String?
-  isVisible      Boolean          @default(true)
-  createdAt      DateTime         @default(now())
+  id           String           @id @default(cuid())
+  authorId     String
+  targetType   ReviewTargetType
+  targetUserId String?
+  restaurantId String?
+  tripId       String?
+  orderId      String?
+  deliveryId   String?
+  rating       Int
+  comment      String?
+  isVisible    Boolean          @default(true)
+  createdAt    DateTime         @default(now())
 
-  author         User             @relation("ReviewsAuthored", fields: [authorId], references: [id])
-  restaurant     Restaurant?      @relation(fields: [restaurantId], references: [id])
-  trip           Trip?            @relation(fields: [tripId], references: [id])
-  order          Order?           @relation(fields: [orderId], references: [id])
-  delivery       Delivery?        @relation(fields: [deliveryId], references: [id])
+  author     User        @relation("ReviewsAuthored", fields: [authorId], references: [id])
+  restaurant Restaurant? @relation(fields: [restaurantId], references: [id])
+  trip       Trip?       @relation(fields: [tripId], references: [id])
+  order      Order?      @relation(fields: [orderId], references: [id])
+  delivery   Delivery?   @relation(fields: [deliveryId], references: [id])
 }
 
 model Promotion {
-  id             String                @id @default(cuid())
-  code           String                @unique
-  title          String
-  description    String?
-  type           PromotionType
-  scope          PromotionScope        @default(GLOBAL)
-  value          Decimal               @db.Decimal(10, 2)
-  maxDiscount    Decimal?              @db.Decimal(10, 2)
-  minSpend       Decimal?              @db.Decimal(10, 2)
-  usageLimit     Int?
-  perUserLimit   Int                   @default(1)
-  startsAt       DateTime
-  endsAt         DateTime
-  isActive       Boolean               @default(true)
-  createdAt      DateTime              @default(now())
-  updatedAt      DateTime              @updatedAt
+  id           String         @id @default(cuid())
+  code         String         @unique
+  title        String
+  description  String?
+  type         PromotionType
+  scope        PromotionScope @default(GLOBAL)
+  value        Decimal        @db.Decimal(10, 2)
+  maxDiscount  Decimal?       @db.Decimal(10, 2)
+  minSpend     Decimal?       @db.Decimal(10, 2)
+  usageLimit   Int?
+  perUserLimit Int            @default(1)
+  startsAt     DateTime
+  endsAt       DateTime
+  isActive     Boolean        @default(true)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
 
-  redemptions    PromotionRedemption[]
+  redemptions PromotionRedemption[]
 
   @@index([scope, isActive, startsAt, endsAt])
 }
 
 model PromotionRedemption {
-  id           String    @id @default(cuid())
-  promotionId  String
-  userId       String
-  orderId      String?
-  tripId       String?
-  discount     Decimal   @db.Decimal(10, 2)
-  createdAt    DateTime  @default(now())
+  id          String   @id @default(cuid())
+  promotionId String
+  userId      String
+  orderId     String?
+  tripId      String?
+  discount    Decimal  @db.Decimal(10, 2)
+  createdAt   DateTime @default(now())
 
-  promotion    Promotion @relation(fields: [promotionId], references: [id])
-  user         User      @relation(fields: [userId], references: [id])
+  promotion Promotion @relation(fields: [promotionId], references: [id])
+  user      User      @relation(fields: [userId], references: [id])
 }
 
 model Notification {
@@ -585,23 +587,23 @@ model Notification {
   readAt      DateTime?
   createdAt   DateTime            @default(now())
 
-  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, status, createdAt])
 }
 
 model PushDevice {
-  id          String   @id @default(cuid())
-  userId      String
-  platform    String
-  token       String   @unique
-  locale      String?
-  appVersion  String?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String   @id @default(cuid())
+  userId     String
+  platform   String
+  token      String   @unique
+  locale     String?
+  appVersion String?
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model SupportTicket {
@@ -618,50 +620,77 @@ model SupportTicket {
   updatedAt   DateTime              @updatedAt
   resolvedAt  DateTime?
 
-  requester   User                  @relation("TicketRequester", fields: [requesterId], references: [id])
-  assignee    User?                 @relation("TicketAssignee", fields: [assigneeId], references: [id])
-  messages    SupportMessage[]
+  requester User             @relation("TicketRequester", fields: [requesterId], references: [id])
+  assignee  User?            @relation("TicketAssignee", fields: [assigneeId], references: [id])
+  messages  SupportMessage[]
 
   @@index([status, priority, updatedAt])
   @@index([requesterId, createdAt])
 }
 
 model SupportMessage {
-  id        String        @id @default(cuid())
+  id        String   @id @default(cuid())
   ticketId  String
   senderId  String
   body      String
   metadata  Json?
-  createdAt DateTime      @default(now())
+  createdAt DateTime @default(now())
 
-  ticket    SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  sender    User          @relation(fields: [senderId], references: [id])
+  ticket SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  sender User          @relation(fields: [senderId], references: [id])
+}
+
+enum LoyaltyTransactionType {
+  CREDIT
+  DEBIT
+}
+
+model LoyaltyTransaction {
+  id               String                 @id @default(cuid())
+  loyaltyAccountId String
+  loyaltyAccount   LoyaltyAccount         @relation(fields: [loyaltyAccountId], references: [id])
+  tripId           String?                @unique
+  trip             Trip?                  @relation(fields: [tripId], references: [id])
+  type             LoyaltyTransactionType
+  amount           Int
+  description      String?
+  createdAt        DateTime               @default(now())
+}
+
+model DriverTierConfig {
+  id        String     @id @default(cuid())
+  tier      DriverTier @unique
+  minTrips  Int
+  minRating Float
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
 }
 
 model LoyaltyAccount {
-  id         String   @id @default(cuid())
-  userId     String   @unique
-  points     Int      @default(0)
-  tier       String   @default("NOORI")
-  lifetime   Int      @default(0)
-  updatedAt  DateTime @updatedAt
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  points    Int      @default(0)
+  tier      String   @default("NOORI")
+  lifetime  Int      @default(0)
+  updatedAt DateTime @updatedAt
 
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions LoyaltyTransaction[]
 }
 
 model AuditLog {
-  id          String   @id @default(cuid())
-  actorId     String?
-  action      String
-  entityType  String
-  entityId    String?
-  before      Json?
-  after       Json?
-  metadata    Json?
-  ipAddress   String?
-  createdAt   DateTime @default(now())
+  id         String   @id @default(cuid())
+  actorId    String?
+  action     String
+  entityType String
+  entityId   String?
+  before     Json?
+  after      Json?
+  metadata   Json?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
 
-  actor       User?    @relation(fields: [actorId], references: [id])
+  actor User? @relation(fields: [actorId], references: [id])
 
   @@index([actorId, createdAt])
   @@index([entityType, entityId])
@@ -669,25 +698,25 @@ model AuditLog {
 }
 
 model PhoneOtp {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   phone     String
   codeHash  String
   expiresAt DateTime
   usedAt    DateTime?
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
 
   @@index([phone, usedAt])
 }
 
 model RefreshToken {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   userId    String
-  tokenHash String   @unique
+  tokenHash String    @unique
   expiresAt DateTime
   revokedAt DateTime?
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, revokedAt])
 }
@@ -709,17 +738,17 @@ model SurgeZone {
 }
 
 model TrustedContact {
-  id        String   @id @default(cuid())
-  userId    String
-  name      String
-  phone     String
-  relation  String?
-  notifyOnSos     Boolean @default(true)
-  notifyOnTrip    Boolean @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(cuid())
+  userId       String
+  name         String
+  phone        String
+  relation     String?
+  notifyOnSos  Boolean  @default(true)
+  notifyOnTrip Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  user      User     @relation("UserTrustedContacts", fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation("UserTrustedContacts", fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, phone])
   @@index([userId])
@@ -732,19 +761,19 @@ enum SosStatus {
 }
 
 model SosAlert {
-  id          String    @id @default(cuid())
-  userId      String
-  tripId      String?
-  status      SosStatus @default(ACTIVE)
-  lat         Float?
-  lng         Float?
-  message     String?
-  resolvedAt  DateTime?
-  resolvedBy  String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id         String    @id @default(cuid())
+  userId     String
+  tripId     String?
+  status     SosStatus @default(ACTIVE)
+  lat        Float?
+  lng        Float?
+  message    String?
+  resolvedAt DateTime?
+  resolvedBy String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
-  user        User      @relation("UserSosAlerts", fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation("UserSosAlerts", fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, status, createdAt])
   @@index([status, createdAt])

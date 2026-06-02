@@ -70,7 +70,7 @@ export class SurgeController {
   checkSurge(@Query('lat') lat: string, @Query('lng') lng: string) {
     if (!lat || !lng) return { multiplier: 1.0 };
     return this.surgeService
-      .getCurrentSurgeMultiplier(Number(lat), Number(lng))
+      .getSurgeMultiplier(Number(lat), Number(lng))
       .then((multiplier) => ({ multiplier }));
   }
 }

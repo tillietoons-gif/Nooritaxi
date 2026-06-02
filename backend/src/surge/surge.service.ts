@@ -1,112 +1,102 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
-import { Prisma } from '@prisma/client';
+
+type Point = { lat: number; lng: number };
+type Polygon = Point[];
 
 @Injectable()
 export class SurgeService {
-  constructor(private prisma: PrismaService) {}
+  private readonly logger = new Logger(SurgeService.name);
 
-  async createZone(data: {
-    name: string;
-    multiplier: number;
-    radiusKm: number;
-    centerLat: number;
-    centerLng: number;
-    isActive: boolean;
-    activeFrom: Date;
-    activeUntil: Date;
-  }) {
-    // We mock the polygon creation as a square around the center for simplicity
-    const offset = data.radiusKm * 0.01; // ~1km in degrees
-    const polygon = {
-      type: 'Polygon',
-      coordinates: [
-        [
-          [data.centerLng - offset, data.centerLat - offset],
-          [data.centerLng + offset, data.centerLat - offset],
-          [data.centerLng + offset, data.centerLat + offset],
-          [data.centerLng - offset, data.centerLat + offset],
-          [data.centerLng - offset, data.centerLat - offset],
-        ],
-      ],
-    };
+  constructor(private readonly prisma: PrismaService) {}
+
+  async getSurgeMultiplier(lat: number, lng: number): Promise<number> {
+    const point: Point = { lat, lng };
+
+    const activeZones = await this.prisma.surgeZone.findMany({
+      where: { isActive: true },
+    });
+
+    if (!activeZones.length) {
+      return 1.0;
+    }
+
+    const multipliers: number[] = activeZones
+      .filter((zone) => {
+        const polygon = zone.polygon as unknown as Polygon;
+        return this.isPointInPolygon(point, polygon);
+      })
+      .map((zone) => zone.multiplier);
+
+    if (multipliers.length === 0) {
+      return 1.0;
+    }
+
+    const highestMultiplier = Math.max(...multipliers);
+    this.logger.log(`Surge multiplier for (${lat}, ${lng}): ${highestMultiplier}`);
+    
+    return highestMultiplier;
+  }
+
+  private isPointInPolygon(point: Point, polygon: Polygon): boolean {
+    if (!polygon || polygon.length < 3) {
+      return false;
+    }
+
+    const lats = polygon.map((p) => p.lat);
+    const lngs = polygon.map((p) => p.lng);
+    const minLat = Math.min(...lats);
+    const maxLat = Math.max(...lats);
+    const minLng = Math.min(...lngs);
+    const maxLng = Math.max(...lngs);
+
+    const isWithinBoundingBox =
+      point.lat >= minLat &&
+      point.lat <= maxLat &&
+      point.lng >= minLng &&
+      point.lng <= maxLng;
+      
+    return isWithinBoundingBox;
+  }
+
+  async getActiveZones() {
+    return this.prisma.surgeZone.findMany({ where: { isActive: true } });
+  }
+
+  async getAllZones() {
+    return this.prisma.surgeZone.findMany();
+  }
+
+  async createZone(data: any) {
+    const offset = data.radiusKm * 0.009;
+    const polygon = [
+      { lat: data.centerLat - offset, lng: data.centerLng - offset },
+      { lat: data.centerLat - offset, lng: data.centerLng + offset },
+      { lat: data.centerLat + offset, lng: data.centerLng + offset },
+      { lat: data.centerLat + offset, lng: data.centerLng - offset },
+    ];
 
     return this.prisma.surgeZone.create({
       data: {
         name: data.name,
-        city: 'Kabul', // Hardcoded for MVP
+        city: 'System',
+        polygon: polygon,
         multiplier: data.multiplier,
         isActive: data.isActive,
         activeFrom: data.activeFrom,
         activeUntil: data.activeUntil,
-        polygon: polygon,
-      },
-    });
-  }
-
-  async getActiveZones() {
-    const now = new Date();
-    return this.prisma.surgeZone.findMany({
-      where: {
-        isActive: true,
-        activeFrom: { lte: now },
-        activeUntil: { gte: now },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
-  }
-
-  async getAllZones() {
-    return this.prisma.surgeZone.findMany({
-      orderBy: { createdAt: 'desc' },
+      }
     });
   }
 
   async updateZoneStatus(id: string, isActive: boolean, activeUntil?: Date) {
-    const zone = await this.prisma.surgeZone.findUnique({ where: { id } });
-    if (!zone) throw new NotFoundException('Surge zone not found');
-
+    const data: any = { isActive };
+    if (activeUntil) {
+      data.activeUntil = activeUntil;
+    }
     return this.prisma.surgeZone.update({
       where: { id },
-      data: {
-        isActive,
-        ...(activeUntil ? { activeUntil } : {}),
-      },
+      data
     });
-  }
-
-  // Calculates the current surge multiplier for a given location
-  async getCurrentSurgeMultiplier(lat: number, lng: number): Promise<number> {
-    const activeZones = await this.getActiveZones();
-    let maxMultiplier = 1.0;
-
-    for (const zone of activeZones) {
-      if (zone.multiplier > maxMultiplier) {
-        // Simple bounding box check for MVP
-        try {
-          const poly = zone.polygon as any;
-          if (poly && poly.coordinates && poly.coordinates[0]) {
-            const coords = poly.coordinates[0];
-            const minLng = Math.min(...coords.map((c: any) => c[0]));
-            const maxLng = Math.max(...coords.map((c: any) => c[0]));
-            const minLat = Math.min(...coords.map((c: any) => c[1]));
-            const maxLat = Math.max(...coords.map((c: any) => c[1]));
-
-            if (
-              lng >= minLng &&
-              lng <= maxLng &&
-              lat >= minLat &&
-              lat <= maxLat
-            ) {
-              maxMultiplier = zone.multiplier;
-            }
-          }
-        } catch (err) {
-          // Ignore invalid polygons
-        }
-      }
-    }
-
-    return maxMultiplier;
   }
 }

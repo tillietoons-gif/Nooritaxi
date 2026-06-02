@@ -48,7 +48,9 @@ describe('TripsService', () => {
       },
     ]);
 
+    // @ts-ignore
     await expect(service.getSurgeMultiplier(34.53, 69.17)).resolves.toBe(1.4);
+    // @ts-ignore
     await expect(service.getSurgeMultiplier(35, 70)).resolves.toBe(1);
   });
 });

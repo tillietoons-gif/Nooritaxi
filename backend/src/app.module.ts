@@ -20,6 +20,11 @@ import { AdminModule } from './admin/admin.module';
 import { SurgeModule } from './surge/surge.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { AdminTrackingModule } from './admin-tracking/admin-tracking.module';
+import { KycModule } from './kyc/kyc.module';
+import { LoyaltyModule } from './loyalty/loyalty.module';
+import { DriverTiersModule } from './driver-tiers/driver-tiers.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -38,6 +43,10 @@ import { AppService } from './app.service';
     SafetyModule,
     AdminModule,
     SurgeModule,
+    AdminTrackingModule,
+    KycModule,
+    LoyaltyModule,
+    DriverTiersModule,
   ],
   providers: [
     AppService,

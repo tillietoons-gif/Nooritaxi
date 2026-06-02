@@ -23,6 +23,8 @@ import {
 } from "lucide-react"
 import { useUserBehavior } from "@/components/user-behavior-provider"
 
+import { useTranslation } from "react-i18next"
+
 const GenAIGlobe = () => {
   return (
     <div className="h-full w-full bg-primary/5 rounded-2xl flex items-center justify-center overflow-hidden relative">
@@ -141,6 +143,7 @@ const GenAITracking = () => {
 
 export default function LandingPage() {
   const { behavior } = useUserBehavior()
+  const { t } = useTranslation()
   const { scrollY } = useScroll()
   const opacity = useTransform(scrollY, [0, 200], [1, 0])
   const y1 = useTransform(scrollY, [0, 500], [0, -100])
@@ -155,29 +158,29 @@ export default function LandingPage() {
 
   const services = [
     {
-      title: "Intelligent Design",
-      description: "Premium engineering meets aesthetic excellence in every component of our infrastructure.",
+      title: t("services.design_title", "Intelligent Design"),
+      description: t("services.design_desc", "Premium engineering meets aesthetic excellence in every component of our infrastructure."),
       icon: <Layers className="h-6 w-6" />,
       size: "large" as const,
       header: <GenAILayers />
     },
     {
-      title: "Global Logistics",
-      description: "Freight management across borders with real-time customs integration.",
+      title: t("services.logistics_title", "Global Logistics"),
+      description: t("services.logistics_desc", "Freight management across borders with real-time customs integration."),
       icon: <Globe className="h-6 w-6" />,
       size: "medium" as const,
       header: <GenAIGlobe />
     },
     {
-      title: "Parcel Express",
-      description: "On-demand hyper-local delivery for businesses and individuals.",
+      title: t("services.parcel_title", "Parcel Express"),
+      description: t("services.parcel_desc", "On-demand hyper-local delivery for businesses and individuals."),
       icon: <Package className="h-6 w-6" />,
       size: "medium" as const,
       header: <GenAIParcelFlow />
     },
     {
-      title: "Real-time Tracking",
-      description: "High-fidelity WebGL visualization of every asset in your supply chain.",
+      title: t("services.tracking_title", "Real-time Tracking"),
+      description: t("services.tracking_desc", "High-fidelity WebGL visualization of every asset in your supply chain."),
       icon: <Activity className="h-6 w-6" />,
       size: "large" as const,
       header: <GenAITracking />
@@ -217,21 +220,21 @@ export default function LandingPage() {
               </div>
 
               <HeadingLg className="mb-8 leading-[1.1] text-balance">
-                The Operating System for <span className="text-primary italic">Modern Logistics</span> in Afghanistan.
+                {t("hero.title", "The Operating System for Modern Logistics in Afghanistan.")}
               </HeadingLg>
 
               <BodyLg className="mb-12 max-w-2xl text-xl text-muted-foreground leading-relaxed">
-                Noori combines AI-driven routing, real-time WebGL tracking, and premium fleet management into a single, unified ecosystem.
+                {t("hero.subtitle", "Noori combines AI-driven routing, real-time WebGL tracking, and premium fleet management into a single, unified ecosystem.")}
               </BodyLg>
 
               <div className="flex flex-col sm:flex-row gap-6">
                 <Button size="xl" className="rounded-full px-10 h-16 text-lg font-black bg-primary hover:bg-primary/90 shadow-[0_20px_50px_rgba(0,105,71,0.3)] group" asChild>
                   <Link href="/signup">
-                    Get Started <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                    {t("hero.cta_primary", "Get Started")} <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                   </Link>
                 </Button>
                 <Button variant="outline" size="xl" className="rounded-full px-10 h-16 text-lg font-black glass border-primary/20 hover:bg-primary/5" asChild>
-                  <Link href="/book">View Network</Link>
+                  <Link href="/book">{t("hero.cta_secondary", "View Network")}</Link>
                 </Button>
               </div>
             </motion.div>
@@ -254,11 +257,11 @@ export default function LandingPage() {
           <div className="container mx-auto px-4">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-20">
               <div className="max-w-2xl space-y-6">
-                <Badge className="bg-primary/5 text-primary border-primary/10 px-4 py-1 rounded-full font-bold">Services</Badge>
-                <HeadingMd className="font-black">Unrivaled Infrastructure. <br/>Intelligent Design.</HeadingMd>
+                <Badge className="bg-primary/5 text-primary border-primary/10 px-4 py-1 rounded-full font-bold">{t("services.badge", "Services")}</Badge>
+                <HeadingMd className="font-black">{t("services.heading", "Unrivaled Infrastructure. Intelligent Design.")}</HeadingMd>
               </div>
               <BodyMd className="max-w-sm text-lg text-muted-foreground">
-                Modular components designed to scale with your business needs, from local deliveries to international freight.
+                {t("services.subheading", "Modular components designed to scale with your business needs, from local deliveries to international freight.")}
               </BodyMd>
             </div>
 

@@ -103,6 +103,8 @@ export class FleetsService {
       }
     });
 
+    if (!fleet) throw new NotFoundException('Fleet not found');
+
     return {
       totalDrivers: fleet._count.drivers,
       totalVehicles: fleet._count.vehicles,

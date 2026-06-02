@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { BodyMd, HeadingMd } from "@/components/ui/typography"
-import { Car, Headphones, Package, RefreshCw, ShieldCheck, Store, Users, ArrowRight, Activity, Map, UserCheck, Award, TrendingUp, LifeBuoy, Shield, KeySquare, ShieldAlert } from "lucide-react"
+import { Car, Headphones, Package, RefreshCw, ShieldCheck, Store, Users, ArrowRight, Activity, Map, UserCheck, Award, TrendingUp, LifeBuoy, Shield, KeySquare, ShieldAlert, Banknote, HandCoins, Undo2 } from "lucide-react"
 import { AuthGate } from "@/components/auth-gate"
 import Link from "next/link"
 import { authedFetch } from "@/lib/auth"
@@ -120,6 +120,9 @@ export default function AdminPage() {
     { label: "Roles", value: "RBAC", icon: Shield, href: "/admin/roles" },
     { label: "Permissions", value: "Matrix", icon: KeySquare, href: "/admin/permissions" },
     { label: "Admin Users", value: "Directory", icon: ShieldAlert, href: "/admin/admin-users" },
+    { label: "Cash Finance", value: "Center", icon: Banknote, href: "/admin/finance" },
+    { label: "Cash Collections", value: "Receivables", icon: HandCoins, href: "/admin/cash-collections" },
+    { label: "Refunds", value: "Requests", icon: Undo2, href: "/admin/refunds" },
   ]
 
   const supportCount = (keyword: string) =>

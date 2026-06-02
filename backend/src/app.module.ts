@@ -26,6 +26,7 @@ import { LoyaltyModule } from './loyalty/loyalty.module';
 import { DriverTiersModule } from './driver-tiers/driver-tiers.module';
 import { RolesModule } from './roles/roles.module';
 import { FleetsModule } from './fleets/fleets.module';
+import { FinanceModule } from './finance/finance.module';
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import { FleetsModule } from './fleets/fleets.module';
     DriverTiersModule,
     RolesModule,
     FleetsModule,
+    FinanceModule,
   ],
   providers: [
     AppService,

@@ -197,7 +197,7 @@ export default function LandingPage() {
     <div className="flex flex-col min-h-screen selection:bg-primary/20 selection:text-primary">
       <Header />
 
-      <main className="flex-grow">
+      <main id="main-content" className="flex-grow">
         {/* HERO SECTION */}
         <section className="relative min-h-[100vh] flex items-center overflow-hidden pt-20">
           <div className="absolute inset-0 z-0 opacity-40 dark:opacity-20 pointer-events-none">

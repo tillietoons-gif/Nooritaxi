@@ -47,7 +47,7 @@ export default function SignupPage() {
   }
 
   return (
-    <main className="relative min-h-screen flex items-center justify-center bg-background px-4 py-10 overflow-hidden">
+    <main id="main-content" className="relative min-h-screen flex items-center justify-center bg-background px-4 py-10 overflow-hidden">
       {/* Background FX */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150%] h-[150%] opacity-10">

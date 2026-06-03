@@ -61,7 +61,7 @@ export default function PublicTripSharePage() {
 
   if (error) {
     return (
-      <main className="flex min-h-screen items-center justify-center p-6 bg-background">
+      <main id="main-content" className="flex min-h-screen items-center justify-center p-6 bg-background">
         <Card className="max-w-md">
           <CardHeader>
             <CardTitle>Unable to load trip</CardTitle>
@@ -76,7 +76,7 @@ export default function PublicTripSharePage() {
 
   if (!trip) {
     return (
-      <main className="flex min-h-screen items-center justify-center p-6 bg-background">
+      <main id="main-content" className="flex min-h-screen items-center justify-center p-6 bg-background">
         <BodyMd className="text-muted-foreground">Loading trip…</BodyMd>
       </main>
     )
@@ -86,7 +86,7 @@ export default function PublicTripSharePage() {
   const hasDriverPin = trip.isLive && driverLoc && driverLoc.lat != null && driverLoc.lng != null
 
   return (
-    <main className="min-h-screen bg-background px-4 py-6">
+    <main id="main-content" className="min-h-screen bg-background px-4 py-6">
       <div className="mx-auto max-w-2xl space-y-5">
         <div className="flex items-center justify-between">
           <div>

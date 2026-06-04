@@ -4,6 +4,7 @@ import Link from "next/link"
 import { NooriLogo } from "@/components/ui/noori-logo"
 import { PatternOverlay } from "@/components/ui/pattern-overlay"
 import { useTranslation } from "react-i18next"
+import { cn } from "@/lib/utils"
 export function Footer() {
   const { i18n } = useTranslation()
 
@@ -112,10 +113,34 @@ export function Footer() {
         </div>
         <div className="border-t border-primary/10 mt-16 pt-10 flex flex-col md:flex-row justify-between items-center text-sm font-medium text-muted-foreground">
           <p>© 2024 Noori Mobility System. Made with ❤️ in Kabul.</p>
-          <div className="flex space-x-8 mt-6 md:mt-0">
-             <button onClick={() => changeLanguage('fa')} className="hover:text-primary transition-colors">Dari</button>
-             <button onClick={() => changeLanguage('ps')} className="hover:text-primary transition-colors">Pashto</button>
-             <button onClick={() => changeLanguage('en')} className="hover:text-primary transition-colors">English</button>
+          <div className="flex space-x-4 mt-6 md:mt-0">
+             <button
+               onClick={() => changeLanguage('fa')}
+               className={cn(
+                 "hover:text-primary transition-all px-3 py-1 rounded-full focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 outline-none",
+                 i18n.language === 'fa' && "bg-primary/10 text-primary font-bold"
+               )}
+             >
+               Dari
+             </button>
+             <button
+               onClick={() => changeLanguage('ps')}
+               className={cn(
+                 "hover:text-primary transition-all px-3 py-1 rounded-full focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 outline-none",
+                 i18n.language === 'ps' && "bg-primary/10 text-primary font-bold"
+               )}
+             >
+               Pashto
+             </button>
+             <button
+               onClick={() => changeLanguage('en')}
+               className={cn(
+                 "hover:text-primary transition-all px-3 py-1 rounded-full focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 outline-none",
+                 i18n.language === 'en' && "bg-primary/10 text-primary font-bold"
+               )}
+             >
+               English
+             </button>
           </div>
         </div>
       </div>

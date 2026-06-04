@@ -26,14 +26,18 @@ import { useUserBehavior } from "@/components/user-behavior-provider"
 
 import { useTranslation } from "react-i18next"
 
+const ADAPTIVE_FEATURES = [
+  { title: "Dynamic UI", desc: "Widgets rearrange based on your frequency.", icon: Layers },
+  { title: "Smart Defaults", desc: "Your most common routes pre-filled.", icon: Zap },
+  { title: "Predictive Routing", desc: "AI forecasts demand before it happens.", icon: Activity },
+  { title: "Localized Context", desc: "Adaptive language and regional settings.", icon: Globe },
+];
+
 const GenAIGlobe = () => {
   const particles = useMemo(() => {
-    return [...Array(6)].map((_, i) => ({
-      id: i,
+    return Array.from({ length: 6 }).map(() => ({
       top: `${30 + Math.random() * 40}%`,
       left: `${30 + Math.random() * 40}%`,
-      duration: 4 + i,
-      delay: i * 0.5,
     }));
   }, []);
 
@@ -50,7 +54,7 @@ const GenAIGlobe = () => {
         <div className="absolute inset-0 border-2 border-gold/10 rounded-full" style={{ transform: 'rotateZ(45deg) rotateX(45deg)' }} />
       </motion.div>
       <Globe className="absolute h-12 w-12 text-primary/50" />
-      {particles.map((p) => (
+      {particles.map((pos, i) => (
         <motion.div
           key={p.id}
           className="absolute w-2 h-2 bg-gold/60 rounded-full blur-[1px]"
@@ -61,8 +65,8 @@ const GenAIGlobe = () => {
           }}
           transition={{ duration: p.duration, repeat: Infinity, delay: p.delay, ease: "easeInOut" }}
           style={{ 
-            top: p.top,
-            left: p.left
+            top: pos.top,
+            left: pos.left
           }}
         />
       ))}
@@ -209,12 +213,12 @@ export default function LandingPage() {
   const sortedServices = useMemo(() => {
     return [...services].sort((a, b) => {
       if (behavior.preferredService === "delivery") {
-        if (a.type === "tracking" && b.type !== "tracking") return -1;
-        if (b.type === "tracking" && a.type !== "tracking") return 1;
+        if (a.title.includes("Tracking") && !b.title.includes("Tracking")) return -1;
+        if (!a.title.includes("Tracking") && b.title.includes("Tracking")) return 1;
       }
       if (behavior.preferredService === "ride") {
-        if (a.type === "design" && b.type !== "design") return -1;
-        if (b.type === "design" && a.type !== "design") return 1;
+        if (a.title.includes("Design") && !b.title.includes("Design")) return -1;
+        if (!a.title.includes("Design") && b.title.includes("Design")) return 1;
       }
       return 0;
     });
@@ -224,7 +228,7 @@ export default function LandingPage() {
     <div className="flex flex-col min-h-screen selection:bg-primary/20 selection:text-primary">
       <Header />
 
-      <main className="flex-grow">
+      <main id="main-content" className="flex-grow">
         {/* HERO SECTION */}
         <section className="relative min-h-[100vh] flex items-center overflow-hidden pt-20">
           <div className="absolute inset-0 z-0 opacity-40 dark:opacity-20 pointer-events-none">
@@ -327,19 +331,14 @@ export default function LandingPage() {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                  {[
-                    { title: "Dynamic UI", desc: "Widgets rearrange based on your frequency.", icon: <Layers className="h-6 w-6" /> },
-                    { title: "Smart Defaults", desc: "Your most common routes pre-filled.", icon: <Zap className="h-6 w-6" /> },
-                    { title: "Predictive Routing", desc: "AI forecasts demand before it happens.", icon: <Activity className="h-6 w-6" /> },
-                    { title: "Localized Context", desc: "Adaptive language and regional settings.", icon: <Globe className="h-6 w-6" /> },
-                  ].map((feat, idx) => (
+                  {ADAPTIVE_FEATURES.map((feat, idx) => (
                     <motion.div
                       key={idx}
                       whileHover={{ scale: 1.02 }}
                       className="flex flex-col p-6 rounded-2xl glass-premium"
                     >
                       <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary mb-4">
-                        {feat.icon}
+                        <feat.icon className="h-6 w-6" />
                       </div>
                       <h4 className="font-bold text-lg mb-2">{feat.title}</h4>
                       <p className="text-sm text-muted-foreground">{feat.desc}</p>

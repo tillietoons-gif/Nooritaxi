@@ -47,7 +47,7 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="relative min-h-screen flex items-center justify-center bg-background px-4 py-10 overflow-hidden">
+    <main id="main-content" className="relative min-h-screen flex items-center justify-center bg-background px-4 py-10 overflow-hidden">
       {/* Abstract Background */}
       <div className="absolute inset-0 pointer-events-none opacity-20">
         <div className="absolute top-[-10%] right-[-10%] w-[60%] h-[60%] bg-primary/20 rounded-full blur-[120px]" />

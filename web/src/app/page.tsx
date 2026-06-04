@@ -56,14 +56,14 @@ const GenAIGlobe = () => {
       <Globe className="absolute h-12 w-12 text-primary/50" />
       {particles.map((pos, i) => (
         <motion.div
-          key={i}
+          key={p.id}
           className="absolute w-2 h-2 bg-gold/60 rounded-full blur-[1px]"
           animate={{ 
             y: [-30, 30, -30],
             x: [-30, 30, -30],
             opacity: [0.2, 1, 0.2] 
           }}
-          transition={{ duration: 4 + i, repeat: Infinity, delay: i * 0.5, ease: "easeInOut" }}
+          transition={{ duration: p.duration, repeat: Infinity, delay: p.delay, ease: "easeInOut" }}
           style={{ 
             top: pos.top,
             left: pos.left
@@ -173,6 +173,8 @@ export default function LandingPage() {
 
   const services = useMemo(() => [
     {
+      id: "design",
+      type: "design",
       title: t("services.design_title", "Intelligent Design"),
       description: t("services.design_desc", "Premium engineering meets aesthetic excellence in every component of our infrastructure."),
       icon: <Layers className="h-6 w-6" />,
@@ -180,6 +182,8 @@ export default function LandingPage() {
       header: <GenAILayers />
     },
     {
+      id: "logistics",
+      type: "logistics",
       title: t("services.logistics_title", "Global Logistics"),
       description: t("services.logistics_desc", "Freight management across borders with real-time customs integration."),
       icon: <Globe className="h-6 w-6" />,
@@ -187,6 +191,8 @@ export default function LandingPage() {
       header: <GenAIGlobe />
     },
     {
+      id: "parcel",
+      type: "parcel",
       title: t("services.parcel_title", "Parcel Express"),
       description: t("services.parcel_desc", "On-demand hyper-local delivery for businesses and individuals."),
       icon: <Package className="h-6 w-6" />,
@@ -194,6 +200,8 @@ export default function LandingPage() {
       header: <GenAIParcelFlow />
     },
     {
+      id: "tracking",
+      type: "tracking",
       title: t("services.tracking_title", "Real-time Tracking"),
       description: t("services.tracking_desc", "High-fidelity WebGL visualization of every asset in your supply chain."),
       icon: <Activity className="h-6 w-6" />,

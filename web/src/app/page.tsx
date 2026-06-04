@@ -1,4 +1,5 @@
 "use client"
+import { useMemo } from "react"
 import Link from "next/link"
 import { motion, useScroll, useTransform } from "framer-motion"
 import { Button } from "@/components/ui/button"
@@ -26,6 +27,16 @@ import { useUserBehavior } from "@/components/user-behavior-provider"
 import { useTranslation } from "react-i18next"
 
 const GenAIGlobe = () => {
+  const particles = useMemo(() => {
+    return [...Array(6)].map((_, i) => ({
+      id: i,
+      top: `${30 + Math.random() * 40}%`,
+      left: `${30 + Math.random() * 40}%`,
+      duration: 4 + i,
+      delay: i * 0.5,
+    }));
+  }, []);
+
   return (
     <div className="h-full w-full bg-primary/5 rounded-2xl flex items-center justify-center overflow-hidden relative">
       <div className="absolute inset-0 opacity-20"><PatternOverlay /></div>
@@ -39,19 +50,19 @@ const GenAIGlobe = () => {
         <div className="absolute inset-0 border-2 border-gold/10 rounded-full" style={{ transform: 'rotateZ(45deg) rotateX(45deg)' }} />
       </motion.div>
       <Globe className="absolute h-12 w-12 text-primary/50" />
-      {[...Array(6)].map((_, i) => (
+      {particles.map((p) => (
         <motion.div
-          key={i}
+          key={p.id}
           className="absolute w-2 h-2 bg-gold/60 rounded-full blur-[1px]"
           animate={{ 
             y: [-30, 30, -30],
             x: [-30, 30, -30],
             opacity: [0.2, 1, 0.2] 
           }}
-          transition={{ duration: 4 + i, repeat: Infinity, delay: i * 0.5, ease: "easeInOut" }}
+          transition={{ duration: p.duration, repeat: Infinity, delay: p.delay, ease: "easeInOut" }}
           style={{ 
-            top: `${30 + Math.random() * 40}%`, 
-            left: `${30 + Math.random() * 40}%` 
+            top: p.top,
+            left: p.left
           }}
         />
       ))}
@@ -156,8 +167,10 @@ export default function LandingPage() {
         ? "Good Evening"
         : "Good Night";
 
-  const services = [
+  const services = useMemo(() => [
     {
+      id: "design",
+      type: "design",
       title: t("services.design_title", "Intelligent Design"),
       description: t("services.design_desc", "Premium engineering meets aesthetic excellence in every component of our infrastructure."),
       icon: <Layers className="h-6 w-6" />,
@@ -165,6 +178,8 @@ export default function LandingPage() {
       header: <GenAILayers />
     },
     {
+      id: "logistics",
+      type: "logistics",
       title: t("services.logistics_title", "Global Logistics"),
       description: t("services.logistics_desc", "Freight management across borders with real-time customs integration."),
       icon: <Globe className="h-6 w-6" />,
@@ -172,6 +187,8 @@ export default function LandingPage() {
       header: <GenAIGlobe />
     },
     {
+      id: "parcel",
+      type: "parcel",
       title: t("services.parcel_title", "Parcel Express"),
       description: t("services.parcel_desc", "On-demand hyper-local delivery for businesses and individuals."),
       icon: <Package className="h-6 w-6" />,
@@ -179,19 +196,29 @@ export default function LandingPage() {
       header: <GenAIParcelFlow />
     },
     {
+      id: "tracking",
+      type: "tracking",
       title: t("services.tracking_title", "Real-time Tracking"),
       description: t("services.tracking_desc", "High-fidelity WebGL visualization of every asset in your supply chain."),
       icon: <Activity className="h-6 w-6" />,
       size: "large" as const,
       header: <GenAITracking />
     }
-  ]
+  ], [t]);
 
-  const sortedServices = [...services].sort((a) => {
-    if (behavior.preferredService === "delivery" && a.title.includes("Tracking")) return -1;
-    if (behavior.preferredService === "ride" && a.title.includes("Design")) return -1;
-    return 0;
-  });
+  const sortedServices = useMemo(() => {
+    return [...services].sort((a, b) => {
+      if (behavior.preferredService === "delivery") {
+        if (a.type === "tracking" && b.type !== "tracking") return -1;
+        if (b.type === "tracking" && a.type !== "tracking") return 1;
+      }
+      if (behavior.preferredService === "ride") {
+        if (a.type === "design" && b.type !== "design") return -1;
+        if (b.type === "design" && a.type !== "design") return 1;
+      }
+      return 0;
+    });
+  }, [services, behavior.preferredService]);
 
   return (
     <div className="flex flex-col min-h-screen selection:bg-primary/20 selection:text-primary">

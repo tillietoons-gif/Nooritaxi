@@ -15,6 +15,15 @@
 2. Hoist static data structures (arrays, objects) outside the component definition.
 3. Use `useMemo` for expensive transformations (like sorting or filtering) and ensure the logic is deterministic (e.g., `sort((a, b) => ...)` instead of `sort(() => ...)`).
 
+## 2025-06-03 - Stabilizing Random Values and Render Memoization
+
+**Learning:** Component internal state derived from `Math.random()` or unstable object literals defined inside the render body causes visual jitter and redundant re-renders. Specifically, `GenAIGlobe` was recalculating particle positions on every frame, and `sortedServices` was using an unstable sort comparator.
+
+**Action:**
+1. Stabilize random visual properties using `useMemo` with an empty dependency array.
+2. Memoize complex derived data (like sorted lists) to prevent redundant computation and downstream re-renders.
+3. Always use a proper two-argument `(a, b)` comparator for stable sorting logic.
+
 ## Mobile App Performance and Fixes
 - Centralized API calls in `mobile/src/lib/api.ts` to ensure consistent Authorization headers and error handling.
 - Optimized Food and Restaurant screens by reducing redundant fetch calls and improving loading states.

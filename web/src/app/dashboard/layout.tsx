@@ -78,7 +78,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
              <Button variant="ghost" size="sm" className="font-semibold text-primary">Help</Button>
            </div>
         </header>
-        <main className="p-4 lg:p-8 max-w-7xl mx-auto">{children}</main>
+        <main id="main-content" className="p-4 lg:p-8 max-w-7xl mx-auto">{children}</main>
       </div>
     </div>
     </AuthGate>

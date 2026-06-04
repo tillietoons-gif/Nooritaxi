@@ -10,7 +10,7 @@ export default function ContactPage() {
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
-      <main className="flex-1 py-24 px-4">
+      <main id="main-content" className="flex-1 py-24 px-4">
         <div className="max-w-2xl mx-auto space-y-8">
           <div className="text-center space-y-4">
             <h1 className="text-4xl font-bold tracking-tight">{t('contact.title', 'Contact Us')}</h1>

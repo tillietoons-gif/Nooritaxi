@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { I18nProvider } from "@/components/i18n-provider";
 import { UserBehaviorProvider } from "@/components/user-behavior-provider";
+import { SkipToContent } from "@/components/layout/skip-to-content";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -32,6 +33,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <I18nProvider>
           <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
             <UserBehaviorProvider>
+              <SkipToContent />
               {children}
             </UserBehaviorProvider>
           </ThemeProvider>

@@ -52,5 +52,8 @@
     "parcel_desc": "On-demand hyper-local delivery for businesses and individuals.",
     "tracking_title": "Real-time Tracking",
     "tracking_desc": "High-fidelity WebGL visualization of every asset in your supply chain."
+  },
+  "accessibility": {
+    "skip_to_content": "Skip to main content"
   }
 }

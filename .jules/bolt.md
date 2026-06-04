@@ -15,6 +15,15 @@
 2. Hoist static data structures (arrays, objects) outside the component definition.
 3. Use `useMemo` for expensive transformations (like sorting or filtering) and ensure the logic is deterministic (e.g., `sort((a, b) => ...)` instead of `sort(() => ...)`).
 
+## 2025-06-03 - Interactive Component Stabilization and Memoization
+
+**Learning:** Using `Math.random()` or unstable inline arrays within the render path of interactive components (like `GenAIGlobe`) causes visual jitter and redundant re-renders of complex sub-grids (like `BentoGrid`) whenever the parent component re-renders. Additionally, incorrect use of `.sort()` with a single-argument comparator leads to non-deterministic behavior across different browsers.
+
+**Action:**
+1. Stabilize random values (e.g., particle positions, timings) using `useMemo` to ensure they remain consistent across renders unless dependencies change.
+2. Memoize complex arrays and computed results (like `services` and `sortedServices`) to prevent unnecessary prop updates to heavy child components.
+3. Always use a standard two-argument comparator `(a, b) => ...` for stable sorting.
+
 ## Mobile App Performance and Fixes
 - Centralized API calls in `mobile/src/lib/api.ts` to ensure consistent Authorization headers and error handling.
 - Optimized Food and Restaurant screens by reducing redundant fetch calls and improving loading states.

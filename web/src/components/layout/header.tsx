@@ -61,7 +61,7 @@ export function Header() {
         className="container mx-auto flex items-center justify-between px-8 rounded-3xl dark:bg-black/20"
       >
         <div className="flex items-center gap-12">
-          <Link href="/" className="flex items-center space-x-3 group">
+          <Link href="/" className="flex items-center space-x-3 group focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-md outline-none transition-shadow">
             <div className="h-10 w-10 bg-primary/5 rounded-xl flex items-center justify-center group-hover:bg-primary transition-all duration-500">
               <NooriLogo size={24} className="text-primary group-hover:text-white transition-colors" />
             </div>
@@ -76,7 +76,7 @@ export function Header() {
                   key={item.name}
                   href={item.href}
                   className={cn(
-                    "text-xs font-black uppercase tracking-[0.2em] transition-all relative group",
+                    "text-xs font-black uppercase tracking-[0.2em] transition-all relative group focus-visible:text-primary outline-none",
                     isActive ? "text-primary" : "text-muted-foreground hover:text-primary"
                   )}
                 >
@@ -94,7 +94,7 @@ export function Header() {
         <div className="flex items-center space-x-6">
           <div className="hidden items-center space-x-6 md:flex">
              <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center gap-1 text-primary/60 hover:text-primary cursor-pointer transition-colors outline-none">
+                <DropdownMenuTrigger className="flex items-center gap-1 text-primary/60 hover:text-primary cursor-pointer transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-sm outline-none">
                   <Globe className="h-4 w-4" />
                   <span className="text-[10px] font-black uppercase tracking-widest">{currentLang}</span>
                   <ChevronDown className="h-3 w-3" />

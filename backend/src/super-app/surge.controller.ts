@@ -14,7 +14,7 @@ import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 import { PrismaService } from '../prisma.service';
 
-@Controller('surge-zones')
+@Controller('super-app/surge-zones')
 export class SurgeController {
   constructor(private prisma: PrismaService) {}
 

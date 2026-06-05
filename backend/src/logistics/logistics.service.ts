@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { DispatchService } from '../dispatch/dispatch.service';
 
@@ -50,13 +50,36 @@ export class LogisticsService {
   }
 
   async updateDelivery(id: string, data: any) {
+    const { actorId, ...deliveryData } = data ?? {};
+    const status = deliveryData.status;
+    if (
+      status &&
+      ![
+        'REQUESTED',
+        'ASSIGNED',
+        'PICKED_UP',
+        'IN_TRANSIT',
+        'DELIVERED',
+        'FAILED',
+        'CANCELLED',
+      ].includes(String(status))
+    ) {
+      throw new BadRequestException('Invalid delivery status');
+    }
+
     const before = await this.prisma.delivery.findUnique({ where: { id } });
-    const delivery = await this.prisma.delivery.update({ where: { id }, data });
+    if (!before) throw new NotFoundException('Delivery not found');
+
+    const delivery = await this.prisma.delivery.update({
+      where: { id },
+      data: deliveryData,
+      include: { order: true, sender: true, driver: true, vehicle: true },
+    });
     await this.audit(
       'DELIVERY_UPDATED',
       'Delivery',
       id,
-      data.actorId,
+      actorId,
       delivery,
       before,
     );

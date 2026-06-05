@@ -57,7 +57,7 @@ const GenAIGlobe = () => {
         <div className="absolute inset-0 border-2 border-gold/10 rounded-full" style={{ transform: 'rotateZ(45deg) rotateX(45deg)' }} />
       </motion.div>
       <Globe className="absolute h-12 w-12 text-primary/50" />
-      {particles.map((particle) => (
+      {particles.map((p) => (
         <motion.div
           key={particle.id}
           className="absolute w-2 h-2 bg-gold/60 rounded-full blur-[1px]"
@@ -68,8 +68,8 @@ const GenAIGlobe = () => {
           }}
           transition={{ duration: particle.duration, repeat: Infinity, delay: particle.delay, ease: "easeInOut" }}
           style={{ 
-            top: particle.top,
-            left: particle.left
+            top: p.top,
+            left: p.left
           }}
         />
       ))}

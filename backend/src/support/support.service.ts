@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 
 @Injectable()
@@ -54,6 +54,9 @@ export class SupportService {
   }
 
   async updateTicketStatus(id: string, status: any, adminId: string) {
+    if (!['OPEN', 'PENDING', 'RESOLVED', 'CLOSED'].includes(status)) {
+      throw new BadRequestException('Invalid support ticket status');
+    }
     return this.prisma.supportTicket.update({
       where: { id },
       data: { 

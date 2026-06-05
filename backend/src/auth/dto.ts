@@ -48,6 +48,18 @@ export class VerifyPhoneDto {
   code: string;
 }
 
+export class ResetPasswordDto {
+  @IsPhoneNumber()
+  phone: string;
+
+  @IsString()
+  code: string;
+
+  @IsString()
+  @MinLength(12)
+  newPassword: string;
+}
+
 export class SendOtpDto {
   @IsPhoneNumber()
   phone: string;

@@ -1,119 +1,212 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { AuthGate } from "@/components/auth-gate"
-import { Header } from "@/components/layout/header"
-import { HeadingLg, BodyMd, HeadingSm } from "@/components/ui/typography"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { TrendingUp, Car, Star, CheckCircle, AlertTriangle } from "lucide-react"
+import { authedFetch } from "@/lib/auth"
+import { AlertTriangle, Car, RefreshCw, Route, Star, TrendingUp } from "lucide-react"
+
+type TierSummary = {
+  totals: {
+    totalDrivers: number
+    averageRating: number
+    averageCompletedTrips: number
+    averageCompletedDeliveries: number
+    atRiskDrivers: number
+  }
+  configSource: "database" | "defaults"
+  tiers: Array<{
+    tier: string
+    drivers: number
+    minTrips: number
+    minRating: number
+    averageRating: number
+    averageTrips: number
+    completedTrips: number
+    completedDeliveries: number
+  }>
+}
+
+const tierStyles: Record<string, string> = {
+  BRONZE: "border-orange-500/30 bg-orange-500/5",
+  SILVER: "border-slate-400/40 bg-slate-400/10",
+  GOLD: "border-yellow-500/40 bg-yellow-500/10",
+  PLATINUM: "border-cyan-500/40 bg-cyan-500/10",
+}
+
+function formatNumber(value: number, digits = 0) {
+  return new Intl.NumberFormat(undefined, {
+    maximumFractionDigits: digits,
+    minimumFractionDigits: digits,
+  }).format(value)
+}
 
 export default function DriverTiersPage() {
-  const [metrics, setMetrics] = useState({
-    avgRating: 4.82,
-    avgAcceptance: 92,
-  })
+  const [summary, setSummary] = useState<TierSummary | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+  const [error, setError] = useState("")
 
-  // Simulate real-time metric fluctuations
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setMetrics(prev => ({
-        avgRating: Math.max(4.5, Math.min(5.0, prev.avgRating + (Math.random() - 0.5) * 0.05)),
-        avgAcceptance: Math.max(80, Math.min(100, prev.avgAcceptance + (Math.random() - 0.5) * 2)),
-      }))
-    }, 4000)
-    return () => clearInterval(interval)
+  const loadSummary = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true)
+    setRefreshing(true)
+    setError("")
+    try {
+      const response = await authedFetch("/driver-tiers/admin/summary")
+      if (!response.ok) throw new Error(`Failed to load driver tiers (${response.status})`)
+      setSummary(await response.json())
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load driver tiers")
+    } finally {
+      setLoading(false)
+      setRefreshing(false)
+    }
   }, [])
 
+  useEffect(() => {
+    void loadSummary()
+  }, [loadSummary])
+
   return (
-    <AuthGate roles={["ADMIN"]}>
-      <div className="flex flex-col min-h-screen bg-background/50">
-        <Header />
-        <main className="flex-1 container py-8">
-          <div className="mb-8">
-            <HeadingLg className="mb-2 flex items-center gap-2">
-              <TrendingUp className="h-8 w-8 text-primary" />
-              Driver Tiers & Performance
-            </HeadingLg>
-            <BodyMd className="text-muted-foreground">
-              Monitor network health, acceptance rates, and driver distributions across tiers.
-            </BodyMd>
+    <AuthGate roles={["ADMIN", "SUPPORT"]}>
+      <main className="min-h-screen bg-muted/20 px-4 py-6 md:px-8">
+        <div className="mx-auto max-w-7xl space-y-6">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight">
+                <TrendingUp className="h-6 w-6 text-primary" />
+                Driver Tiers
+              </h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Real driver distribution, performance, and tier requirements.
+              </p>
+            </div>
+            <Button variant="outline" onClick={() => void loadSummary(true)} disabled={refreshing}>
+              <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+              Refresh
+            </Button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <Card className="glass-premium border-primary/10">
+          {error ? (
+            <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+              {error}
+            </div>
+          ) : null}
+
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                  <Star className="h-4 w-4" /> Network Avg Rating
+                <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                  <Star className="h-4 w-4" />
+                  Network Avg Rating
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-black text-primary">{metrics.avgRating.toFixed(2)}</div>
+                <div className="text-3xl font-semibold">
+                  {loading ? "..." : formatNumber(summary?.totals.averageRating ?? 0, 2)}
+                </div>
               </CardContent>
             </Card>
-            <Card className="glass-premium border-primary/10">
+            <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4" /> Avg Acceptance
+                <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                  <Route className="h-4 w-4" />
+                  Avg Completed Trips
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-black text-primary">{metrics.avgAcceptance.toFixed(1)}%</div>
+                <div className="text-3xl font-semibold">
+                  {loading ? "..." : formatNumber(summary?.totals.averageCompletedTrips ?? 0, 1)}
+                </div>
               </CardContent>
             </Card>
-            <Card className="glass-premium border-primary/10">
+            <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                  <Car className="h-4 w-4" /> Total Drivers
+                <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                  <Car className="h-4 w-4" />
+                  Total Drivers
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-black">1,204</div>
+                <div className="text-3xl font-semibold">
+                  {loading ? "..." : formatNumber(summary?.totals.totalDrivers ?? 0)}
+                </div>
               </CardContent>
             </Card>
-            <Card className="glass-premium border-red-500/20 bg-red-500/5">
+            <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-red-500 flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4" /> At Risk (Sub 4.5)
+                <CardTitle className="flex items-center gap-2 text-sm font-medium text-destructive">
+                  <AlertTriangle className="h-4 w-4" />
+                  At Risk
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-black text-red-500">42</div>
+                <div className="text-3xl font-semibold text-destructive">
+                  {loading ? "..." : formatNumber(summary?.totals.atRiskDrivers ?? 0)}
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">Rating below 4.5</p>
               </CardContent>
             </Card>
           </div>
 
-          <Card className="border-primary/10 mb-8">
-            <CardHeader>
-              <HeadingSm>Tier Distribution & Requirements</HeadingSm>
+          <Card>
+            <CardHeader className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+              <div>
+                <CardTitle>Tier Distribution & Requirements</CardTitle>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {summary?.configSource === "database"
+                    ? "Requirements are loaded from DriverTierConfig."
+                    : "Using fallback requirements because no DriverTierConfig rows exist yet."}
+                </p>
+              </div>
+              {summary ? <Badge variant="secondary">{summary.configSource}</Badge> : null}
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                {[
-                  { name: "Standard", drivers: 450, rating: "4.5+", acc: "80%+", color: "bg-slate-100 dark:bg-slate-800" },
-                  { name: "Pro", drivers: 320, rating: "4.7+", acc: "85%+", color: "bg-blue-100 dark:bg-blue-900/30 border-blue-500/30" },
-                  { name: "Expert", drivers: 280, rating: "4.85+", acc: "90%+", color: "bg-purple-100 dark:bg-purple-900/30 border-purple-500/30" },
-                  { name: "Elite", drivers: 154, rating: "4.95+", acc: "95%+", color: "bg-gold/10 border-gold/30" }
-                ].map(tier => (
-                  <div key={tier.name} className={`p-6 rounded-2xl border ${tier.color} flex flex-col items-center justify-center text-center`}>
-                    <h3 className="font-black text-xl mb-1">{tier.name}</h3>
-                    <p className="text-sm text-muted-foreground mb-4">{tier.drivers} Drivers</p>
-                    <div className="w-full space-y-2 text-sm">
-                      <div className="flex justify-between bg-background/50 px-3 py-1.5 rounded-md">
-                        <span>Rating Req</span>
-                        <span className="font-bold">{tier.rating}</span>
+              {loading ? (
+                <p className="text-sm text-muted-foreground">Loading tier distribution...</p>
+              ) : summary?.tiers.length ? (
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                  {summary.tiers.map((tier) => (
+                    <div key={tier.tier} className={`rounded-lg border p-4 ${tierStyles[tier.tier] ?? ""}`}>
+                      <div className="flex items-center justify-between gap-3">
+                        <h3 className="font-semibold">{tier.tier}</h3>
+                        <Badge variant={tier.drivers ? "default" : "secondary"}>
+                          {formatNumber(tier.drivers)} drivers
+                        </Badge>
                       </div>
-                      <div className="flex justify-between bg-background/50 px-3 py-1.5 rounded-md">
-                        <span>Acceptance Req</span>
-                        <span className="font-bold">{tier.acc}</span>
+
+                      <div className="mt-4 grid gap-2 text-sm">
+                        <div className="flex justify-between rounded-md bg-background/70 px-3 py-2">
+                          <span className="text-muted-foreground">Min trips</span>
+                          <span className="font-medium">{formatNumber(tier.minTrips)}</span>
+                        </div>
+                        <div className="flex justify-between rounded-md bg-background/70 px-3 py-2">
+                          <span className="text-muted-foreground">Min rating</span>
+                          <span className="font-medium">{formatNumber(tier.minRating, 2)}</span>
+                        </div>
+                        <div className="flex justify-between rounded-md bg-background/70 px-3 py-2">
+                          <span className="text-muted-foreground">Avg rating</span>
+                          <span className="font-medium">{formatNumber(tier.averageRating, 2)}</span>
+                        </div>
+                        <div className="flex justify-between rounded-md bg-background/70 px-3 py-2">
+                          <span className="text-muted-foreground">Total trips</span>
+                          <span className="font-medium">{formatNumber(tier.completedTrips)}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="rounded-lg border p-6 text-center text-sm text-muted-foreground">
+                  No driver tier data found.
+                </p>
+              )}
             </CardContent>
           </Card>
-        </main>
-      </div>
+        </div>
+      </main>
     </AuthGate>
   )
 }

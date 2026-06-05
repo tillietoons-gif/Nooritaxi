@@ -84,4 +84,75 @@ export class LoyaltyService {
       return updatedAccount;
     });
   }
+
+  async getAdminSummary() {
+    const [
+      totalAccounts,
+      pointTotals,
+      claimedRewards,
+      tierDistribution,
+      recentTransactions,
+    ] = await Promise.all([
+      this.prisma.loyaltyAccount.count(),
+      this.prisma.loyaltyAccount.aggregate({
+        _sum: { points: true, lifetime: true },
+      }),
+      this.prisma.loyaltyTransaction.count({
+        where: { type: LoyaltyTransactionType.DEBIT },
+      }),
+      this.prisma.loyaltyAccount.groupBy({
+        by: ['tier'],
+        _count: { tier: true },
+        _sum: { points: true, lifetime: true },
+        orderBy: { tier: 'asc' },
+      }),
+      this.prisma.loyaltyTransaction.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: 20,
+        include: {
+          loyaltyAccount: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  phone: true,
+                  role: true,
+                },
+              },
+            },
+          },
+        },
+      }),
+    ]);
+
+    return {
+      totals: {
+        enrolled: totalAccounts,
+        currentPoints: pointTotals._sum.points ?? 0,
+        lifetimePoints: pointTotals._sum.lifetime ?? 0,
+        rewardsClaimed: claimedRewards,
+      },
+      tiers: tierDistribution.map((tier) => ({
+        tier: tier.tier,
+        members: tier._count.tier,
+        currentPoints: tier._sum.points ?? 0,
+        lifetimePoints: tier._sum.lifetime ?? 0,
+      })),
+      recentTransactions: recentTransactions.map((transaction) => ({
+        id: transaction.id,
+        type: transaction.type,
+        amount: transaction.amount,
+        description: transaction.description,
+        createdAt: transaction.createdAt,
+        user: transaction.loyaltyAccount.user,
+        account: {
+          id: transaction.loyaltyAccount.id,
+          tier: transaction.loyaltyAccount.tier,
+          points: transaction.loyaltyAccount.points,
+          lifetime: transaction.loyaltyAccount.lifetime,
+        },
+      })),
+    };
+  }
 }

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Body, Param, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Param, Query, UseGuards, Request } from '@nestjs/common';
 import { FinanceService } from './finance.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RequirePermission } from '../auth/decorators/permissions.decorator';
@@ -8,6 +8,12 @@ import { PermissionsGuard } from '../auth/guards/permissions.guard';
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 export class FinanceController {
   constructor(private readonly financeService: FinanceService) {}
+
+  @Get('cash-collections')
+  @RequirePermission('finance.view')
+  getCashCollections(@Query('limit') limit?: string) {
+    return this.financeService.getCashCollections(limit ? Number(limit) : undefined);
+  }
 
   @Get('commissions')
   @RequirePermission('finance.view')
@@ -23,8 +29,10 @@ export class FinanceController {
 
   @Get('settlements')
   @RequirePermission('finance.view')
-  getSettlements() {
-    return this.financeService.getSettlements();
+  getSettlements(
+    @Query('status') status?: 'PENDING' | 'PARTIAL' | 'COMPLETED' | 'OVERDUE',
+  ) {
+    return this.financeService.getSettlements(status);
   }
 
   @Post('collect-cash')
@@ -37,8 +45,8 @@ export class FinanceController {
 
   @Get('refunds')
   @RequirePermission('finance.view')
-  getRefundRequests() {
-    return this.financeService.getRefundRequests();
+  getRefundRequests(@Query('status') status?: 'PENDING' | 'APPROVED' | 'REJECTED') {
+    return this.financeService.getRefundRequests(status);
   }
 
   @Put('refunds/:id')
@@ -49,7 +57,7 @@ export class FinanceController {
   }
 
   @Get('analytics')
-  @RequirePermission('reports.view')
+  @RequirePermission('finance.view')
   getAnalytics() {
     return this.financeService.getFinanceAnalytics();
   }

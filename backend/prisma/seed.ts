@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { seedRbac } from './seeds/rbac.seed';
 
 const prisma = new PrismaClient();
 
@@ -41,7 +42,28 @@ async function main() {
 
   const adminPhone = process.env.SEED_ADMIN_PHONE ?? '+93000000000';
 
+  await seedRbac();
+
   const admin = await upsertUser(adminPhone, 'ADMIN', 'Noori Admin', adminPassword);
+  const superAdminRole = await prisma.role.findUnique({ where: { name: 'Super Admin' } });
+  if (!superAdminRole) {
+    throw new Error('Super Admin role was not seeded successfully.');
+  }
+
+  await prisma.adminRole.upsert({
+    where: {
+      adminId_roleId: {
+        adminId: admin.id,
+        roleId: superAdminRole.id,
+      },
+    },
+    update: {},
+    create: {
+      adminId: admin.id,
+      roleId: superAdminRole.id,
+    },
+  });
+
   const rider = await upsertUser('+93700000001', 'RIDER', 'Ahmad Rider', 'Rider123!');
   const driverUser = await upsertUser('+93700000002', 'DRIVER', 'Farid Driver', 'Driver123!');
   const merchant = await upsertUser('+93700000003', 'MERCHANT', 'Kabul Kitchen Owner', 'Merchant123!');

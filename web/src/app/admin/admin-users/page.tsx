@@ -37,6 +37,13 @@ type AdminUser = {
   adminRoles: AdminRoleAssignment[]
 }
 
+type AdminUsersResponse = {
+  items: AdminUser[]
+  total: number
+  page: number
+  limit: number
+}
+
 type RoleFormState = Record<string, string>
 
 type PasswordResetFormState = {
@@ -48,6 +55,10 @@ const EMPTY_PASSWORD_RESET_FORM: PasswordResetFormState = {
   code: "",
   newPassword: "",
 }
+
+const SEARCH_DEBOUNCE_MS = 300
+const ALL_STATUS_FILTER = "ALL"
+const ALL_ROLE_FILTER = "ALL"
 
 async function getErrorMessage(response: Response) {
   try {
@@ -63,12 +74,16 @@ async function getErrorMessage(response: Response) {
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<AdminUser[]>([])
+  const [totalUsers, setTotalUsers] = useState(0)
   const [roles, setRoles] = useState<RoleSummary[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [submitError, setSubmitError] = useState<string | null>(null)
-  const [search, setSearch] = useState("")
+  const [searchInput, setSearchInput] = useState("")
+  const [debouncedSearch, setDebouncedSearch] = useState("")
+  const [statusFilter, setStatusFilter] = useState(ALL_STATUS_FILTER)
+  const [roleFilter, setRoleFilter] = useState(ALL_ROLE_FILTER)
   const [selectedAdmin, setSelectedAdmin] = useState<AdminUser | null>(null)
   const [form, setForm] = useState<RoleFormState>({})
   const [resetTarget, setResetTarget] = useState<AdminUser | null>(null)
@@ -80,48 +95,85 @@ export default function AdminUsersPage() {
   const [handoffPassword, setHandoffPassword] = useState<string | null>(null)
   const [copiedPassword, setCopiedPassword] = useState(false)
 
-  const loadData = useCallback(async () => {
-    setLoading(true)
-    try {
-      const [usersResponse, rolesResponse] = await Promise.all([
-        authedFetch("/admin/users?role=ADMIN&limit=100"),
-        authedFetch("/admin/roles"),
-      ])
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setDebouncedSearch(searchInput.trim())
+    }, SEARCH_DEBOUNCE_MS)
 
-      if (!usersResponse.ok) throw new Error(await getErrorMessage(usersResponse))
+    return () => {
+      window.clearTimeout(timeoutId)
+    }
+  }, [searchInput])
+
+  const loadRoles = useCallback(async () => {
+    try {
+      const rolesResponse = await authedFetch("/admin/roles")
+
       if (!rolesResponse.ok) throw new Error(await getErrorMessage(rolesResponse))
 
-      const usersData = (await usersResponse.json()) as {
-        items: AdminUser[]
-      }
       const rolesData = (await rolesResponse.json()) as RoleSummary[]
-
-      setUsers(usersData.items)
       setRoles(rolesData)
+      setError(null)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load admin roles")
+    }
+  }, [])
+
+  const loadUsers = useCallback(async () => {
+    setLoading(true)
+    try {
+      const params = new URLSearchParams({
+        role: "ADMIN",
+        limit: "100",
+      })
+
+      if (statusFilter !== ALL_STATUS_FILTER) {
+        params.set("status", statusFilter)
+      }
+
+      if (debouncedSearch) {
+        params.set("q", debouncedSearch)
+      }
+
+      const usersResponse = await authedFetch(`/admin/users?${params.toString()}`)
+
+      if (!usersResponse.ok) throw new Error(await getErrorMessage(usersResponse))
+
+      const usersData = (await usersResponse.json()) as AdminUsersResponse
+
+      setUsers(Array.isArray(usersData.items) ? usersData.items : [])
+      setTotalUsers(typeof usersData.total === "number" ? usersData.total : 0)
       setError(null)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load admin users")
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [debouncedSearch, statusFilter])
+
+  const loadData = useCallback(async () => {
+    await Promise.all([loadUsers(), loadRoles()])
+  }, [loadRoles, loadUsers])
 
   useEffect(() => {
-    void loadData()
-  }, [loadData])
+    void loadRoles()
+  }, [loadRoles])
+
+  useEffect(() => {
+    void loadUsers()
+  }, [loadUsers])
 
   const filteredUsers = useMemo(() => {
-    const query = search.trim().toLowerCase()
-    if (!query) return users
+    if (roleFilter === ALL_ROLE_FILTER) return users
 
-    return users.filter((user) => {
-      const haystack = [user.name, user.phone, user.email, ...user.adminRoles.map((entry) => entry.role.name)]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase()
-      return haystack.includes(query)
-    })
-  }, [search, users])
+    return users.filter((user) => user.adminRoles.some((assignment) => assignment.role.id === roleFilter))
+  }, [roleFilter, users])
+
+  const hasActiveFilters = debouncedSearch.length > 0 || statusFilter !== ALL_STATUS_FILTER || roleFilter !== ALL_ROLE_FILTER
+
+  const resultsSummary = hasActiveFilters
+    ? `Showing ${filteredUsers.length} of ${totalUsers} matching admin accounts`
+    : `Showing ${filteredUsers.length} admin accounts`
 
   function openAssignmentDialog(user: AdminUser) {
     setSelectedAdmin(user)
@@ -295,16 +347,46 @@ export default function AdminUsersPage() {
             </div>
             <div className="flex items-center gap-3">
               <Input
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder="Search admins, phones, roles..."
+                aria-label="Search admins"
+                value={searchInput}
+                onChange={(event) => setSearchInput(event.target.value)}
+                placeholder="Search admins, phones, emails, roles, cities..."
                 className="w-72 bg-background/80"
               />
+              <label className="sr-only" htmlFor="admin-users-status-filter">Status</label>
+              <select
+                id="admin-users-status-filter"
+                aria-label="Status"
+                className="h-10 rounded-lg border border-input bg-background px-3 text-sm text-foreground"
+                value={statusFilter}
+                onChange={(event) => setStatusFilter(event.target.value)}
+              >
+                <option value={ALL_STATUS_FILTER}>All statuses</option>
+                <option value="ACTIVE">Active</option>
+                <option value="SUSPENDED">Suspended</option>
+                <option value="PENDING_VERIFICATION">Pending verification</option>
+                <option value="DELETED">Deleted</option>
+              </select>
+              <label className="sr-only" htmlFor="admin-users-role-filter">RBAC role</label>
+              <select
+                id="admin-users-role-filter"
+                aria-label="RBAC role"
+                className="h-10 rounded-lg border border-input bg-background px-3 text-sm text-foreground"
+                value={roleFilter}
+                onChange={(event) => setRoleFilter(event.target.value)}
+              >
+                <option value={ALL_ROLE_FILTER}>All RBAC roles</option>
+                {roles.map((role) => (
+                  <option key={role.id} value={role.id}>{role.name}</option>
+                ))}
+              </select>
               <Button variant="outline" onClick={() => void loadData()} disabled={loading}>
                 Refresh
               </Button>
             </div>
           </div>
+
+          <div className="mb-4 text-sm text-muted-foreground">{resultsSummary}</div>
 
           {error ? (
             <div className="mb-6 rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm font-medium text-destructive">
@@ -325,8 +407,12 @@ export default function AdminUsersPage() {
                   <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
                     <AlertCircle className="h-5 w-5" />
                   </div>
-                  <h2 className="text-lg font-bold">No admin users found</h2>
-                  <p className="mt-2 text-sm text-muted-foreground">Try a different search or seed another admin account.</p>
+                  <h2 className="text-lg font-bold">{hasActiveFilters ? "No admins match the current filters" : "No admin users found"}</h2>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    {hasActiveFilters
+                      ? "Adjust the search, status, or RBAC role filters and try again."
+                      : "Try refreshing the directory or seed another admin account."}
+                  </p>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
@@ -387,7 +473,7 @@ export default function AdminUsersPage() {
                               {u.adminRoles
                                 .filter((assignment) => assignment.cityScope)
                                 .map((assignment) => (
-                                  <Badge key={`${u.id}-${assignment.role.id}-scope`} variant="secondary" className="text-[10px] uppercase bg-muted text-muted-foreground">
+                                  <Badge key={`${u.id}-${assignment.role.id}-${assignment.cityScope ?? "global-scope"}`} variant="secondary" className="text-[10px] uppercase bg-muted text-muted-foreground">
                                     <MapPin className="h-3 w-3 mr-1" /> {assignment.cityScope}
                                   </Badge>
                                 ))}

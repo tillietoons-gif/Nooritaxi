@@ -682,6 +682,20 @@ export class AdminService {
         { name: { contains: q, mode: 'insensitive' } },
         { phone: { contains: q } },
         { email: { contains: q, mode: 'insensitive' } },
+        {
+          adminRoles: {
+            some: {
+              role: { name: { contains: q, mode: 'insensitive' } },
+            },
+          },
+        },
+        {
+          adminRoles: {
+            some: {
+              cityScope: { contains: q, mode: 'insensitive' },
+            },
+          },
+        },
       ];
     }
 

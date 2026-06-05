@@ -7,7 +7,9 @@ import { Header } from "@/components/layout/header"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { GlassSurface } from "@/components/ui/glass-surface"
 import { Input } from "@/components/ui/input"
+import { PatternOverlay } from "@/components/ui/pattern-overlay"
 import { authedFetch } from "@/lib/auth"
 import { Check, LoaderCircle, RefreshCcw, Undo2, X } from "lucide-react"
 
@@ -189,20 +191,81 @@ export default function RefundsPage() {
     <AuthGate roles={["ADMIN"]}>
       <div className="flex min-h-screen flex-col bg-background/50">
         <Header />
-        <main className="container flex-1 py-8">
-          <div className="mb-8 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-            <div>
-              <h1 className="text-3xl font-black">Refund Requests</h1>
-              <p className="mt-1 text-sm font-medium text-muted-foreground">
-                {loading ? "Loading records…" : `Found ${refunds.length.toLocaleString()} ${getRefundStatusLabel(statusFilter)}`}
-              </p>
-            </div>
-            <Link href="/admin" className="text-sm font-bold text-primary transition-colors hover:text-primary/80">
-              ← Back to Overview
-            </Link>
+        <main className="relative flex-1 overflow-hidden px-4 py-8 md:px-8">
+          <div className="fixed inset-0 pointer-events-none opacity-20">
+            <PatternOverlay />
           </div>
 
-          <div className="mb-8 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+          <div className="relative z-10 mx-auto max-w-7xl space-y-6">
+            <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+              <div>
+                <h1 className="text-3xl font-black">Refund Requests</h1>
+                <p className="mt-1 text-sm font-medium text-muted-foreground">
+                  {loading ? "Loading records…" : `Found ${refunds.length.toLocaleString()} ${getRefundStatusLabel(statusFilter)}`}
+                </p>
+              </div>
+              <Link href="/admin" className="text-sm font-bold text-primary transition-colors hover:text-primary/80">
+                ← Back to Overview
+              </Link>
+            </div>
+
+            <GlassSurface variant="premium" className="flex flex-col gap-3 p-4 md:flex-row md:items-end">
+              <div className="flex-1">
+                <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-muted-foreground" htmlFor="refund-search">
+                  Search Query
+                </label>
+                <Input
+                  id="refund-search"
+                  placeholder="Search by request, customer, reason, or reference..."
+                  value={query}
+                  className="border-primary/20 bg-background/80 backdrop-blur-sm focus-visible:ring-primary"
+                  onChange={(event) => setQuery(event.target.value)}
+                />
+              </div>
+              <div className="w-full md:w-48">
+                <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-muted-foreground" htmlFor="refund-status-filter">
+                  Status Filter
+                </label>
+                <select
+                  id="refund-status-filter"
+                  className="block h-10 w-full rounded-md border border-primary/20 bg-background/80 px-3 text-sm outline-none backdrop-blur-sm focus-visible:ring-1 focus-visible:ring-primary"
+                  value={statusFilter}
+                  onChange={(event) => setStatusFilter(event.target.value as typeof ALL_STATUSES | RefundStatus)}
+                >
+                  <option value={ALL_STATUSES}>All statuses</option>
+                  <option value="PENDING">Pending</option>
+                  <option value="APPROVED">Approved</option>
+                  <option value="REJECTED">Rejected</option>
+                </select>
+              </div>
+              <div className="w-full md:w-48">
+                <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-muted-foreground" htmlFor="refund-service-filter">
+                  Service Filter
+                </label>
+                <select
+                  id="refund-service-filter"
+                  className="block h-10 w-full rounded-md border border-primary/20 bg-background/80 px-3 text-sm outline-none backdrop-blur-sm focus-visible:ring-1 focus-visible:ring-primary"
+                  value={serviceFilter}
+                  onChange={(event) => setServiceFilter(event.target.value as typeof ALL_SERVICES | RefundService)}
+                >
+                  <option value={ALL_SERVICES}>All services</option>
+                  <option value="TRIP">Trip</option>
+                  <option value="ORDER">Food Order</option>
+                  <option value="DELIVERY">Delivery</option>
+                  <option value="UNKNOWN">Unknown</option>
+                </select>
+              </div>
+              <Button
+                variant="ghost"
+                className="hover:bg-primary/10 hover:text-primary"
+                onClick={() => void loadData()}
+                disabled={loading}
+              >
+                <RefreshCcw className="mr-2 h-4 w-4" /> Refresh
+              </Button>
+            </GlassSurface>
+
+            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
             <Card className="glass-premium border-primary/10">
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -244,155 +307,104 @@ export default function RefundsPage() {
                 <p className="mt-1 text-xs text-muted-foreground">Requests closed without refund</p>
               </CardContent>
             </Card>
-          </div>
-
-          <Card className="mb-6 glass-premium border-primary/10">
-            <CardContent className="flex flex-col gap-3 p-4 md:flex-row md:items-end">
-              <div className="flex-1">
-                <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-muted-foreground" htmlFor="refund-search">
-                  Search Query
-                </label>
-                <Input
-                  id="refund-search"
-                  placeholder="Search by request, customer, reason, or reference..."
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                />
-              </div>
-              <div className="w-full md:w-48">
-                <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-muted-foreground" htmlFor="refund-status-filter">
-                  Status Filter
-                </label>
-                <select
-                  id="refund-status-filter"
-                  className="block h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:ring-1 focus-visible:ring-primary"
-                  value={statusFilter}
-                  onChange={(event) => setStatusFilter(event.target.value as typeof ALL_STATUSES | RefundStatus)}
-                >
-                  <option value={ALL_STATUSES}>All statuses</option>
-                  <option value="PENDING">Pending</option>
-                  <option value="APPROVED">Approved</option>
-                  <option value="REJECTED">Rejected</option>
-                </select>
-              </div>
-              <div className="w-full md:w-48">
-                <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-muted-foreground" htmlFor="refund-service-filter">
-                  Service Filter
-                </label>
-                <select
-                  id="refund-service-filter"
-                  className="block h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:ring-1 focus-visible:ring-primary"
-                  value={serviceFilter}
-                  onChange={(event) => setServiceFilter(event.target.value as typeof ALL_SERVICES | RefundService)}
-                >
-                  <option value={ALL_SERVICES}>All services</option>
-                  <option value="TRIP">Trip</option>
-                  <option value="ORDER">Food Order</option>
-                  <option value="DELIVERY">Delivery</option>
-                  <option value="UNKNOWN">Unknown</option>
-                </select>
-              </div>
-              <Button variant="outline" onClick={() => void loadData()} disabled={loading}>
-                <RefreshCcw className="mr-2 h-4 w-4" /> Refresh
-              </Button>
-            </CardContent>
-          </Card>
-
-          {error ? (
-            <div className="mb-6 rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm font-medium text-destructive">
-              {error}
             </div>
-          ) : null}
 
-          <Card className="glass-premium border-primary/10">
-            <CardHeader className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-              <div>
-                <CardTitle>Refund Queue</CardTitle>
-                <p className="text-sm text-muted-foreground">Approve or reject customer refund requests directly from live finance data.</p>
+            {error ? (
+              <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm font-medium text-destructive">
+                {error}
               </div>
-              <Badge variant="outline">{filteredRefunds.length} visible</Badge>
-            </CardHeader>
-            <CardContent className="p-0">
-              {loading ? (
-                <div className="flex min-h-[240px] items-center justify-center text-sm font-semibold text-muted-foreground">
-                  <LoaderCircle className="mr-2 h-5 w-5 animate-spin" /> Loading refund requests...
-                </div>
-              ) : filteredRefunds.length === 0 ? (
-                <div className="p-8 text-center text-sm text-muted-foreground">No refund requests match the current filters.</div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm">
-                    <thead className="border-b border-primary/10 bg-background/50 text-xs uppercase text-muted-foreground">
-                      <tr>
-                        <th className="px-6 py-4 font-black">Request</th>
-                        <th className="px-6 py-4 font-black">Customer</th>
-                        <th className="px-6 py-4 font-black">Service</th>
-                        <th className="px-6 py-4 font-black">Amount</th>
-                        <th className="px-6 py-4 font-black">Reason</th>
-                        <th className="px-6 py-4 font-black">Status</th>
-                        <th className="px-6 py-4 text-right font-black">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredRefunds.map((refund) => {
-                        const service = getRefundService(refund)
-                        const customerName = refund.user.name ?? refund.user.phone ?? "Unknown user"
+            ) : null}
 
-                        return (
-                          <tr key={refund.id} className="border-b border-primary/5 align-top hover:bg-muted/20">
-                            <td className="px-6 py-4">
-                              <div className="font-mono text-xs">{refund.id}</div>
-                              <div className="mt-1 text-xs text-muted-foreground">Ref {getRefundReference(refund)}</div>
-                            </td>
-                            <td className="px-6 py-4">
-                              <div className="font-semibold">{customerName}</div>
-                              <div className="text-xs text-muted-foreground">{formatDate(refund.createdAt)}</div>
-                            </td>
-                            <td className="px-6 py-4">
-                              <Badge variant="outline">{getServiceLabel(service)}</Badge>
-                            </td>
-                            <td className="px-6 py-4 font-bold text-gold">{formatMoney(refund.amount)}</td>
-                            <td className="px-6 py-4 text-xs text-muted-foreground">{refund.reason}</td>
-                            <td className="px-6 py-4">
-                              <Badge variant={statusVariant(refund.status)}>{refund.status}</Badge>
-                              {refund.processedAt ? (
-                                <div className="mt-2 text-xs text-muted-foreground">Processed {formatDate(refund.processedAt)}</div>
-                              ) : null}
-                            </td>
-                            <td className="px-6 py-4 text-right">
-                              {refund.status === "PENDING" ? (
-                                <div className="flex justify-end gap-2">
-                                  <Button
-                                    size="sm"
-                                    onClick={() => void processRefund(refund.id, "APPROVED")}
-                                    disabled={actionLoading === `refund:${refund.id}:APPROVED`}
-                                  >
-                                    {actionLoading === `refund:${refund.id}:APPROVED` ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
-                                    Approve
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => void processRefund(refund.id, "REJECTED")}
-                                    disabled={actionLoading === `refund:${refund.id}:REJECTED`}
-                                  >
-                                    {actionLoading === `refund:${refund.id}:REJECTED` ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : <X className="mr-2 h-4 w-4" />}
-                                    Reject
-                                  </Button>
-                                </div>
-                              ) : (
-                                <span className="text-xs text-muted-foreground">Processed</span>
-                              )}
-                            </td>
-                          </tr>
-                        )
-                      })}
-                    </tbody>
-                  </table>
+            <Card className="glass-premium border-primary/10">
+              <CardHeader className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <CardTitle>Refund Queue</CardTitle>
+                  <p className="text-sm text-muted-foreground">Approve or reject customer refund requests directly from live finance data.</p>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+                <Badge variant="outline">{filteredRefunds.length} visible</Badge>
+              </CardHeader>
+              <CardContent className="p-0">
+                {loading ? (
+                  <div className="flex min-h-[240px] items-center justify-center text-sm font-semibold text-muted-foreground">
+                    <LoaderCircle className="mr-2 h-5 w-5 animate-spin" /> Loading refund requests...
+                  </div>
+                ) : filteredRefunds.length === 0 ? (
+                  <div className="p-8 text-center text-sm text-muted-foreground">No refund requests match the current filters.</div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm">
+                      <thead className="border-b border-primary/10 bg-background/50 text-xs uppercase text-muted-foreground">
+                        <tr>
+                          <th className="px-6 py-4 font-black">Request</th>
+                          <th className="px-6 py-4 font-black">Customer</th>
+                          <th className="px-6 py-4 font-black">Service</th>
+                          <th className="px-6 py-4 font-black">Amount</th>
+                          <th className="px-6 py-4 font-black">Reason</th>
+                          <th className="px-6 py-4 font-black">Status</th>
+                          <th className="px-6 py-4 text-right font-black">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredRefunds.map((refund) => {
+                          const service = getRefundService(refund)
+                          const customerName = refund.user.name ?? refund.user.phone ?? "Unknown user"
+
+                          return (
+                            <tr key={refund.id} className="border-b border-primary/5 align-top hover:bg-muted/20">
+                              <td className="px-6 py-4">
+                                <div className="font-mono text-xs">{refund.id}</div>
+                                <div className="mt-1 text-xs text-muted-foreground">Ref {getRefundReference(refund)}</div>
+                              </td>
+                              <td className="px-6 py-4">
+                                <div className="font-semibold">{customerName}</div>
+                                <div className="text-xs text-muted-foreground">{formatDate(refund.createdAt)}</div>
+                              </td>
+                              <td className="px-6 py-4">
+                                <Badge variant="outline">{getServiceLabel(service)}</Badge>
+                              </td>
+                              <td className="px-6 py-4 font-bold text-gold">{formatMoney(refund.amount)}</td>
+                              <td className="px-6 py-4 text-xs text-muted-foreground">{refund.reason}</td>
+                              <td className="px-6 py-4">
+                                <Badge variant={statusVariant(refund.status)}>{refund.status}</Badge>
+                                {refund.processedAt ? (
+                                  <div className="mt-2 text-xs text-muted-foreground">Processed {formatDate(refund.processedAt)}</div>
+                                ) : null}
+                              </td>
+                              <td className="px-6 py-4 text-right">
+                                {refund.status === "PENDING" ? (
+                                  <div className="flex justify-end gap-2">
+                                    <Button
+                                      size="sm"
+                                      onClick={() => void processRefund(refund.id, "APPROVED")}
+                                      disabled={actionLoading === `refund:${refund.id}:APPROVED`}
+                                    >
+                                      {actionLoading === `refund:${refund.id}:APPROVED` ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
+                                      Approve
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => void processRefund(refund.id, "REJECTED")}
+                                      disabled={actionLoading === `refund:${refund.id}:REJECTED`}
+                                    >
+                                      {actionLoading === `refund:${refund.id}:REJECTED` ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : <X className="mr-2 h-4 w-4" />}
+                                      Reject
+                                    </Button>
+                                  </div>
+                                ) : (
+                                  <span className="text-xs text-muted-foreground">Processed</span>
+                                )}
+                              </td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </main>
       </div>
     </AuthGate>

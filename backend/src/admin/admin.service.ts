@@ -204,8 +204,9 @@ export class AdminService {
       this.prisma.delivery.findMany({
         where,
         include: {
-          driver: { select: { id: true, name: true } },
-          sender: { select: { id: true, name: true } },
+          driver: { select: { id: true, name: true, phone: true } },
+          sender: { select: { id: true, name: true, phone: true } },
+          vehicle: { select: { id: true, plateNumber: true, type: true } },
           order: { select: { id: true, restaurantId: true } },
         },
         orderBy: { createdAt: 'desc' },
@@ -215,6 +216,93 @@ export class AdminService {
       this.prisma.delivery.count({ where }),
     ]);
     return { items, total, page: safePage, limit: safeLimit };
+  }
+
+  // ------- Reviews -------
+  async listReviews({ status, q, page, from, to, limit }: ListArgs) {
+    const safeLimit = clampLimit(limit);
+    const safePage = clampPage(page);
+
+    const where: Prisma.ReviewWhereInput = {};
+    if (status === 'VISIBLE') where.isVisible = true;
+    if (status === 'HIDDEN') where.isVisible = false;
+    if (from || to) {
+      where.createdAt = {
+        ...(from ? { gte: new Date(from) } : {}),
+        ...(to ? { lte: new Date(to) } : {}),
+      };
+    }
+    if (q) {
+      where.OR = [
+        { id: { contains: q, mode: 'insensitive' } },
+        { comment: { contains: q, mode: 'insensitive' } },
+        { author: { name: { contains: q, mode: 'insensitive' } } },
+        { author: { phone: { contains: q } } },
+        { restaurant: { name: { contains: q, mode: 'insensitive' } } },
+        { trip: { id: { contains: q, mode: 'insensitive' } } },
+        { order: { id: { contains: q, mode: 'insensitive' } } },
+        { delivery: { id: { contains: q, mode: 'insensitive' } } },
+      ];
+    }
+
+    const [items, total] = await Promise.all([
+      this.prisma.review.findMany({
+        where,
+        include: {
+          author: { select: { id: true, name: true, phone: true } },
+          restaurant: { select: { id: true, name: true } },
+          trip: { select: { id: true } },
+          order: { select: { id: true } },
+          delivery: { select: { id: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip: (safePage - 1) * safeLimit,
+        take: safeLimit,
+      }),
+      this.prisma.review.count({ where }),
+    ]);
+
+    const targetUserIds = [...new Set(items.map((review) => review.targetUserId).filter(Boolean))] as string[];
+    const targetUsers = targetUserIds.length
+      ? await this.prisma.user.findMany({
+          where: { id: { in: targetUserIds } },
+          select: { id: true, name: true, phone: true },
+        })
+      : [];
+    const targetUserMap = new Map(targetUsers.map((user) => [user.id, user]));
+
+    return {
+      items: items.map((review) => ({
+        ...review,
+        targetUser: review.targetUserId
+          ? (targetUserMap.get(review.targetUserId) ?? null)
+          : null,
+      })),
+      total,
+      page: safePage,
+      limit: safeLimit,
+    };
+  }
+
+  async updateReviewVisibility(id: string, isVisible: boolean, actorId?: string) {
+    const review = await this.prisma.review.findUnique({ where: { id } });
+    if (!review) throw new NotFoundException('Review not found');
+
+    const updated = await this.prisma.review.update({
+      where: { id },
+      data: { isVisible },
+    });
+
+    await this.audit(
+      'ADMIN_REVIEW_VISIBILITY_UPDATED',
+      'Review',
+      id,
+      actorId,
+      { isVisible },
+      { isVisible: review.isVisible },
+    );
+
+    return updated;
   }
 
   // ------- Drivers -------

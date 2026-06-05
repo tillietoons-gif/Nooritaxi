@@ -1,89 +1,196 @@
 "use client"
 
+import { useState } from "react"
 import { AuthGate } from "@/components/auth-gate"
-import { Header } from "@/components/layout/header"
-import { HeadingLg, BodyMd } from "@/components/ui/typography"
-import { Card, CardContent } from "@/components/ui/card"
+import { AdminListPage, StatusBadge } from "@/components/admin/admin-list-page"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Star, Check, X, ShieldAlert } from "lucide-react"
+import { authedFetch } from "@/lib/auth"
+import { Check, EyeOff, Star } from "lucide-react"
 
-export default function ReviewsPage() {
-  const reviews = [
-    { id: "REV-901", author: "Ahmad Jan", target: "Driver (Ali)", rating: 5, comment: "Very fast and polite!", status: "VISIBLE" },
-    { id: "REV-902", author: "Zahra S.", target: "Restaurant (Kabul Grill)", rating: 1, comment: "Terrible food, cold.", status: "REPORTED" },
-    { id: "REV-903", author: "Karim M.", target: "Trip (TRP-100)", rating: 2, comment: "Driver asked for extra cash.", status: "PENDING_REVIEW" },
-  ]
+type ReviewStatus = "VISIBLE" | "HIDDEN"
+
+type Review = {
+  id: string
+  targetType: string
+  targetUserId?: string | null
+  rating: number
+  comment?: string | null
+  isVisible: boolean
+  createdAt: string
+  author: {
+    id: string
+    name?: string | null
+    phone?: string | null
+  }
+  targetUser?: {
+    id: string
+    name?: string | null
+    phone?: string | null
+  } | null
+  restaurant?: {
+    id: string
+    name?: string | null
+  } | null
+  trip?: {
+    id: string
+  } | null
+  order?: {
+    id: string
+  } | null
+  delivery?: {
+    id: string
+  } | null
+}
+
+const REVIEW_VISIBILITY_OPTIONS: ReviewStatus[] = ["VISIBLE", "HIDDEN"]
+
+function getReviewStatus(review: Review): ReviewStatus {
+  return review.isVisible ? "VISIBLE" : "HIDDEN"
+}
+
+function shortId(value?: string | null) {
+  if (!value) return "Unknown"
+  return value.slice(-8)
+}
+
+function getReviewTarget(review: Review) {
+  if (review.targetType === "DRIVER") {
+    const label = review.targetUser?.name ?? review.targetUser?.phone ?? shortId(review.targetUserId)
+    return `Driver (${label})`
+  }
+
+  if (review.targetType === "RIDER") {
+    const label = review.targetUser?.name ?? review.targetUser?.phone ?? shortId(review.targetUserId)
+    return `Rider (${label})`
+  }
+
+  if (review.targetType === "RESTAURANT") {
+    return `Restaurant (${review.restaurant?.name ?? shortId(review.restaurant?.id)})`
+  }
+
+  if (review.delivery?.id) {
+    return `Delivery (${shortId(review.delivery.id)})`
+  }
+
+  if (review.order?.id) {
+    return `Order (${shortId(review.order.id)})`
+  }
+
+  if (review.trip?.id) {
+    return `Trip (${shortId(review.trip.id)})`
+  }
+
+  return review.targetType
+}
+
+export default function AdminReviewsPage() {
+  const [refreshKey, setRefreshKey] = useState(0)
+  const [updatingId, setUpdatingId] = useState<string | null>(null)
+
+  async function updateReviewVisibility(id: string, isVisible: boolean) {
+    setUpdatingId(id)
+    try {
+      const res = await authedFetch(`/admin/reviews/${id}/visibility`, {
+        method: "PATCH",
+        body: JSON.stringify({ isVisible }),
+      })
+      if (!res.ok) {
+        const body = await res.json().catch(() => null)
+        const message = Array.isArray(body?.message) ? body.message.join(", ") : body?.message
+        throw new Error(message ? `Failed to update review: ${message}` : `Failed to update review (${res.status})`)
+      }
+      setRefreshKey((key) => key + 1)
+    } catch (err) {
+      alert((err as Error).message)
+    } finally {
+      setUpdatingId(null)
+    }
+  }
 
   return (
-    <AuthGate roles={["ADMIN"]}>
-      <div className="flex flex-col min-h-screen bg-background/50">
-        <Header />
-        <main className="flex-1 container py-8">
-          <div className="flex justify-between items-end mb-8">
-            <div>
-              <HeadingLg className="mb-2 flex items-center gap-2">
-                <Star className="h-8 w-8 text-primary" />
-                Ratings & Reviews Moderation
-              </HeadingLg>
-              <BodyMd className="text-muted-foreground">
-                Moderate user feedback for Drivers, Merchants, and Trips.
-              </BodyMd>
-            </div>
-            <Button variant="outline" className="border-red-500/50 text-red-500 hover:bg-red-500/10">
-              <ShieldAlert className="h-4 w-4 mr-1" /> View Reported
-            </Button>
-          </div>
-
-          <Card className="glass-premium">
-            <CardContent className="p-0">
-              <table className="w-full text-sm text-left">
-                <thead className="bg-muted/50 border-b">
-                  <tr>
-                    <th className="px-6 py-4">ID</th>
-                    <th className="px-6 py-4">Author</th>
-                    <th className="px-6 py-4">Target Entity</th>
-                    <th className="px-6 py-4">Rating</th>
-                    <th className="px-6 py-4">Comment</th>
-                    <th className="px-6 py-4">Status</th>
-                    <th className="px-6 py-4 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {reviews.map(r => (
-                    <tr key={r.id} className="border-b hover:bg-muted/20">
-                      <td className="px-6 py-4 font-mono text-xs">{r.id}</td>
-                      <td className="px-6 py-4 font-bold">{r.author}</td>
-                      <td className="px-6 py-4">{r.target}</td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center text-gold font-bold">
-                          <Star className="h-4 w-4 fill-current mr-1" /> {r.rating}.0
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-muted-foreground italic text-xs max-w-[200px] truncate">&quot;{r.comment}&quot;</td>
-                      <td className="px-6 py-4">
-                        <Badge variant={r.status === 'REPORTED' || r.status === 'PENDING_REVIEW' ? 'destructive' : 'default'} className="text-[10px]">
-                          {r.status}
-                        </Badge>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        {(r.status === 'REPORTED' || r.status === 'PENDING_REVIEW') ? (
-                          <div className="flex justify-end gap-2">
-                            <Button size="sm" className="h-8 bg-primary hover:bg-primary/90 text-white"><Check className="h-4 w-4 mr-1" /> Approve</Button>
-                            <Button size="sm" variant="outline" className="h-8 text-red-500 hover:bg-red-500/10"><X className="h-4 w-4 mr-1" /> Hide</Button>
-                          </div>
-                        ) : (
-                          <Button size="sm" variant="outline" className="h-8">Hide</Button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </CardContent>
-          </Card>
-        </main>
-      </div>
+    <AuthGate roles={["ADMIN", "SUPPORT"]}>
+      <AdminListPage<Review>
+        key={refreshKey}
+        title="Reviews"
+        endpoint="/admin/reviews"
+        statusOptions={REVIEW_VISIBILITY_OPTIONS}
+        searchPlaceholder="Search by id, author, target, or comment..."
+        rowKey={(review) => review.id}
+        columns={[
+          {
+            key: "id",
+            header: "Review",
+            render: (review) => (
+              <div>
+                <span className="font-mono text-xs">{review.id.slice(-8)}</span>
+                <p className="text-xs text-muted-foreground">{new Date(review.createdAt).toLocaleString()}</p>
+              </div>
+            ),
+          },
+          {
+            key: "author",
+            header: "Author",
+            render: (review) => review.author.name ?? review.author.phone ?? "Unknown author",
+          },
+          {
+            key: "target",
+            header: "Target Entity",
+            render: (review) => getReviewTarget(review),
+          },
+          {
+            key: "rating",
+            header: "Rating",
+            render: (review) => (
+              <div className="flex items-center gap-1 font-bold text-gold">
+                <Star className="h-4 w-4 fill-current" /> {review.rating.toFixed(1)}
+              </div>
+            ),
+          },
+          {
+            key: "comment",
+            header: "Comment",
+            render: (review) => (
+              <div className="max-w-sm">
+                <p className="truncate text-muted-foreground">{review.comment?.trim() || "No comment provided."}</p>
+              </div>
+            ),
+          },
+          {
+            key: "status",
+            header: "Status",
+            render: (review) => (
+              <div className="flex items-center gap-2">
+                <StatusBadge status={getReviewStatus(review)} />
+                {review.rating <= 2 ? <Badge variant="destructive">Low Rating</Badge> : null}
+              </div>
+            ),
+          },
+          {
+            key: "actions",
+            header: "Actions",
+            render: (review) =>
+              review.isVisible ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => updateReviewVisibility(review.id, false)}
+                  disabled={updatingId === review.id}
+                >
+                  <EyeOff className="mr-2 h-4 w-4" /> Hide
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  onClick={() => updateReviewVisibility(review.id, true)}
+                  disabled={updatingId === review.id}
+                >
+                  <Check className="mr-2 h-4 w-4" /> Approve
+                </Button>
+              ),
+          },
+        ]}
+      />
     </AuthGate>
   )
 }

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -87,6 +88,20 @@ export class AdminController {
     );
   }
 
+  @Get('reviews')
+  listReviews(
+    @Query('status') status?: string,
+    @Query('q') q?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    return this.admin.listReviews(
+      this.parseListArgs(status, q, page, limit, from, to),
+    );
+  }
+
   @Get('drivers')
   listDrivers(
     @Query('status') status?: string,
@@ -150,6 +165,19 @@ export class AdminController {
     @CurrentUser() actor: any,
   ) {
     return this.admin.updateDeliveryStatus(id, status, actor?.userId);
+  }
+
+  @Patch('reviews/:id/visibility')
+  updateReviewVisibility(
+    @Param('id') id: string,
+    @Body('isVisible') isVisible: boolean,
+    @CurrentUser() actor: any,
+  ) {
+    if (typeof isVisible !== 'boolean') {
+      throw new BadRequestException('isVisible must be a boolean');
+    }
+
+    return this.admin.updateReviewVisibility(id, isVisible, actor?.userId);
   }
 
   @Patch('users/:id/status')

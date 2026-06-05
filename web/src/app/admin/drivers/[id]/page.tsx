@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
-import { AlertTriangle, Banknote, Car, CheckCircle, ChevronLeft, Clock, CreditCard, Download, FileText, MessageSquare, ShieldAlert, Star, User, XCircle } from "lucide-react"
+import { AlertTriangle, Banknote, Car, CheckCircle, ChevronLeft, Clock, CreditCard, Download, FileText, type LucideIcon, MessageSquare, ShieldAlert, Star, User, XCircle } from "lucide-react"
 import { AuthGate } from "@/components/auth-gate"
 import { Header } from "@/components/layout/header"
 import { Badge } from "@/components/ui/badge"
@@ -123,7 +123,7 @@ const statusVariant = (status?: string | null) => {
   return "secondary"
 }
 
-function MiniStat({ label, value, icon: Icon }: { label: string; value: string | number; icon: React.ElementType }) {
+function MiniStat({ label, value, icon: Icon }: { label: string; value: string | number; icon: LucideIcon }) {
   return (
     <Card>
       <CardContent className="flex items-center justify-between p-4">

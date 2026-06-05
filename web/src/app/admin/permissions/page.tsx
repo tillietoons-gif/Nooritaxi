@@ -8,9 +8,10 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { GlassSurface } from "@/components/ui/glass-surface"
+import { Input } from "@/components/ui/input"
 import { PatternOverlay } from "@/components/ui/pattern-overlay"
 import { authedFetch } from "@/lib/auth"
-import { AlertCircle, Check, KeySquare, LoaderCircle, RefreshCw, Shield, X } from "lucide-react"
+import { AlertCircle, Check, KeySquare, LoaderCircle, RefreshCw, Search, Shield, X } from "lucide-react"
 
 type Permission = {
   id: string
@@ -31,6 +32,11 @@ type Role = {
   _count: {
     admins: number
   }
+}
+
+type PermissionRow = {
+  moduleName: string
+  permission: Permission
 }
 
 async function getErrorMessage(response: Response) {
@@ -58,6 +64,9 @@ export default function PermissionsMatrixPage() {
   const [permissions, setPermissions] = useState<Permission[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [selectedModule, setSelectedModule] = useState<string>("all")
+  const [selectedRoleId, setSelectedRoleId] = useState<string>("all")
 
   const permissionLookup = useMemo(() => {
     return roles.reduce<Record<string, Set<string>>>((lookup, role) => {
@@ -78,6 +87,53 @@ export default function PermissionsMatrixPage() {
   const moduleEntries = useMemo(() => {
     return Object.entries(permissionGroups).sort(([left], [right]) => left.localeCompare(right))
   }, [permissionGroups])
+
+  const visibleRoles = useMemo(() => {
+    if (selectedRoleId === "all") return roles
+    return roles.filter((role) => role.id === selectedRoleId)
+  }, [roles, selectedRoleId])
+
+  const filteredRows = useMemo(() => {
+    const normalizedQuery = searchQuery.trim().toLowerCase()
+    const sourceRows = moduleEntries.flatMap(([moduleName, modulePermissions]) =>
+      modulePermissions.map((permission) => ({ moduleName, permission } satisfies PermissionRow)),
+    )
+
+    return sourceRows.filter(({ moduleName, permission }) => {
+      if (selectedModule !== "all" && moduleName !== selectedModule) {
+        return false
+      }
+
+      if (!normalizedQuery) {
+        return true
+      }
+
+      const haystack = [
+        moduleName,
+        permission.name,
+        permission.action,
+        permission.description ?? "",
+      ]
+        .join(" ")
+        .toLowerCase()
+
+      return haystack.includes(normalizedQuery)
+    })
+  }, [moduleEntries, searchQuery, selectedModule])
+
+  const filteredModuleEntries = useMemo(() => {
+    return filteredRows.reduce<Record<string, Permission[]>>((groups, row) => {
+      if (!groups[row.moduleName]) groups[row.moduleName] = []
+      groups[row.moduleName].push(row.permission)
+      return groups
+    }, {})
+  }, [filteredRows])
+
+  const filteredModuleList = useMemo(() => {
+    return Object.entries(filteredModuleEntries).sort(([left], [right]) => left.localeCompare(right))
+  }, [filteredModuleEntries])
+
+  const filteredPermissionCount = filteredRows.length
 
   const systemRoleCount = useMemo(() => roles.filter((role) => role.isSystem).length, [roles])
 
@@ -184,6 +240,81 @@ export default function PermissionsMatrixPage() {
               </div>
             </GlassSurface>
 
+            {!loading && !error && permissions.length > 0 && roles.length > 0 ? (
+              <Card className="glass-premium border-primary/10">
+                <CardContent className="space-y-4 p-5">
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                    <div className="flex-1 space-y-2">
+                      <label htmlFor="permissions-search" className="text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">
+                        Search permissions
+                      </label>
+                      <div className="relative max-w-xl">
+                        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                          id="permissions-search"
+                          value={searchQuery}
+                          onChange={(event) => setSearchQuery(event.target.value)}
+                          placeholder="Search by module, permission, action, or description"
+                          className="h-10 rounded-xl border-primary/15 bg-background/80 pl-10"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <label className="space-y-2 text-sm">
+                        <span className="block text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">Module</span>
+                        <select
+                          value={selectedModule}
+                          onChange={(event) => setSelectedModule(event.target.value)}
+                          className="h-10 min-w-[220px] rounded-xl border border-primary/15 bg-background/80 px-3 text-sm outline-none transition-colors focus:border-ring focus:ring-2 focus:ring-ring/30"
+                        >
+                          <option value="all">All modules</option>
+                          {moduleEntries.map(([moduleName]) => (
+                            <option key={moduleName} value={moduleName}>
+                              {formatLabel(moduleName)}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+
+                      <label className="space-y-2 text-sm">
+                        <span className="block text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">Role focus</span>
+                        <select
+                          value={selectedRoleId}
+                          onChange={(event) => setSelectedRoleId(event.target.value)}
+                          className="h-10 min-w-[220px] rounded-xl border border-primary/15 bg-background/80 px-3 text-sm outline-none transition-colors focus:border-ring focus:ring-2 focus:ring-ring/30"
+                        >
+                          <option value="all">All roles</option>
+                          {roles.map((role) => (
+                            <option key={role.id} value={role.id}>
+                              {role.name}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-muted-foreground">
+                    <Badge variant="outline" className="border-primary/15 bg-background/80 px-3 py-1 text-[11px] uppercase tracking-[0.22em]">
+                      {filteredPermissionCount} matching permissions
+                    </Badge>
+                    <Badge variant="outline" className="border-primary/15 bg-background/80 px-3 py-1 text-[11px] uppercase tracking-[0.22em]">
+                      {filteredModuleList.length} visible modules
+                    </Badge>
+                    <Badge variant="outline" className="border-primary/15 bg-background/80 px-3 py-1 text-[11px] uppercase tracking-[0.22em]">
+                      {visibleRoles.length} visible roles
+                    </Badge>
+                    {searchQuery ? (
+                      <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => setSearchQuery("")}>
+                        Clear search
+                      </Button>
+                    ) : null}
+                  </div>
+                </CardContent>
+              </Card>
+            ) : null}
+
             {error ? (
               <div className="rounded-2xl border border-destructive/40 bg-destructive/10 p-4 text-sm font-medium text-destructive">
                 {error}
@@ -222,7 +353,7 @@ export default function PermissionsMatrixPage() {
                         <tr>
                           <th className="px-5 py-4 font-black">Module</th>
                           <th className="px-5 py-4 font-black">Permission</th>
-                          {roles.map((role) => (
+                          {visibleRoles.map((role) => (
                             <th key={role.id} className="min-w-[160px] px-5 py-4 text-center font-black">
                               <div className="flex flex-col items-center gap-2">
                                 <span>{role.name}</span>
@@ -238,7 +369,7 @@ export default function PermissionsMatrixPage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {moduleEntries.map(([moduleName, modulePermissions]) =>
+                        {filteredModuleList.map(([moduleName, modulePermissions]) =>
                           modulePermissions.map((permission, index) => (
                             <tr key={permission.id} className="border-b border-primary/5 align-top hover:bg-muted/20">
                               {index === 0 ? (
@@ -255,7 +386,7 @@ export default function PermissionsMatrixPage() {
                                   <p className="text-sm text-muted-foreground">{permission.description || "No description provided for this permission."}</p>
                                 </div>
                               </td>
-                              {roles.map((role) => {
+                              {visibleRoles.map((role) => {
                                 const hasPermission = permissionLookup[role.id]?.has(permission.name) ?? false
 
                                 return (
@@ -272,6 +403,18 @@ export default function PermissionsMatrixPage() {
                       </tbody>
                     </table>
                   </div>
+
+                  {filteredPermissionCount === 0 ? (
+                    <div className="border-t border-primary/10 px-5 py-8 text-center">
+                      <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+                        <Search className="h-5 w-5" />
+                      </div>
+                      <h3 className="text-lg font-bold">No matching permissions</h3>
+                      <p className="mt-2 text-sm text-muted-foreground">
+                        Try a different role, module, or search term to widen the matrix.
+                      </p>
+                    </div>
+                  ) : null}
                 </CardContent>
               </Card>
             )}

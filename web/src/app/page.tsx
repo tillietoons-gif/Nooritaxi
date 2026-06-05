@@ -35,9 +35,12 @@ const ADAPTIVE_FEATURES = [
 
 const GenAIGlobe = () => {
   const particles = useMemo(() => {
-    return Array.from({ length: 6 }).map(() => ({
+    return Array.from({ length: 6 }).map((_, i) => ({
+      id: i,
       top: `${30 + Math.random() * 40}%`,
       left: `${30 + Math.random() * 40}%`,
+      duration: 2 + Math.random() * 2,
+      delay: Math.random() * 2,
     }));
   }, []);
 
@@ -54,19 +57,19 @@ const GenAIGlobe = () => {
         <div className="absolute inset-0 border-2 border-gold/10 rounded-full" style={{ transform: 'rotateZ(45deg) rotateX(45deg)' }} />
       </motion.div>
       <Globe className="absolute h-12 w-12 text-primary/50" />
-      {particles.map((pos, i) => (
+      {particles.map((particle) => (
         <motion.div
-          key={p.id}
+          key={particle.id}
           className="absolute w-2 h-2 bg-gold/60 rounded-full blur-[1px]"
           animate={{ 
             y: [-30, 30, -30],
             x: [-30, 30, -30],
             opacity: [0.2, 1, 0.2] 
           }}
-          transition={{ duration: p.duration, repeat: Infinity, delay: p.delay, ease: "easeInOut" }}
+          transition={{ duration: particle.duration, repeat: Infinity, delay: particle.delay, ease: "easeInOut" }}
           style={{ 
-            top: pos.top,
-            left: pos.left
+            top: particle.top,
+            left: particle.left
           }}
         />
       ))}

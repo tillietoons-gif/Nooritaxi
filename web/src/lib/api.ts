@@ -1,50 +1,57 @@
-import axios from 'axios';
+import { apiUrl, getToken } from "@/lib/auth";
 
-export type DocumentStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+export type DocumentStatus = 'PENDING' | 'VERIFIED' | 'REJECTED';
 
 export interface DriverDocument {
   id: string;
   driver: {
     id: string;
-    name: string;
+    name?: string | null;
+    user?: {
+      name?: string | null;
+      phone?: string | null;
+    } | null;
   };
-  documentType: 'LICENSE' | 'VEHICLE_REGISTRATION' | 'NATIONAL_ID';
+  type: 'LICENSE' | 'VEHICLE_REGISTRATION' | 'NATIONAL_ID' | 'INSURANCE' | 'BACKGROUND_CHECK';
   url: string;
   status: DocumentStatus;
   createdAt: string;
 }
 
-const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://localhost:3000/api',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+async function apiFetch(path: string, init: RequestInit = {}) {
+  const token = getToken();
+  return fetch(`${apiUrl}${path}`, {
+    ...init,
+    headers: {
+      "Content-Type": "application/json",
+      ...(init.headers ?? {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+}
 
 export const getPendingKycDocuments = async (): Promise<DriverDocument[]> => {
-  try {
-    const response = await api.get<DriverDocument[]>('/driver-documents/pending');
-    return response.data;
-  } catch (error) {
-    console.error('Failed to fetch pending KYC documents:', error);
-    return [];
-  }
+  const response = await apiFetch('/users/admin/documents/pending');
+  if (!response.ok) throw new Error(`Failed to fetch pending KYC documents (${response.status})`);
+  return response.json();
 };
 
 export const updateDocumentStatus = async (
   id: string,
-  status: 'APPROVED' | 'REJECTED'
+  status: 'VERIFIED' | 'REJECTED'
 ): Promise<DriverDocument> => {
-  try {
-    const response = await api.patch<DriverDocument>(`/driver-documents/${id}/status`, { status });
-    return response.data;
-  } catch (error) {
-    console.error(`Failed to update document ${id} to status ${status}:`, error);
-    throw error;
-  }
+  const response = await apiFetch(`/users/admin/documents/${id}/verify`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status }),
+  });
+  if (!response.ok) throw new Error(`Failed to update document ${id} (${response.status})`);
+  return response.json();
 };
 
 export const getFullImageUrl = (relativeUrl: string): string => {
-  const backendBaseUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL?.replace('/api', '') || 'http://localhost:3000';
-  return `${backendBaseUrl}/${relativeUrl.replace(/^\//, '')}`;
+  const backendBaseUrl = apiUrl.replace(/\/api\/?$/, '');
+  if (/^https?:\/\//i.test(relativeUrl)) return relativeUrl;
+  const cleanUrl = relativeUrl.replace(/^\/+/, '');
+  if (cleanUrl.startsWith('files/')) return `${backendBaseUrl}/${cleanUrl}`;
+  return `${backendBaseUrl}/files/kyc/${cleanUrl}`;
 };

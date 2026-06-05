@@ -4,9 +4,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MapContainer, Marker, Polygon, Popup, TileLayer, useMap } from "react-leaflet";
 import L from "leaflet";
 import { io, Socket } from "socket.io-client";
-import { Crosshair, Layers, LocateFixed, MapPin, Radio, RefreshCw, Users, Wifi, WifiOff, Zap } from "lucide-react";
+import { Crosshair, Layers, LocateFixed, MapPin, Radio, RefreshCw, Search, Users, Wifi, WifiOff, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { apiUrl, getToken } from "@/lib/auth";
 
 import "leaflet/dist/leaflet.css";
@@ -133,6 +135,13 @@ export default function LiveMap() {
   const [drivers, setDrivers] = useState<DriverLocation[]>([]);
   const [surgeZones, setSurgeZones] = useState<SurgeZone[]>([]);
   const [places, setPlaces] = useState<CustomPlace[]>([]);
+  const [activeModal, setActiveModal] = useState<"drivers" | "places" | "zones" | null>(null);
+  const [modalSearch, setModalSearch] = useState("");
+  const [visibleLayers, setVisibleLayers] = useState({
+    drivers: true,
+    zones: true,
+    places: true,
+  });
   const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [liveError, setLiveError] = useState<string | null>(null);
@@ -157,6 +166,44 @@ export default function LiveMap() {
     }),
     [drivers, surgeZones, places],
   );
+
+  const visibleDrivers = visibleLayers.drivers ? drivers : [];
+  const visibleZones = visibleLayers.zones ? surgeZones : [];
+  const visiblePlaces = visibleLayers.places ? places : [];
+  const normalizedSearch = modalSearch.trim().toLowerCase();
+  const filteredDrivers = drivers.filter((driver) =>
+    [driver.name, driver.id, driver.status].some((value) => value?.toLowerCase().includes(normalizedSearch)),
+  );
+  const filteredPlaces = places.filter((place) =>
+    [place.name, place.address, place.city, place.category ?? ""].some((value) => value.toLowerCase().includes(normalizedSearch)),
+  );
+  const filteredZones = surgeZones.filter((zone) =>
+    [zone.name, String(zone.multiplier), (zone.isCurrentlyActive ?? zone.isActive) ? "active" : "inactive"].some((value) =>
+      value.toLowerCase().includes(normalizedSearch),
+    ),
+  );
+  const modalTitle = activeModal === "drivers" ? "Drivers" : activeModal === "places" ? "Custom Places" : "Surge Zones";
+  const modalDescription =
+    activeModal === "drivers"
+      ? "Search online and busy drivers on the live map."
+      : activeModal === "places"
+        ? "Search saved rider pickup and destination places."
+        : "Search configured surge overlays.";
+  const modalPlaceholder =
+    activeModal === "drivers"
+      ? "Search by driver, status, or ID"
+      : activeModal === "places"
+        ? "Search by place, address, city, or category"
+        : "Search by zone, status, or multiplier";
+
+  function toggleLayer(layer: keyof typeof visibleLayers) {
+    setVisibleLayers((current) => ({ ...current, [layer]: !current[layer] }));
+  }
+
+  function openModal(modal: "drivers" | "places" | "zones") {
+    setActiveModal(modal);
+    setModalSearch("");
+  }
 
   const loadDrivers = useCallback(async (silent = false) => {
     try {
@@ -273,31 +320,64 @@ export default function LiveMap() {
   }
 
   return (
-    <div className="grid h-full min-h-0 grid-rows-[1fr_auto] bg-background lg:grid-cols-[minmax(0,1fr)_360px] lg:grid-rows-1">
-      <div className="relative min-h-[420px]">
-        <div className="absolute left-4 top-4 z-[500] flex flex-wrap items-center gap-2">
-          <Badge variant={isLiveConnected ? "default" : "secondary"} className="gap-1.5">
-            {isLiveConnected ? <Wifi className="h-3.5 w-3.5" /> : <WifiOff className="h-3.5 w-3.5" />}
-            {isLiveConnected ? "Live" : "Polling"}
-          </Badge>
-          <div className="rounded-full border bg-background/90 px-3 py-1 text-xs font-medium shadow">
-            Updated {formatTime(lastUpdated)}
+    <div className="grid h-full min-h-0 bg-background lg:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="relative min-h-[460px]">
+        <div className="absolute left-3 right-3 top-3 z-[500] flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+          <div className="flex w-fit flex-wrap items-center gap-2 rounded-lg border bg-background/95 p-2 shadow-sm backdrop-blur">
+            <Badge variant={isLiveConnected ? "default" : "secondary"} className="gap-1.5">
+              {isLiveConnected ? <Wifi className="h-3.5 w-3.5" /> : <WifiOff className="h-3.5 w-3.5" />}
+              {isLiveConnected ? "Live" : "Polling"}
+            </Badge>
+            <span className="px-1 text-xs text-muted-foreground">Updated {formatTime(lastUpdated)}</span>
+          </div>
+
+          <div className="flex w-fit flex-wrap items-center gap-2 rounded-lg border bg-background/95 p-2 shadow-sm backdrop-blur">
+            <Button size="sm" variant={visibleLayers.drivers ? "default" : "outline"} onClick={() => toggleLayer("drivers")}>
+              Drivers
+            </Button>
+            <Button size="sm" variant={visibleLayers.zones ? "default" : "outline"} onClick={() => toggleLayer("zones")}>
+              Surge
+            </Button>
+            <Button size="sm" variant={visibleLayers.places ? "default" : "outline"} onClick={() => toggleLayer("places")}>
+              Places
+            </Button>
+            <Button
+              size="icon"
+              variant="outline"
+              onClick={() => loadDrivers(true)}
+              disabled={isRefreshing}
+              aria-label="Refresh map data"
+            >
+              <RefreshCw className={isRefreshing ? "animate-spin" : ""} />
+            </Button>
+            <Button
+              size="icon"
+              variant="outline"
+              onClick={() => {
+                setSelectedDriverId(null);
+                setFitVersion((version) => version + 1);
+              }}
+              disabled={!drivers.length && !surgeZones.length && !places.length}
+              aria-label="Fit map objects"
+            >
+              <Crosshair className="h-4 w-4" />
+            </Button>
           </div>
         </div>
 
         {liveError ? (
-          <div className="absolute right-4 top-4 z-[500] max-w-sm rounded-md bg-destructive/90 px-3 py-2 text-sm text-destructive-foreground shadow">
+          <div className="absolute bottom-4 left-4 z-[500] max-w-sm rounded-md bg-destructive/90 px-3 py-2 text-sm text-destructive-foreground shadow">
             {liveError}
           </div>
         ) : null}
 
         <MapContainer center={mapCenter} zoom={13} style={{ height: "100%", width: "100%" }}>
-          <ViewportController drivers={drivers} surgeZones={surgeZones} places={places} fitVersion={fitVersion} selectedDriver={selectedDriver} />
+          <ViewportController drivers={visibleDrivers} surgeZones={visibleZones} places={visiblePlaces} fitVersion={fitVersion} selectedDriver={selectedDriver} />
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-          {surgeZones.map((zone) => {
+          {visibleZones.map((zone) => {
             const positions = getSurgeZoneRing(zone);
             return (
               <Polygon key={zone.id} positions={positions} pathOptions={getZonePathOptions(zone)}>
@@ -312,7 +392,7 @@ export default function LiveMap() {
               </Polygon>
             );
           })}
-          {drivers.map((driver) => (
+          {visibleDrivers.map((driver) => (
             <Marker
               key={driver.id}
               icon={createDriverIcon(driver.status, driver.id === selectedDriverId)}
@@ -331,7 +411,7 @@ export default function LiveMap() {
               </Popup>
             </Marker>
           ))}
-          {places.map((place) => (
+          {visiblePlaces.map((place) => (
             <Marker key={place.id} icon={createPlaceIcon()} position={[place.lat, place.lng]}>
               <Popup>
                 <div className="space-y-1">
@@ -346,22 +426,26 @@ export default function LiveMap() {
             </Marker>
           ))}
         </MapContainer>
+
+        <div className="absolute bottom-3 right-3 z-[500] rounded-lg border bg-background/95 p-2 text-xs shadow-sm backdrop-blur">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+            <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-green-600" />Online</span>
+            <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-amber-500" />Busy</span>
+            <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-orange-500" />Place</span>
+            <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-sm bg-red-500/70" />Surge</span>
+          </div>
+        </div>
       </div>
 
       <aside className="min-h-0 border-t bg-background lg:border-l lg:border-t-0">
         <div className="flex h-full min-h-0 flex-col">
           <div className="border-b p-4">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <h2 className="text-lg font-semibold">Fleet Snapshot</h2>
-                <p className="text-sm text-muted-foreground">{drivers.length} drivers with live coordinates</p>
-              </div>
-              <Button size="icon" variant="outline" onClick={() => loadDrivers(true)} disabled={isRefreshing} aria-label="Refresh drivers">
-                <RefreshCw className={isRefreshing ? "animate-spin" : ""} />
-              </Button>
+            <div>
+              <h2 className="text-base font-semibold">Operations</h2>
+              <p className="text-xs text-muted-foreground">{drivers.length} drivers with coordinates</p>
             </div>
 
-            <div className="mt-4 grid grid-cols-3 gap-2">
+            <div className="mt-4 grid grid-cols-2 gap-2">
               <div className="rounded-md border p-3">
                 <Users className="mb-2 h-4 w-4 text-primary" />
                 <p className="text-2xl font-semibold">{drivers.length}</p>
@@ -377,121 +461,162 @@ export default function LiveMap() {
                 <p className="text-2xl font-semibold">{totals.busy}</p>
                 <p className="text-xs text-muted-foreground">Busy</p>
               </div>
-            </div>
-            <div className="mt-2 rounded-md border p-3">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  <Zap className="h-4 w-4 text-red-600" />
-                  <span className="text-sm font-medium">Surge zones</span>
-                </div>
-                <Badge variant={totals.activeSurgeZones ? "destructive" : "secondary"}>
-                  {totals.activeSurgeZones} active
-                </Badge>
+              <div className="rounded-md border p-3">
+                <Zap className="mb-2 h-4 w-4 text-red-600" />
+                <p className="text-2xl font-semibold">{totals.activeSurgeZones}</p>
+                <p className="text-xs text-muted-foreground">Active surge</p>
               </div>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {surgeZones.length} configured zone{surgeZones.length === 1 ? "" : "s"} shown on the map
-              </p>
-            </div>
-            <div className="mt-2 rounded-md border p-3">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-orange-600" />
-                  <span className="text-sm font-medium">Custom places</span>
-                </div>
-                <Badge variant="secondary">{totals.places}</Badge>
-              </div>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Saved rider pickup and destination places shown on the map
-              </p>
             </div>
 
-            <Button
-              className="mt-4 w-full"
-              variant="secondary"
-              onClick={() => {
-                setSelectedDriverId(null);
-                setFitVersion((version) => version + 1);
-              }}
-              disabled={!drivers.length && !surgeZones.length && !places.length}
-            >
-              <Crosshair className="h-4 w-4" />
-              Fit Map Objects
-            </Button>
-          </div>
-
-          <div className="min-h-0 flex-1 overflow-y-auto p-3">
-            {surgeZones.length ? (
-              <div className="mb-3 rounded-md border p-3">
-                <div className="mb-2 flex items-center gap-2 text-sm font-semibold">
-                  <Layers className="h-4 w-4" />
-                  Surge Overlays
-                </div>
-                <div className="space-y-2">
-                  {surgeZones.map((zone) => (
-                    <div key={zone.id} className="flex items-center justify-between gap-3 text-sm">
-                      <span className="truncate">{zone.name}</span>
-                      <Badge variant={(zone.isCurrentlyActive ?? zone.isActive) ? "destructive" : "secondary"}>
-                        {zone.multiplier}x
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-            {places.length ? (
-              <div className="mb-3 rounded-md border p-3">
-                <div className="mb-2 flex items-center gap-2 text-sm font-semibold">
+            <div className="mt-4 space-y-2">
+              <button
+                type="button"
+                onClick={() => openModal("drivers")}
+                className="flex w-full items-center justify-between rounded-md border p-3 text-left transition-colors hover:bg-muted/50"
+              >
+                <span className="flex items-center gap-2 text-sm font-medium">
+                  <Users className="h-4 w-4 text-primary" />
+                  Drivers
+                </span>
+                <Badge variant="secondary">{drivers.length}</Badge>
+              </button>
+              <button
+                type="button"
+                onClick={() => openModal("places")}
+                className="flex w-full items-center justify-between rounded-md border p-3 text-left transition-colors hover:bg-muted/50"
+              >
+                <span className="flex items-center gap-2 text-sm font-medium">
                   <MapPin className="h-4 w-4 text-orange-600" />
                   Custom Places
-                </div>
-                <div className="space-y-2">
-                  {places.map((place) => (
-                    <div key={place.id} className="text-sm">
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="truncate font-medium">{place.name}</span>
-                        {place.category ? <Badge variant="outline">{place.category}</Badge> : null}
-                      </div>
-                      <p className="truncate text-xs text-muted-foreground">{place.address}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-            {isLoading ? (
-              <div className="rounded-md border p-4 text-sm text-muted-foreground">Loading online drivers...</div>
-            ) : drivers.length === 0 ? (
-              <div className="rounded-md border p-4 text-sm text-muted-foreground">No online drivers with coordinates.</div>
-            ) : (
-              <div className="space-y-2">
-                {drivers.map((driver) => {
-                  const selected = driver.id === selectedDriverId;
-                  return (
-                    <button
-                      key={driver.id}
-                      type="button"
-                      onClick={() => setSelectedDriverId(driver.id)}
-                      className={`w-full rounded-md border p-3 text-left transition-colors ${
-                        selected ? "border-primary bg-primary/5" : "hover:bg-muted/50"
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold">{driver.name}</p>
-                          <p className="font-mono text-xs text-muted-foreground">{driver.id.slice(0, 10)}</p>
-                        </div>
-                        <Badge variant={driver.status === "BUSY" ? "secondary" : "default"}>{driver.status ?? "ONLINE"}</Badge>
-                      </div>
-                      <p className="mt-2 text-xs text-muted-foreground">
-                        {driver.lat.toFixed(5)}, {driver.lng.toFixed(5)}
-                      </p>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+                </span>
+                <Badge variant="secondary">{places.length}</Badge>
+              </button>
+              <button
+                type="button"
+                onClick={() => openModal("zones")}
+                className="flex w-full items-center justify-between rounded-md border p-3 text-left transition-colors hover:bg-muted/50"
+              >
+                <span className="flex items-center gap-2 text-sm font-medium">
+                  <Layers className="h-4 w-4 text-red-600" />
+                  Surge Zones
+                </span>
+                <Badge variant={totals.activeSurgeZones ? "destructive" : "secondary"}>{surgeZones.length}</Badge>
+              </button>
+            </div>
+          </div>
+
+          <div className="flex-1 p-4">
+            <div className="rounded-md border bg-muted/20 p-4 text-sm text-muted-foreground">
+              Use the map controls to show or hide layers. Open a modal to search and inspect drivers, custom places, or surge zones.
+            </div>
           </div>
         </div>
       </aside>
+
+      <Dialog open={activeModal !== null} onOpenChange={(open) => !open && setActiveModal(null)}>
+        <DialogContent className="max-h-[82vh] gap-3 overflow-hidden sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{modalTitle}</DialogTitle>
+            <DialogDescription>{modalDescription}</DialogDescription>
+          </DialogHeader>
+
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={modalSearch}
+              onChange={(event) => setModalSearch(event.target.value)}
+              placeholder={modalPlaceholder}
+              className="pl-9"
+            />
+          </div>
+
+          <div className="min-h-0 max-h-[56vh] overflow-y-auto rounded-md border">
+            {activeModal === "drivers" ? (
+              isLoading ? (
+                <div className="p-4 text-sm text-muted-foreground">Loading online drivers...</div>
+              ) : filteredDrivers.length ? (
+                <div className="divide-y">
+                  {filteredDrivers.map((driver) => {
+                    const selected = driver.id === selectedDriverId;
+                    return (
+                      <button
+                        key={driver.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedDriverId(driver.id);
+                          setActiveModal(null);
+                        }}
+                        className={`block w-full p-4 text-left transition-colors ${selected ? "bg-primary/5" : "hover:bg-muted/50"}`}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="truncate font-semibold">{driver.name}</p>
+                            <p className="font-mono text-xs text-muted-foreground">{driver.id}</p>
+                          </div>
+                          <Badge variant={driver.status === "BUSY" ? "secondary" : "default"}>{driver.status ?? "ONLINE"}</Badge>
+                        </div>
+                        <p className="mt-2 font-mono text-xs text-muted-foreground">
+                          {driver.lat.toFixed(5)}, {driver.lng.toFixed(5)}
+                        </p>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="p-4 text-sm text-muted-foreground">No drivers match your search.</div>
+              )
+            ) : null}
+
+            {activeModal === "places" ? (
+              filteredPlaces.length ? (
+                <div className="divide-y">
+                  {filteredPlaces.map((place) => (
+                    <div key={place.id} className="p-4 text-sm">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="truncate font-semibold">{place.name}</p>
+                          <p className="truncate text-muted-foreground">{place.address}</p>
+                        </div>
+                        {place.category ? <Badge variant="outline">{place.category}</Badge> : null}
+                      </div>
+                      <p className="mt-2 font-mono text-xs text-muted-foreground">
+                        {place.lat.toFixed(5)}, {place.lng.toFixed(5)} · {place.city}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-4 text-sm text-muted-foreground">No custom places match your search.</div>
+              )
+            ) : null}
+
+            {activeModal === "zones" ? (
+              filteredZones.length ? (
+                <div className="divide-y">
+                  {filteredZones.map((zone) => (
+                    <div key={zone.id} className="p-4 text-sm">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="truncate font-semibold">{zone.name}</p>
+                          <p className="text-xs text-muted-foreground">Until {new Date(zone.activeUntil).toLocaleString()}</p>
+                        </div>
+                        <Badge variant={(zone.isCurrentlyActive ?? zone.isActive) ? "destructive" : "secondary"}>
+                          {zone.multiplier}x
+                        </Badge>
+                      </div>
+                      <p className="mt-2 text-xs text-muted-foreground">
+                        {(zone.isCurrentlyActive ?? zone.isActive) ? "Active" : "Inactive"} · {getSurgeZoneRing(zone).length} map points
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-4 text-sm text-muted-foreground">No surge zones match your search.</div>
+              )
+            ) : null}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

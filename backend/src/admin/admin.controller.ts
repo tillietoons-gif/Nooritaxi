@@ -13,6 +13,8 @@ import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { AdminService } from './admin.service';
+import { RequirePermission } from '../auth/decorators/permissions.decorator';
+import { PermissionsGuard } from '../auth/guards/permissions.guard';
 
 @Controller('admin')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -106,6 +108,8 @@ export class AdminController {
   }
 
   @Get('users')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('admins.view')
   listUsers(
     @Query('status') status?: string,
     @Query('q') q?: string,

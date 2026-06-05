@@ -670,12 +670,13 @@ export class AdminService {
   }
 
   // ------- Users -------
-  async listUsers({ status, q, page, limit }: ListArgs & { role?: string }) {
+  async listUsers({ status, q, page, limit, role }: ListArgs & { role?: string }) {
     const safeLimit = clampLimit(limit);
     const safePage = clampPage(page);
 
     const where: Prisma.UserWhereInput = {};
     if (status) where.status = status as any;
+    if (role) where.role = role as any;
     if (q) {
       where.OR = [
         { name: { contains: q, mode: 'insensitive' } },
@@ -695,6 +696,19 @@ export class AdminService {
           role: true,
           status: true,
           createdAt: true,
+          adminRoles: {
+            select: {
+              cityScope: true,
+              role: {
+                select: {
+                  id: true,
+                  name: true,
+                  isSystem: true,
+                },
+              },
+            },
+            orderBy: { createdAt: 'asc' },
+          },
         },
         orderBy: { createdAt: 'desc' },
         skip: (safePage - 1) * safeLimit,

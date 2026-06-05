@@ -13,6 +13,7 @@ import { CurrentUser } from './current-user.decorator';
 import {
   LoginDto,
   LogoutDto,
+  ResetPasswordDto,
   RefreshDto,
   RegisterDto,
   SendOtpDto,
@@ -64,6 +65,20 @@ export class AuthController {
       throw new BadRequestException('Invalid or expired OTP');
     }
     return { verified: true };
+  }
+
+  @Post('reset-password')
+  @Throttle({ default: { ttl: 60_000, limit: 5 } })
+  async resetPassword(@Body() body: ResetPasswordDto) {
+    const reset = await this.authService.resetPassword(
+      body.phone,
+      body.code,
+      body.newPassword,
+    );
+    if (!reset) {
+      throw new BadRequestException('Invalid or expired OTP');
+    }
+    return { reset: true };
   }
 
   @Post('logout')

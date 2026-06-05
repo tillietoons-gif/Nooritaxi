@@ -54,21 +54,8 @@ export class AuthService {
   }
 
   async verifyOtp(phone: string, code: string): Promise<boolean> {
-    const record = await this.prisma.phoneOtp.findFirst({
-      where: {
-        phone,
-        usedAt: null,
-        expiresAt: { gt: new Date() },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
-
+    const record = await this.findMatchingOtp(phone, code);
     if (!record) {
-      return false;
-    }
-
-    const isValid = await bcrypt.compare(code, record.codeHash);
-    if (!isValid) {
       return false;
     }
 
@@ -80,6 +67,46 @@ export class AuthService {
       this.prisma.user.updateMany({
         where: { phone },
         data: { isVerified: true, status: UserStatus.ACTIVE },
+      }),
+    ]);
+
+    return true;
+  }
+
+  async resetPassword(
+    phone: string,
+    code: string,
+    newPassword: string,
+  ): Promise<boolean> {
+    const user = await this.usersService.findOne(phone);
+    if (!user) {
+      return false;
+    }
+
+    const record = await this.findMatchingOtp(phone, code);
+    if (!record) {
+      return false;
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    const now = new Date();
+
+    await this.prisma.$transaction([
+      this.prisma.phoneOtp.update({
+        where: { id: record.id },
+        data: { usedAt: now },
+      }),
+      this.prisma.refreshToken.updateMany({
+        where: { userId: user.id, revokedAt: null },
+        data: { revokedAt: now },
+      }),
+      this.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          password: hashedPassword,
+          isVerified: true,
+          status: UserStatus.ACTIVE,
+        },
       }),
     ]);
 
@@ -264,6 +291,28 @@ export class AuthService {
     }
 
     return null;
+  }
+
+  private async findMatchingOtp(phone: string, code: string) {
+    const record = await this.prisma.phoneOtp.findFirst({
+      where: {
+        phone,
+        usedAt: null,
+        expiresAt: { gt: new Date() },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!record) {
+      return null;
+    }
+
+    const isValid = await bcrypt.compare(code, record.codeHash);
+    if (!isValid) {
+      return null;
+    }
+
+    return record;
   }
 
   private stripPassword(user: User) {

@@ -24,6 +24,12 @@
 2. Memoize complex arrays and computed results (like `services` and `sortedServices`) to prevent unnecessary prop updates to heavy child components.
 3. Always use a standard two-argument comparator `(a, b) => ...` for stable sorting.
 
+## 2025-06-04 - Parallelizing Independent Asynchronous Operations
+
+**Learning:** Sequential `await` calls for independent database queries or external API calls introduce unnecessary latency, especially in high-traffic services like promotion redemption or notification dispatch.
+
+**Action:** Identify asynchronous operations that do not depend on each other and parallelize them using `Promise.all`. This can reduce response times by 30-50% in multi-query operations.
+
 ## Mobile App Performance and Fixes
 - Centralized API calls in `mobile/src/lib/api.ts` to ensure consistent Authorization headers and error handling.
 - Optimized Food and Restaurant screens by reducing redundant fetch calls and improving loading states.

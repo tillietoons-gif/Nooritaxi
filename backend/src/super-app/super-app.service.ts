@@ -103,21 +103,25 @@ export class SuperAppService {
       );
     }
 
-    // Check total usage limit
-    if (promo.usageLimit != null) {
-      const totalUses = await this.prisma.promotionRedemption.count({
-        where: { promotionId: promo.id },
-      });
-      if (totalUses >= promo.usageLimit)
-        throw new BadRequestException('Promotion usage limit reached');
+    // Optimization: Parallelize independent usage checks to reduce latency
+    const [totalUses, userUses] = await Promise.all([
+      promo.usageLimit != null
+        ? this.prisma.promotionRedemption.count({
+            where: { promotionId: promo.id },
+          })
+        : Promise.resolve(0),
+      this.prisma.promotionRedemption.count({
+        where: { promotionId: promo.id, userId },
+      }),
+    ]);
+
+    if (promo.usageLimit != null && totalUses >= promo.usageLimit) {
+      throw new BadRequestException('Promotion usage limit reached');
     }
 
-    // Check per-user limit
-    const userUses = await this.prisma.promotionRedemption.count({
-      where: { promotionId: promo.id, userId },
-    });
-    if (userUses >= promo.perUserLimit)
+    if (userUses >= promo.perUserLimit) {
       throw new BadRequestException('You have already used this promotion');
+    }
 
     // Compute discount
     let discount = Number(promo.value);
@@ -173,10 +177,14 @@ export class SuperAppService {
   }
 
   async createNotification(data: any) {
-    const notification = await this.prisma.notification.create({ data });
-    const devices = await this.prisma.pushDevice.findMany({
-      where: { userId: data.userId, isActive: true },
-    });
+    // Optimization: Parallelize notification creation and device fetching
+    const [notification, devices] = await Promise.all([
+      this.prisma.notification.create({ data }),
+      this.prisma.pushDevice.findMany({
+        where: { userId: data.userId, isActive: true },
+      }),
+    ]);
+
     const pushResult = await this.push.sendToTokens(
       devices.map((device) => device.token),
       data.title,

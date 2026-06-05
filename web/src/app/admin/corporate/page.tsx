@@ -1,115 +1,75 @@
 "use client"
 
 import { AuthGate } from "@/components/auth-gate"
-import { Header } from "@/components/layout/header"
-import { HeadingLg, BodyMd } from "@/components/ui/typography"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Building2, Users, FileText, PieChart, Briefcase, FileSignature, Wallet, Headset } from "lucide-react"
+import { Card, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Building, Plus, ArrowRight } from "lucide-react"
 import Link from "next/link"
+import { AdminPageHeader } from "@/components/admin/admin-page-header"
 
-export default function CorporateDashboardPage() {
-  const modules = [
-    { label: "Corporate Accounts", icon: Building2, href: "/admin/corporate/accounts", desc: "Manage registered B2B clients" },
-    { label: "Employees & Departments", icon: Users, href: "/admin/corporate/employees", desc: "Staff lists and role management" },
-    { label: "Budgets & Cost Centers", icon: PieChart, href: "/admin/corporate/budgets", desc: "Spending limits and tracking" },
-    { label: "Travel Policies", icon: Briefcase, href: "/admin/corporate/policies", desc: "Ride rules and restrictions" },
-    { label: "Billing & Invoices", icon: Wallet, href: "/admin/corporate/invoices", desc: "Monthly settlements & taxes" },
-    { label: "Contracts & SLAs", icon: FileSignature, href: "/admin/corporate/contracts", desc: "Agreements and discounts" },
-    { label: "Corporate Reports", icon: FileText, href: "/admin/corporate/reports", desc: "Analytics & exportable data" },
-    { label: "B2B Support Hub", icon: Headset, href: "/admin/corporate/support", desc: "Dedicated priority support" },
+export default function CorporateAdminPage() {
+  const accounts = [
+    { id: "CORP-001", name: "Etisalat Afghanistan", employees: 450, status: "ACTIVE", creditLimit: "500,000 AFN" },
+    { id: "CORP-002", name: "Azizi Bank", employees: 120, status: "ACTIVE", creditLimit: "200,000 AFN" },
+    { id: "CORP-003", name: "Roshan Telecom", employees: 85, status: "PENDING", creditLimit: "0 AFN" },
   ]
 
   return (
     <AuthGate roles={["ADMIN"]}>
-      <div className="flex flex-col min-h-screen bg-background/50">
-        <Header />
-        <main className="flex-1 container py-8">
-          <div className="mb-8">
-            <HeadingLg className="mb-2 flex items-center gap-2">
-              <Building2 className="h-8 w-8 text-primary" />
-              Corporate Accounts & B2B Travel
-            </HeadingLg>
-            <BodyMd className="text-muted-foreground">
-              Enterprise management portal for company accounts, budgets, policies, and billing.
-            </BodyMd>
-          </div>
+      <main className="min-h-screen px-4 py-8 md:px-8">
+        <div className="mx-auto max-w-7xl space-y-6">
+          <AdminPageHeader
+            title="Corporate Accounts"
+            subtitle="Manage enterprise partnerships, billing limits, and employee access."
+            actions={
+              <Button className="font-black uppercase tracking-widest shadow-lg shadow-primary/20">
+                <Plus className="mr-2 h-4 w-4" /> Add Partner
+              </Button>
+            }
+          />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <Card className="glass-premium border-primary/10">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-primary/10 rounded-xl text-primary">
-                    <Building2 className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-black">24</h3>
-                    <p className="text-xs text-muted-foreground">Active Corporations</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="glass-premium border-primary/10">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-blue-500/10 rounded-xl text-blue-500">
-                    <Users className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-black">1,842</h3>
-                    <p className="text-xs text-muted-foreground">Enrolled Employees</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="glass-premium border-primary/10">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-green-500/10 rounded-xl text-green-500">
-                    <Wallet className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-black">450K AFN</h3>
-                    <p className="text-xs text-muted-foreground">B2B Revenue (MTD)</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="glass-premium border-primary/10">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-orange-500/10 rounded-xl text-orange-500">
-                    <Briefcase className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-black">4,502</h3>
-                    <p className="text-xs text-muted-foreground">Completed B2B Trips</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {modules.map((mod, i) => (
-              <Link href={mod.href} key={i}>
-                <Card className="glass-premium hover:border-primary/50 transition-colors cursor-pointer group h-full">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-3 text-base">
-                      <div className="p-2 bg-muted rounded-lg group-hover:bg-primary group-hover:text-white transition-colors">
-                        <mod.icon className="h-5 w-5" />
-                      </div>
-                      {mod.label}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-xs text-muted-foreground">{mod.desc}</p>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
-        </main>
-      </div>
+          <Card className="border-primary/10 shadow-xl glass-premium overflow-hidden">
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left">
+                  <thead className="border-b border-primary/10 bg-background/50 text-[10px] uppercase font-black tracking-widest text-muted-foreground">
+                    <tr>
+                      <th className="px-6 py-4">Organization</th>
+                      <th className="px-6 py-4">Employees</th>
+                      <th className="px-6 py-4">Credit Limit</th>
+                      <th className="px-6 py-4">Status</th>
+                      <th className="px-6 py-4 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {accounts.map(a => (
+                      <tr key={a.id} className="border-b border-primary/5 hover:bg-primary/5 transition-colors">
+                        <td className="px-6 py-4">
+                          <div className="font-black text-lg tracking-tight uppercase">{a.name}</div>
+                          <div className="text-[10px] font-mono text-muted-foreground">{a.id}</div>
+                        </td>
+                        <td className="px-6 py-4 font-bold">{a.employees}</td>
+                        <td className="px-6 py-4 font-black text-gold">{a.creditLimit}</td>
+                        <td className="px-6 py-4">
+                          <Badge variant={a.status === 'ACTIVE' ? 'default' : 'secondary'} className="text-[10px] font-black uppercase">
+                            {a.status}
+                          </Badge>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <Button size="sm" variant="outline" className="font-bold text-[10px] uppercase border-primary/20 hover:bg-primary hover:text-white transition-all">
+                            Manage Account <ArrowRight className="ml-2 h-4 w-4" />
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </main>
     </AuthGate>
   )
 }

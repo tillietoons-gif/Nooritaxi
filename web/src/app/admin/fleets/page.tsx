@@ -1,13 +1,12 @@
 "use client"
 
 import { AuthGate } from "@/components/auth-gate"
-import { Header } from "@/components/layout/header"
-import { HeadingLg, BodyMd } from "@/components/ui/typography"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Building2, Plus, Users, Car, ArrowRight, TrendingUp } from "lucide-react"
 import Link from "next/link"
+import { AdminPageHeader } from "@/components/admin/admin-page-header"
 
 export default function FleetsAdminPage() {
   const fleets = [
@@ -18,66 +17,60 @@ export default function FleetsAdminPage() {
 
   return (
     <AuthGate roles={["ADMIN"]}>
-      <div className="flex flex-col min-h-screen bg-background/50">
-        <Header />
-        <main className="flex-1 container py-8">
-          <div className="flex justify-between items-end mb-8">
-            <div>
-              <HeadingLg className="mb-2 flex items-center gap-2">
-                <Building2 className="h-8 w-8 text-primary" />
-                Fleet Management
-              </HeadingLg>
-              <BodyMd className="text-muted-foreground">
-                Manage fleet partners, drivers, vehicles, and commission structures.
-              </BodyMd>
-            </div>
-            <Button className="bg-primary hover:bg-primary/90 text-white gap-2 font-bold rounded-full">
-              <Plus className="h-4 w-4" /> Register Fleet
-            </Button>
-          </div>
+      <main className="min-h-screen px-4 py-8 md:px-8">
+        <div className="mx-auto max-w-7xl space-y-6">
+          <AdminPageHeader
+            title="Fleet Management"
+            subtitle="Manage fleet partners, drivers, vehicles, and commission structures."
+            actions={
+              <Button className="font-black uppercase tracking-widest shadow-lg shadow-primary/20">
+                <Plus className="mr-2 h-4 w-4" /> Register Fleet
+              </Button>
+            }
+          />
 
-          <div className="grid grid-cols-1 gap-6">
+          <div className="grid grid-cols-1 gap-4">
             {fleets.map(fleet => (
-              <Card key={fleet.id} className="glass-premium border-primary/10 hover:border-primary/30 transition-colors">
+              <Card key={fleet.id} className="border-primary/10 shadow-xl glass-premium hover:border-primary/30 transition-all group">
                 <CardContent className="p-6 flex flex-col md:flex-row items-center justify-between gap-6">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <h3 className="font-bold text-xl">{fleet.name}</h3>
-                      <Badge variant={fleet.status === 'APPROVED' ? 'default' : 'secondary'} className="text-[10px]">
+                      <h3 className="font-black text-xl tracking-tight">{fleet.name}</h3>
+                      <Badge variant={fleet.status === 'APPROVED' ? 'default' : 'secondary'} className="text-[10px] font-black uppercase">
                         {fleet.status}
                       </Badge>
-                      <Badge variant="outline" className="text-[10px] text-muted-foreground bg-muted">
+                      <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-widest border-primary/20 bg-primary/5">
                         {fleet.city}
                       </Badge>
                     </div>
-                    <p className="text-sm text-muted-foreground">Owner: {fleet.owner}</p>
+                    <p className="text-sm font-medium text-muted-foreground uppercase tracking-widest text-[10px]">Managed by {fleet.owner}</p>
                   </div>
                   
                   <div className="flex items-center gap-8">
                     <div className="text-center">
-                      <p className="text-2xl font-black text-primary flex items-center justify-center gap-1">
-                        <Users className="h-4 w-4" /> {fleet.drivers}
+                      <p className="text-2xl font-black text-primary flex items-center justify-center gap-2">
+                        <Users className="h-5 w-5 opacity-40" /> {fleet.drivers}
                       </p>
-                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Drivers</p>
+                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-1">Drivers</p>
                     </div>
                     <div className="text-center">
-                      <p className="text-2xl font-black text-primary flex items-center justify-center gap-1">
-                        <Car className="h-4 w-4" /> {fleet.vehicles}
+                      <p className="text-2xl font-black text-primary flex items-center justify-center gap-2">
+                        <Car className="h-5 w-5 opacity-40" /> {fleet.vehicles}
                       </p>
-                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Vehicles</p>
+                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-1">Vehicles</p>
                     </div>
-                    <div className="text-center min-w-[100px]">
-                      <p className="text-xl font-black text-gold flex items-center justify-center gap-1">
-                        <TrendingUp className="h-4 w-4" /> {fleet.revenue}
+                    <div className="text-center min-w-[120px]">
+                      <p className="text-xl font-black text-gold flex items-center justify-center gap-2">
+                        <TrendingUp className="h-5 w-5 opacity-40" /> {fleet.revenue}
                       </p>
-                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Week Rev.</p>
+                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-1">7D Revenue</p>
                     </div>
                   </div>
 
                   <div className="flex-shrink-0">
-                    <Button variant="outline" className="gap-2 w-full md:w-auto" asChild>
+                    <Button variant="outline" className="font-black uppercase tracking-widest text-[10px] border-primary/20 group-hover:bg-primary group-hover:text-white transition-all" asChild>
                       <Link href={`/admin/fleets/${fleet.id}`}>
-                        Manage Fleet <ArrowRight className="h-4 w-4" />
+                        Manage <ArrowRight className="ml-2 h-4 w-4" />
                       </Link>
                     </Button>
                   </div>
@@ -85,8 +78,8 @@ export default function FleetsAdminPage() {
               </Card>
             ))}
           </div>
-        </main>
-      </div>
+        </div>
+      </main>
     </AuthGate>
   )
 }

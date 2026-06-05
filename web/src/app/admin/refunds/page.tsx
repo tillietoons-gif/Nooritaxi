@@ -1,412 +1,225 @@
 "use client"
 
-import Link from "next/link"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useState, useEffect, useCallback } from "react"
+import {
+  Undo2,
+  Search,
+  RefreshCcw,
+  Check,
+  X,
+  LoaderCircle,
+} from "lucide-react"
+
 import { AuthGate } from "@/components/auth-gate"
-import { Header } from "@/components/layout/header"
-import { Badge } from "@/components/ui/badge"
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { GlassSurface } from "@/components/ui/glass-surface"
+import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { PatternOverlay } from "@/components/ui/pattern-overlay"
+import { GlassSurface } from "@/components/ui/glass-surface"
+import { AdminPageHeader } from "@/components/admin/admin-page-header"
 import { authedFetch } from "@/lib/auth"
-import { Check, LoaderCircle, RefreshCcw, Undo2, X } from "lucide-react"
 
 type RefundStatus = "PENDING" | "APPROVED" | "REJECTED"
 type RefundService = "TRIP" | "ORDER" | "DELIVERY" | "UNKNOWN"
 
 type RefundRequest = {
   id: string
-  tripId?: string | null
-  orderId?: string | null
-  deliveryId?: string | null
+  userId: string
   amount: number | string
   reason: string
   status: RefundStatus
   createdAt: string
   processedAt?: string | null
-  user: {
-    name?: string | null
-    phone?: string | null
-  }
+  user: { name?: string | null; phone?: string | null; email?: string | null }
+  orderId?: string | null
+  tripId?: string | null
+  deliveryId?: string | null
 }
 
-const ALL_STATUSES = "ALL"
-const ALL_SERVICES = "ALL"
+const ALL_STATUSES = "ALL" as const
+const ALL_SERVICES = "ALL" as const
 
-async function getErrorMessage(response: Response) {
-  try {
-    const payload = (await response.json()) as { message?: string | string[] }
-    if (Array.isArray(payload.message)) return payload.message.join(", ")
-    if (payload.message) return payload.message
-  } catch {
-    // Ignore invalid JSON responses.
-  }
-
-  return `Request failed with ${response.status}`
-}
-
-function toNumber(value: number | string | null | undefined) {
-  if (typeof value === "number") return value
-  if (typeof value === "string") return Number(value)
-  return 0
-}
-
-function formatMoney(value: number | string | null | undefined) {
-  return `${new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(toNumber(value))} AFN`
-}
-
-function formatDate(value: string | null | undefined) {
-  if (!value) return "Unknown date"
-  return new Date(value).toLocaleString()
-}
-
-function statusVariant(status: RefundStatus) {
-  if (status === "APPROVED") return "default" as const
-  if (status === "PENDING") return "secondary" as const
-  return "destructive" as const
-}
-
-function getRefundService(refund: RefundRequest): RefundService {
-  if (refund.tripId) return "TRIP"
-  if (refund.orderId) return "ORDER"
-  if (refund.deliveryId) return "DELIVERY"
-  return "UNKNOWN"
-}
-
-function getServiceLabel(service: RefundService) {
-  if (service === "TRIP") return "Trip"
-  if (service === "ORDER") return "Food Order"
-  if (service === "DELIVERY") return "Delivery"
-  return "Unknown"
-}
-
-function getRefundReference(refund: RefundRequest) {
-  return refund.tripId ?? refund.orderId ?? refund.deliveryId ?? refund.id
-}
-
-function getRefundStatusLabel(status: typeof ALL_STATUSES | RefundStatus) {
-  if (status === ALL_STATUSES) return "live refund requests"
-  if (status === "PENDING") return "pending refund requests"
-  if (status === "APPROVED") return "approved refund requests"
-  return "rejected refund requests"
-}
-
-export default function RefundsPage() {
-  const [refunds, setRefunds] = useState<RefundRequest[]>([])
+export default function AdminRefundsPage() {
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [query, setQuery] = useState("")
+  const [refunds, setRefunds] = useState<RefundRequest[]>([])
+  const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState<typeof ALL_STATUSES | RefundStatus>(ALL_STATUSES)
   const [serviceFilter, setServiceFilter] = useState<typeof ALL_SERVICES | RefundService>(ALL_SERVICES)
-  const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [actionLoading, setActionLoading] = useState("")
 
   const loadData = useCallback(async () => {
     setLoading(true)
+    setError(null)
     try {
-      const params = new URLSearchParams()
-      if (statusFilter !== ALL_STATUSES) params.set("status", statusFilter)
-
-      const path = params.size > 0
-        ? `/admin/finance/refunds?${params.toString()}`
-        : "/admin/finance/refunds"
-
-      const response = await authedFetch(path)
-      if (!response.ok) throw new Error(await getErrorMessage(response))
-
-      const payload = (await response.json()) as RefundRequest[]
-      setRefunds(Array.isArray(payload) ? payload : [])
-      setError(null)
+      const res = await authedFetch("/admin/finance/refunds")
+      if (!res.ok) throw new Error("Failed to fetch refunds")
+      setRefunds(await res.json())
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load refund requests")
+      setError(err instanceof Error ? err.message : "Connection error")
     } finally {
       setLoading(false)
     }
-  }, [statusFilter])
+  }, [])
 
   useEffect(() => {
     void loadData()
   }, [loadData])
 
-  const filteredRefunds = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase()
-
-    return refunds.filter((refund) => {
-      const service = getRefundService(refund)
-      const matchesService = serviceFilter === ALL_SERVICES || service === serviceFilter
-      const matchesQuery =
-        normalizedQuery.length === 0 ||
-        refund.id.toLowerCase().includes(normalizedQuery) ||
-        refund.reason.toLowerCase().includes(normalizedQuery) ||
-        (refund.user.name ?? "").toLowerCase().includes(normalizedQuery) ||
-        (refund.user.phone ?? "").toLowerCase().includes(normalizedQuery) ||
-        getRefundReference(refund).toLowerCase().includes(normalizedQuery)
-
-      return matchesService && matchesQuery
-    })
-  }, [query, refunds, serviceFilter])
-
-  const pendingCount = useMemo(
-    () => refunds.filter((refund) => refund.status === "PENDING").length,
-    [refunds],
-  )
-
-  const approvedCount = useMemo(
-    () => refunds.filter((refund) => refund.status === "APPROVED").length,
-    [refunds],
-  )
-
-  const rejectedCount = useMemo(
-    () => refunds.filter((refund) => refund.status === "REJECTED").length,
-    [refunds],
-  )
-
-  const pendingExposure = useMemo(
-    () => refunds
-      .filter((refund) => refund.status === "PENDING")
-      .reduce((sum, refund) => sum + toNumber(refund.amount), 0),
-    [refunds],
-  )
-
-  async function processRefund(refundId: string, status: Exclude<RefundStatus, "PENDING">) {
-    setActionLoading(`refund:${refundId}:${status}`)
+  const processRefund = async (id: string, status: "APPROVED" | "REJECTED") => {
+    setActionLoading(`refund:${id}:${status}`)
     try {
-      const response = await authedFetch(`/admin/finance/refunds/${refundId}`, {
-        method: "PUT",
-        body: JSON.stringify({ status }),
+      const res = await authedFetch(`/admin/finance/refunds/${id}/process`, {
+        method: "POST",
+        body: JSON.stringify({ status })
       })
-
-      if (!response.ok) throw new Error(await getErrorMessage(response))
-
+      if (!res.ok) throw new Error("Processing failed")
       await loadData()
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update the refund request")
+      alert((err as Error).message)
     } finally {
-      setActionLoading(null)
+      setActionLoading("")
     }
   }
 
+  const formatMoney = (v: number | string) => `${Number(v).toLocaleString()} AFN`
+  const formatDate = (v: string) => new Date(v).toLocaleString()
+
+  const getRefundService = (r: RefundRequest): RefundService => {
+    if (r.tripId) return "TRIP"
+    if (r.orderId) return "ORDER"
+    if (r.deliveryId) return "DELIVERY"
+    return "UNKNOWN"
+  }
+
+  const filteredRefunds = refunds.filter(r => {
+    const s = getRefundService(r)
+    const matchesSearch =
+      r.id.toLowerCase().includes(search.toLowerCase()) ||
+      (r.user.name ?? "").toLowerCase().includes(search.toLowerCase()) ||
+      (r.user.phone ?? "").toLowerCase().includes(search.toLowerCase())
+    const matchesStatus = statusFilter === ALL_STATUSES || r.status === statusFilter
+    const matchesService = serviceFilter === ALL_SERVICES || s === serviceFilter
+    return matchesSearch && matchesStatus && matchesService
+  })
+
+  const pendingCount = refunds.filter(r => r.status === "PENDING").length
+  const pendingExposure = refunds.filter(r => r.status === "PENDING").reduce((a, b) => a + Number(b.amount), 0)
+
   return (
     <AuthGate roles={["ADMIN"]}>
-      <div className="flex min-h-screen flex-col bg-background/50">
-        <Header />
-        <main className="relative flex-1 overflow-hidden px-4 py-8 md:px-8">
-          <div className="fixed inset-0 pointer-events-none opacity-20">
-            <PatternOverlay />
-          </div>
+      <main className="min-h-screen px-4 py-8 md:px-8">
+        <div className="mx-auto max-w-7xl space-y-6">
+          <AdminPageHeader
+            title="Refund Management"
+            subtitle="Approve or reject customer refund requests across all services."
+            actions={
+              <Button variant="outline" onClick={() => void loadData()} disabled={loading}>
+                <RefreshCcw className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+                Refresh
+              </Button>
+            }
+          />
 
-          <div className="relative z-10 mx-auto max-w-7xl space-y-6">
-            <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-              <div>
-                <h1 className="text-3xl font-black">Refund Requests</h1>
-                <p className="mt-1 text-sm font-medium text-muted-foreground">
-                  {loading ? "Loading records…" : `Found ${refunds.length.toLocaleString()} ${getRefundStatusLabel(statusFilter)}`}
-                </p>
-              </div>
-              <Link href="/admin" className="text-sm font-bold text-primary transition-colors hover:text-primary/80">
-                ← Back to Overview
-              </Link>
-            </div>
-
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
             <GlassSurface variant="premium" className="flex flex-col gap-3 p-4 md:flex-row md:items-end">
               <div className="flex-1">
-                <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-muted-foreground" htmlFor="refund-search">
-                  Search Query
-                </label>
+                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Search Requests</label>
                 <Input
-                  id="refund-search"
-                  placeholder="Search by request, customer, reason, or reference..."
-                  value={query}
-                  className="border-primary/20 bg-background/80 backdrop-blur-sm focus-visible:ring-primary"
-                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="ID, customer name, phone..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="bg-background/80 backdrop-blur-sm border-primary/20"
                 />
               </div>
               <div className="w-full md:w-48">
-                <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-muted-foreground" htmlFor="refund-status-filter">
-                  Status Filter
-                </label>
+                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Status</label>
                 <select
-                  id="refund-status-filter"
-                  className="block h-10 w-full rounded-md border border-primary/20 bg-background/80 px-3 text-sm outline-none backdrop-blur-sm focus-visible:ring-1 focus-visible:ring-primary"
+                  className="block w-full rounded-md border border-primary/20 bg-background/80 px-3 py-2 text-sm outline-none backdrop-blur-sm"
                   value={statusFilter}
-                  onChange={(event) => setStatusFilter(event.target.value as typeof ALL_STATUSES | RefundStatus)}
+                  onChange={(e) => setStatusFilter(e.target.value as any)}
                 >
-                  <option value={ALL_STATUSES}>All statuses</option>
+                  <option value="ALL">All Statuses</option>
                   <option value="PENDING">Pending</option>
                   <option value="APPROVED">Approved</option>
                   <option value="REJECTED">Rejected</option>
                 </select>
               </div>
-              <div className="w-full md:w-48">
-                <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-muted-foreground" htmlFor="refund-service-filter">
-                  Service Filter
-                </label>
-                <select
-                  id="refund-service-filter"
-                  className="block h-10 w-full rounded-md border border-primary/20 bg-background/80 px-3 text-sm outline-none backdrop-blur-sm focus-visible:ring-1 focus-visible:ring-primary"
-                  value={serviceFilter}
-                  onChange={(event) => setServiceFilter(event.target.value as typeof ALL_SERVICES | RefundService)}
-                >
-                  <option value={ALL_SERVICES}>All services</option>
-                  <option value="TRIP">Trip</option>
-                  <option value="ORDER">Food Order</option>
-                  <option value="DELIVERY">Delivery</option>
-                  <option value="UNKNOWN">Unknown</option>
-                </select>
-              </div>
-              <Button
-                variant="ghost"
-                className="hover:bg-primary/10 hover:text-primary"
-                onClick={() => void loadData()}
-                disabled={loading}
-              >
-                <RefreshCcw className="mr-2 h-4 w-4" /> Refresh
-              </Button>
             </GlassSurface>
+          </motion.div>
 
-            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-            <Card className="glass-premium border-primary/10">
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Undo2 className="h-4 w-4" /> Pending Refunds
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-black">{pendingCount}</div>
-                <p className="mt-1 text-xs text-muted-foreground">Waiting for a finance decision</p>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <Card className="border-primary/10 glass-premium">
+              <CardContent className="p-6">
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Pending Requests</p>
+                <p className="mt-2 text-3xl font-black">{pendingCount}</p>
               </CardContent>
             </Card>
-
-            <Card className="glass-premium border-primary/10">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm text-muted-foreground">Pending Exposure</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-black text-gold">{formatMoney(pendingExposure)}</div>
-                <p className="mt-1 text-xs text-muted-foreground">Total value still awaiting approval or rejection</p>
-              </CardContent>
-            </Card>
-
-            <Card className="glass-premium border-primary/10">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm text-muted-foreground">Approved</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-black text-primary">{approvedCount}</div>
-                <p className="mt-1 text-xs text-muted-foreground">Refunds already cleared for payout</p>
-              </CardContent>
-            </Card>
-
-            <Card className="glass-premium border-primary/10">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm text-muted-foreground">Rejected</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-black">{rejectedCount}</div>
-                <p className="mt-1 text-xs text-muted-foreground">Requests closed without refund</p>
-              </CardContent>
-            </Card>
-            </div>
-
-            {error ? (
-              <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm font-medium text-destructive">
-                {error}
-              </div>
-            ) : null}
-
-            <Card className="glass-premium border-primary/10">
-              <CardHeader className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                <div>
-                  <CardTitle>Refund Queue</CardTitle>
-                  <p className="text-sm text-muted-foreground">Approve or reject customer refund requests directly from live finance data.</p>
-                </div>
-                <Badge variant="outline">{filteredRefunds.length} visible</Badge>
-              </CardHeader>
-              <CardContent className="p-0">
-                {loading ? (
-                  <div className="flex min-h-[240px] items-center justify-center text-sm font-semibold text-muted-foreground">
-                    <LoaderCircle className="mr-2 h-5 w-5 animate-spin" /> Loading refund requests...
-                  </div>
-                ) : filteredRefunds.length === 0 ? (
-                  <div className="p-8 text-center text-sm text-muted-foreground">No refund requests match the current filters.</div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm">
-                      <thead className="border-b border-primary/10 bg-background/50 text-xs uppercase text-muted-foreground">
-                        <tr>
-                          <th className="px-6 py-4 font-black">Request</th>
-                          <th className="px-6 py-4 font-black">Customer</th>
-                          <th className="px-6 py-4 font-black">Service</th>
-                          <th className="px-6 py-4 font-black">Amount</th>
-                          <th className="px-6 py-4 font-black">Reason</th>
-                          <th className="px-6 py-4 font-black">Status</th>
-                          <th className="px-6 py-4 text-right font-black">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredRefunds.map((refund) => {
-                          const service = getRefundService(refund)
-                          const customerName = refund.user.name ?? refund.user.phone ?? "Unknown user"
-
-                          return (
-                            <tr key={refund.id} className="border-b border-primary/5 align-top hover:bg-muted/20">
-                              <td className="px-6 py-4">
-                                <div className="font-mono text-xs">{refund.id}</div>
-                                <div className="mt-1 text-xs text-muted-foreground">Ref {getRefundReference(refund)}</div>
-                              </td>
-                              <td className="px-6 py-4">
-                                <div className="font-semibold">{customerName}</div>
-                                <div className="text-xs text-muted-foreground">{formatDate(refund.createdAt)}</div>
-                              </td>
-                              <td className="px-6 py-4">
-                                <Badge variant="outline">{getServiceLabel(service)}</Badge>
-                              </td>
-                              <td className="px-6 py-4 font-bold text-gold">{formatMoney(refund.amount)}</td>
-                              <td className="px-6 py-4 text-xs text-muted-foreground">{refund.reason}</td>
-                              <td className="px-6 py-4">
-                                <Badge variant={statusVariant(refund.status)}>{refund.status}</Badge>
-                                {refund.processedAt ? (
-                                  <div className="mt-2 text-xs text-muted-foreground">Processed {formatDate(refund.processedAt)}</div>
-                                ) : null}
-                              </td>
-                              <td className="px-6 py-4 text-right">
-                                {refund.status === "PENDING" ? (
-                                  <div className="flex justify-end gap-2">
-                                    <Button
-                                      size="sm"
-                                      onClick={() => void processRefund(refund.id, "APPROVED")}
-                                      disabled={actionLoading === `refund:${refund.id}:APPROVED`}
-                                    >
-                                      {actionLoading === `refund:${refund.id}:APPROVED` ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
-                                      Approve
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => void processRefund(refund.id, "REJECTED")}
-                                      disabled={actionLoading === `refund:${refund.id}:REJECTED`}
-                                    >
-                                      {actionLoading === `refund:${refund.id}:REJECTED` ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : <X className="mr-2 h-4 w-4" />}
-                                      Reject
-                                    </Button>
-                                  </div>
-                                ) : (
-                                  <span className="text-xs text-muted-foreground">Processed</span>
-                                )}
-                              </td>
-                            </tr>
-                          )
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
+            <Card className="border-primary/10 glass-premium">
+              <CardContent className="p-6">
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Pending Exposure</p>
+                <p className="mt-2 text-3xl font-black text-gold">{formatMoney(pendingExposure)}</p>
               </CardContent>
             </Card>
           </div>
-        </main>
-      </div>
+
+          <Card className="border-primary/10 shadow-2xl overflow-hidden glass-premium">
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead className="border-b border-primary/10 bg-background/50 text-[10px] uppercase font-black tracking-widest text-muted-foreground">
+                    <tr>
+                      <th className="px-6 py-4">Request</th>
+                      <th className="px-6 py-4">Customer</th>
+                      <th className="px-6 py-4">Service</th>
+                      <th className="px-6 py-4">Amount</th>
+                      <th className="px-6 py-4">Status</th>
+                      <th className="px-6 py-4 text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {loading ? (
+                      <tr><td colSpan={6} className="px-6 py-12 text-center animate-pulse text-muted-foreground font-black uppercase tracking-widest text-xs">Accessing finance records...</td></tr>
+                    ) : filteredRefunds.length === 0 ? (
+                      <tr><td colSpan={6} className="px-6 py-12 text-center text-muted-foreground">No refund requests found.</td></tr>
+                    ) : (
+                      filteredRefunds.map((r) => (
+                        <tr key={r.id} className="border-b border-primary/5 hover:bg-primary/5 transition-colors align-top">
+                          <td className="px-6 py-4">
+                            <div className="font-mono text-[10px] text-muted-foreground">{r.id.slice(-12)}</div>
+                            <div className="text-xs mt-1 text-muted-foreground max-w-[120px] truncate">{r.reason}</div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="font-bold">{r.user.name ?? r.user.phone ?? "Unknown"}</div>
+                            <div className="text-[10px] text-muted-foreground">{formatDate(r.createdAt)}</div>
+                          </td>
+                          <td className="px-6 py-4 text-[10px] font-bold uppercase">{getRefundService(r)}</td>
+                          <td className="px-6 py-4 font-black text-gold">{formatMoney(r.amount)}</td>
+                          <td className="px-6 py-4">
+                            <Badge variant={r.status === "APPROVED" ? "default" : r.status === "REJECTED" ? "destructive" : "secondary"} className="text-[10px]">
+                              {r.status}
+                            </Badge>
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            {r.status === "PENDING" ? (
+                              <div className="flex justify-end gap-2">
+                                <Button size="sm" onClick={() => processRefund(r.id, "APPROVED")} disabled={Boolean(actionLoading)}>Approve</Button>
+                                <Button size="sm" variant="outline" onClick={() => processRefund(r.id, "REJECTED")} disabled={Boolean(actionLoading)}>Reject</Button>
+                              </div>
+                            ) : <span className="text-[10px] font-bold uppercase text-muted-foreground">Processed</span>}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </main>
     </AuthGate>
   )
 }
+
+import { motion } from "framer-motion"

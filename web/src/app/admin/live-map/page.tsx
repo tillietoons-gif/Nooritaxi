@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { AuthGate } from '@/components/auth-gate';
+import { AdminPageHeader } from "@/components/admin/admin-page-header"
 
 const LiveMap = dynamic(() => import('@/components/admin/LiveMap'), {
   ssr: false,
@@ -11,18 +12,18 @@ const LiveMap = dynamic(() => import('@/components/admin/LiveMap'), {
 export default function LiveMapPage() {
   return (
     <AuthGate roles={["ADMIN", "SUPPORT"]}>
-      <div className="h-[calc(100vh-5rem)] min-h-[680px] bg-muted/20 p-3 md:p-5">
-        <div className="mb-3 flex items-center justify-between gap-3">
-          <div>
-            <h1 className="text-xl font-semibold tracking-tight">Live Map</h1>
-            <p className="text-sm text-muted-foreground">Drivers, surge zones, and custom rider places</p>
+      <main className="min-h-screen px-4 py-8 md:px-8">
+        <div className="mx-auto max-w-7xl space-y-6 h-full flex flex-col">
+          <AdminPageHeader
+            title="Live Map"
+            subtitle="Drivers, surge zones, and custom rider places"
+          />
+
+          <div className="flex-1 min-h-[600px] overflow-hidden rounded-lg border bg-background shadow-sm relative z-10">
+            <LiveMap />
           </div>
         </div>
-
-        <div className="h-[calc(100%-4.25rem)] overflow-hidden rounded-lg border bg-background shadow-sm">
-          <LiveMap />
-        </div>
-      </div>
+      </main>
     </AuthGate>
   );
 }

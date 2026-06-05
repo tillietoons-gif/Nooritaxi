@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { BodyMd, HeadingMd } from "@/components/ui/typography"
-import { Car, Headphones, Package, RefreshCw, ShieldCheck, Store, Users, ArrowRight, Activity, Map, UserCheck, Award, TrendingUp, LifeBuoy, Shield, KeySquare, ShieldAlert, Banknote, HandCoins, Undo2, AlertTriangle, Network, Building2, PlaneTakeoff, Tag, FileText, Crown, Star } from "lucide-react"
+import { Car, Headphones, Package, RefreshCw, ShieldCheck, Store, Users, ArrowRight, Activity, Map, UserCheck, Award, TrendingUp, LifeBuoy, Shield, KeySquare, ShieldAlert, Banknote, HandCoins, Undo2, AlertTriangle, Network, Building2, PlaneTakeoff, Tag, FileText, Crown, Star, MapPin } from "lucide-react"
 import { AuthGate } from "@/components/auth-gate"
 import Link from "next/link"
 import { authedFetch } from "@/lib/auth"
@@ -113,6 +113,7 @@ export default function AdminPage() {
     { label: "Deliveries", value: overview.deliveries, icon: Package, href: "/admin/deliveries" },
     { label: "Surge Zones", value: "Control", icon: Activity, href: "/admin/surge" },
     { label: "Live Map", value: "Real-time", icon: Map, href: "/admin/live-map" },
+    { label: "Custom Places", value: "Search", icon: MapPin, href: "/admin/places" },
     { label: "KYC Review", value: overview.pendingKyc > 0 ? `${overview.pendingKyc} pending` : "Manage", icon: UserCheck, href: "/admin/kyc" },
     { label: "Loyalty System", value: "Configure", icon: Award, href: "/admin/loyalty" },
     { label: "Driver Tiers", value: "Manage", icon: TrendingUp, href: "/admin/driver-tiers" },
@@ -123,7 +124,7 @@ export default function AdminPage() {
     { label: "Cash Finance", value: "Center", icon: Banknote, href: "/admin/finance" },
     { label: "Cash Collections", value: "Receivables", icon: HandCoins, href: "/admin/cash-collections" },
     { label: "Refunds", value: "Requests", icon: Undo2, href: "/admin/refunds" },
-    { label: "Deliveries", value: "Food & Parcel", icon: Package, href: "/admin/deliveries" },
+    { label: "Delivery Ops", value: "Food & Parcel", icon: Package, href: "/admin/deliveries" },
     { label: "Ratings & Reviews", value: "Moderation", icon: Star, href: "/admin/reviews" },
     { label: "Corporate", value: "B2B Accounts", icon: Building2, href: "/admin/corporate" },
     { label: "Airport", value: "Ops & Queues", icon: PlaneTakeoff, href: "/admin/airport" },

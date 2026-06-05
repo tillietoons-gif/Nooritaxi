@@ -8,5 +8,6 @@ import { DispatchModule } from '../dispatch/dispatch.module';
   imports: [WalletModule, DispatchModule],
   controllers: [FoodController],
   providers: [FoodService],
+  exports: [FoodService],
 })
 export class FoodModule {}

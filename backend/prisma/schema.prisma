@@ -809,6 +809,25 @@ model SurgeZone {
   @@index([city, isActive, activeFrom, activeUntil])
 }
 
+model CustomPlace {
+  id          String   @id @default(cuid())
+  name        String
+  address     String
+  city        String   @default("Kabul")
+  category    String?
+  aliases     String[] @default([])
+  lat         Float
+  lng         Float
+  priority    Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([city, isActive, priority])
+  @@index([name])
+}
+
 model TrustedContact {
   id           String   @id @default(cuid())
   userId       String

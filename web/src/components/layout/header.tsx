@@ -10,7 +10,7 @@ import { useState, useEffect } from "react"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { NooriLogo } from "@/components/ui/noori-logo"
 import { motion, useScroll, useMotionValueEvent } from "framer-motion"
-import { getStoredUser, clearSession } from "@/lib/auth"
+import { getDefaultRouteForRole, getStoredUser, clearSession, type AuthUser } from "@/lib/auth"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,7 +23,7 @@ export function Header() {
   const [isOpen, setIsOpen] = useState(false)
   const { scrollY } = useScroll()
   const [isScrolled, setIsScrolled] = useState(false)
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<AuthUser | null>(null)
   const { i18n } = useTranslation()
 
   useEffect(() => {
@@ -34,11 +34,19 @@ export function Header() {
     setIsScrolled(latest > 50)
   })
 
-  const navigation = [
+  const publicNavigation = [
     { name: "Services", href: "/services" },
     { name: "Partners", href: "/partners" },
     { name: "Safety", href: "/safety" },
     { name: "About", href: "/about" },
+  ]
+
+  const adminNavigation = [
+    { name: "Overview", href: "/admin" },
+    { name: "Drivers", href: "/admin/drivers" },
+    { name: "Users", href: "/admin/users" },
+    { name: "Orders", href: "/admin/orders" },
+    { name: "Support", href: "/admin/support" },
   ]
 
   const changeLanguage = (lng: string) => {
@@ -47,6 +55,12 @@ export function Header() {
 
   const currentLang = i18n.language === 'fa' ? 'Dari' : i18n.language === 'ps' ? 'Pashto' : 'English'
   const pathname = usePathname()
+  const isAdminUser = user?.role === "ADMIN" || user?.role === "SUPPORT"
+  const navigation = isAdminUser ? adminNavigation : publicNavigation
+  const homeHref = isAdminUser ? "/admin" : "/"
+  const actionHref = getDefaultRouteForRole(user?.role)
+  const actionLabel = isAdminUser ? "Admin Console" : "Dashboard"
+  const isActiveRoute = (href: string) => (href === "/admin" ? pathname === "/admin" : pathname.startsWith(href))
 
   return (
     <header className="fixed top-0 z-50 w-full transition-all duration-500 px-4 pt-6">
@@ -61,7 +75,7 @@ export function Header() {
         className="container mx-auto flex items-center justify-between px-8 rounded-3xl dark:bg-black/20"
       >
         <div className="flex items-center gap-12">
-          <Link href="/" className="flex items-center space-x-3 group focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-md outline-none transition-shadow">
+          <Link href={homeHref} className="flex items-center space-x-3 group focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-md outline-none transition-shadow">
             <div className="h-10 w-10 bg-primary/5 rounded-xl flex items-center justify-center group-hover:bg-primary transition-all duration-500">
               <NooriLogo size={24} className="text-primary group-hover:text-white transition-colors" />
             </div>
@@ -70,7 +84,7 @@ export function Header() {
 
           <nav className="hidden lg:flex items-center space-x-10">
             {navigation.map((item) => {
-              const isActive = pathname.startsWith(item.href)
+              const isActive = isActiveRoute(item.href)
               return (
                 <Link
                   key={item.name}
@@ -110,9 +124,9 @@ export function Header() {
 
              {user ? (
                <div className="flex items-center gap-4">
-                 <Link href="/dashboard">
+                 <Link href={actionHref}>
                     <Button variant="ghost" size="sm" className="rounded-full font-black text-[10px] uppercase tracking-widest gap-2">
-                       <LayoutDashboard className="h-3.5 w-3.5" /> Dashboard
+                       <LayoutDashboard className="h-3.5 w-3.5" /> {actionLabel}
                     </Button>
                  </Link>
                  <div className="h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center text-primary border border-primary/20">
@@ -144,7 +158,7 @@ export function Header() {
 
                 <nav className="flex flex-col space-y-8">
                   {navigation.map((item, i) => {
-                    const isActive = pathname.startsWith(item.href)
+                    const isActive = isActiveRoute(item.href)
                     return (
                       <motion.div
                         initial={{ opacity: 0, x: 20 }}
@@ -176,8 +190,8 @@ export function Header() {
                   </div>
                   {user ? (
                     <div className="flex flex-col gap-4">
-                       <Button className="w-full h-14 rounded-2xl font-black text-lg" onClick={() => { setIsOpen(false); window.location.href="/dashboard" }}>
-                         Command Center
+                       <Button className="w-full h-14 rounded-2xl font-black text-lg" onClick={() => { setIsOpen(false); window.location.href=actionHref }}>
+                         {actionLabel}
                        </Button>
                        <Button variant="ghost" className="w-full h-14 rounded-2xl font-black text-lg" onClick={() => { clearSession(); setIsOpen(false); window.location.reload() }}>
                          Terminate Session

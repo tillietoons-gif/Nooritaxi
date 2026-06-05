@@ -5,6 +5,8 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { Prisma } from '@prisma/client';
+import { FoodService } from '../food/food.service';
+import { LogisticsService } from '../logistics/logistics.service';
 
 type ListArgs = {
   status?: string;
@@ -22,7 +24,11 @@ const clampPage = (page?: number) =>
 
 @Injectable()
 export class AdminService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private food: FoodService,
+    private logistics: LogisticsService,
+  ) {}
 
   // ------- Trips -------
   async listTrips({ status, q, page, from, to, limit }: ListArgs) {
@@ -142,9 +148,9 @@ export class AdminService {
   async updateOrderStatus(id: string, status: string, actorId?: string) {
     const order = await this.prisma.order.findUnique({ where: { id } });
     if (!order) throw new NotFoundException('Order not found');
-    const updated = await this.prisma.order.update({
-      where: { id },
-      data: { status: status as any },
+    const updated = await this.food.updateOrder(id, {
+      status,
+      actorId,
     });
     await this.audit(
       'ADMIN_ORDER_STATUS_UPDATED',
@@ -153,6 +159,22 @@ export class AdminService {
       actorId,
       { status },
       { status: order.status },
+    );
+    return updated;
+  }
+
+  async updateDeliveryStatus(id: string, status: string, actorId?: string) {
+    const updated = await this.logistics.updateDelivery(id, {
+      status,
+      actorId,
+      ...(status === 'DELIVERED' ? { deliveredAt: new Date() } : {}),
+    });
+    await this.audit(
+      'ADMIN_DELIVERY_STATUS_UPDATED',
+      'Delivery',
+      id,
+      actorId,
+      { status },
     );
     return updated;
   }
@@ -235,6 +257,365 @@ export class AdminService {
     return { items, total, page: safePage, limit: safeLimit };
   }
 
+  async getDriver(id: string) {
+    const driver = await this.prisma.driver.findFirst({
+      where: { OR: [{ id }, { userId: id }] },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            phone: true,
+            email: true,
+            role: true,
+            status: true,
+            isVerified: true,
+            createdAt: true,
+          },
+        },
+        vehicles: true,
+        documents: { orderBy: { createdAt: 'desc' } },
+      },
+    });
+    if (!driver) throw new NotFoundException('Driver not found');
+    return driver;
+  }
+
+  async getDriverOperations(id: string) {
+    const driver = await this.prisma.driver.findFirst({
+      where: { OR: [{ id }, { userId: id }] },
+      select: { id: true, userId: true },
+    });
+    if (!driver) throw new NotFoundException('Driver not found');
+
+    const [
+      trips,
+      deliveries,
+      wallets,
+      settlements,
+      reviews,
+      incidents,
+      fraudScore,
+      fraudCases,
+      fraudAlerts,
+      audits,
+    ] = await Promise.all([
+      this.prisma.trip.findMany({
+        where: { driverId: driver.userId },
+        select: {
+          id: true,
+          status: true,
+          pickupLocation: true,
+          dropoffLocation: true,
+          fare: true,
+          paymentMethod: true,
+          requestedAt: true,
+          completedAt: true,
+          cancelledAt: true,
+          createdAt: true,
+          customer: { select: { id: true, name: true, phone: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 20,
+      }),
+      this.prisma.delivery.findMany({
+        where: { driverId: driver.userId },
+        select: {
+          id: true,
+          status: true,
+          pickupAddress: true,
+          dropoffAddress: true,
+          fee: true,
+          requestedAt: true,
+          deliveredAt: true,
+          createdAt: true,
+          sender: { select: { id: true, name: true, phone: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 20,
+      }),
+      this.prisma.wallet.findMany({
+        where: { userId: driver.userId },
+        include: {
+          transactions: {
+            orderBy: { createdAt: 'desc' },
+            take: 10,
+          },
+        },
+        orderBy: { updatedAt: 'desc' },
+      }),
+      this.prisma.settlement.findMany({
+        where: { userId: driver.userId },
+        orderBy: { createdAt: 'desc' },
+        take: 12,
+      }),
+      this.prisma.review.findMany({
+        where: {
+          OR: [
+            { targetUserId: driver.userId },
+            { trip: { driverId: driver.userId } },
+            { delivery: { driverId: driver.userId } },
+          ],
+        },
+        include: {
+          author: { select: { id: true, name: true, phone: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 20,
+      }),
+      this.prisma.incident.findMany({
+        where: {
+          OR: [{ driverId: driver.id }, { userId: driver.userId }],
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 20,
+      }),
+      this.prisma.fraudScore.findFirst({
+        where: { OR: [{ driverId: driver.id }, { userId: driver.userId }] },
+      }),
+      this.prisma.fraudCase.findMany({
+        where: {
+          OR: [{ targetDriverId: driver.id }, { targetUserId: driver.userId }],
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 20,
+      }),
+      this.prisma.fraudAlert.findMany({
+        where: {
+          OR: [{ driverId: driver.id }, { userId: driver.userId }],
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 20,
+      }),
+      this.prisma.auditLog.findMany({
+        where: {
+          OR: [
+            { entityType: 'Driver', entityId: driver.id },
+            { entityType: 'User', entityId: driver.userId },
+            { actorId: driver.userId },
+          ],
+        },
+        include: { actor: { select: { id: true, name: true, phone: true } } },
+        orderBy: { createdAt: 'desc' },
+        take: 30,
+      }),
+    ]);
+
+    const completedTrips = trips.filter((trip) => trip.status === 'COMPLETED');
+    const completedDeliveries = deliveries.filter(
+      (delivery) => delivery.status === 'DELIVERED',
+    );
+    const totalTripFare = completedTrips.reduce(
+      (sum, trip) => sum + Number(trip.fare ?? 0),
+      0,
+    );
+    const totalDeliveryFees = completedDeliveries.reduce(
+      (sum, delivery) => sum + Number(delivery.fee ?? 0),
+      0,
+    );
+
+    return {
+      summary: {
+        completedTrips: completedTrips.length,
+        completedDeliveries: completedDeliveries.length,
+        totalTripFare,
+        totalDeliveryFees,
+        openIncidents: incidents.filter((incident) => incident.status !== 'CLOSED')
+          .length,
+        unresolvedFraudAlerts: fraudAlerts.filter((alert) => !alert.isResolved)
+          .length,
+      },
+      trips,
+      deliveries,
+      wallets,
+      settlements,
+      reviews,
+      incidents,
+      fraud: {
+        score: fraudScore,
+        cases: fraudCases,
+        alerts: fraudAlerts,
+      },
+      audits,
+    };
+  }
+
+  async updateDriverStatus(id: string, status: string, actorId?: string) {
+    if (!['OFFLINE', 'ONLINE', 'BUSY', 'SUSPENDED'].includes(status)) {
+      throw new BadRequestException('Invalid driver status');
+    }
+
+    const driver = await this.prisma.driver.findFirst({
+      where: { OR: [{ id }, { userId: id }] },
+      include: { user: true },
+    });
+    if (!driver) throw new NotFoundException('Driver not found');
+
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const nextUserStatus = status === 'SUSPENDED' ? 'SUSPENDED' : 'ACTIVE';
+      await tx.user.update({
+        where: { id: driver.userId },
+        data: {
+          status: nextUserStatus as any,
+          ...(status !== 'SUSPENDED' ? { isVerified: true } : {}),
+        },
+      });
+      return tx.driver.update({
+        where: { id: driver.id },
+        data: { status: status as any },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              phone: true,
+              email: true,
+              role: true,
+              status: true,
+              isVerified: true,
+              createdAt: true,
+            },
+          },
+          vehicles: true,
+          documents: { orderBy: { createdAt: 'desc' } },
+        },
+      });
+    });
+
+    await this.audit(
+      'ADMIN_DRIVER_STATUS_UPDATED',
+      'Driver',
+      driver.id,
+      actorId,
+      { status },
+      { status: driver.status, userStatus: driver.user.status },
+    );
+    return updated;
+  }
+
+  async updateDriverProfile(id: string, body: any, actorId?: string) {
+    const driver = await this.prisma.driver.findFirst({
+      where: { OR: [{ id }, { userId: id }] },
+      include: { vehicles: { take: 1 }, user: true },
+    });
+    if (!driver) throw new NotFoundException('Driver not found');
+
+    const tier = body?.tier;
+    if (
+      tier &&
+      !['BRONZE', 'SILVER', 'GOLD', 'PLATINUM'].includes(String(tier))
+    ) {
+      throw new BadRequestException('Invalid driver tier');
+    }
+
+    const vehicleType = body?.vehicleType;
+    if (
+      vehicleType &&
+      !['CAR', 'MOTORBIKE', 'RICKSHAW', 'VAN', 'TRUCK', 'BICYCLE'].includes(
+        String(vehicleType),
+      )
+    ) {
+      throw new BadRequestException('Invalid vehicle type');
+    }
+
+    const updated = await this.prisma.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id: driver.userId },
+        data: {
+          ...(typeof body?.name === 'string' ? { name: body.name.trim() } : {}),
+          ...(typeof body?.email === 'string'
+            ? { email: body.email.trim() || null }
+            : {}),
+        },
+      });
+
+      await tx.driver.update({
+        where: { id: driver.id },
+        data: {
+          ...(typeof body?.licenseNumber === 'string'
+            ? { licenseNumber: body.licenseNumber.trim() || null }
+            : {}),
+          ...(typeof body?.nationalIdNumber === 'string'
+            ? { nationalIdNumber: body.nationalIdNumber.trim() || null }
+            : {}),
+          ...(tier ? { tier: tier as any } : {}),
+          ...(typeof body?.acceptsCash === 'boolean'
+            ? { acceptsCash: body.acceptsCash }
+            : {}),
+          ...(typeof body?.acceptsWallet === 'boolean'
+            ? { acceptsWallet: body.acceptsWallet }
+            : {}),
+        },
+      });
+
+      const vehicleData = {
+        ...(vehicleType ? { type: vehicleType as any } : {}),
+        ...(typeof body?.vehicleMake === 'string'
+          ? { make: body.vehicleMake.trim() || null }
+          : {}),
+        ...(typeof body?.vehicleModel === 'string'
+          ? { model: body.vehicleModel.trim() || null }
+          : {}),
+        ...(typeof body?.vehicleColor === 'string'
+          ? { color: body.vehicleColor.trim() || null }
+          : {}),
+        ...(typeof body?.vehiclePlateNumber === 'string'
+          ? { plateNumber: body.vehiclePlateNumber.trim() }
+          : {}),
+      };
+
+      if (Object.keys(vehicleData).length) {
+        const existingVehicle = driver.vehicles[0];
+        if (existingVehicle) {
+          await tx.vehicle.update({
+            where: { id: existingVehicle.id },
+            data: vehicleData,
+          });
+        } else if (vehicleData.plateNumber && vehicleData.type) {
+          await tx.vehicle.create({
+            data: {
+              driverId: driver.id,
+              type: vehicleData.type,
+              plateNumber: vehicleData.plateNumber,
+              make: vehicleData.make,
+              model: vehicleData.model,
+              color: vehicleData.color,
+            },
+          });
+        }
+      }
+
+      return tx.driver.findUniqueOrThrow({
+        where: { id: driver.id },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              phone: true,
+              email: true,
+              role: true,
+              status: true,
+              isVerified: true,
+              createdAt: true,
+            },
+          },
+          vehicles: true,
+          documents: { orderBy: { createdAt: 'desc' } },
+        },
+      });
+    });
+
+    await this.audit(
+      'ADMIN_DRIVER_PROFILE_UPDATED',
+      'Driver',
+      driver.id,
+      actorId,
+      body,
+    );
+    return updated;
+  }
+
   async listDriverDocuments(driverId: string) {
     const driver = await this.prisma.driver.findFirst({
       where: { OR: [{ id: driverId }, { userId: driverId }] },
@@ -266,6 +647,17 @@ export class AdminService {
         verifiedAt: status === 'VERIFIED' ? new Date() : null,
       },
     });
+    if (status === 'VERIFIED') {
+      const remainingPending = await this.prisma.driverDocument.count({
+        where: { driverId: doc.driverId, status: 'PENDING' as any },
+      });
+      if (remainingPending === 0) {
+        await this.prisma.user.update({
+          where: { id: doc.driverId },
+          data: { isVerified: true, status: 'ACTIVE' as any },
+        });
+      }
+    }
     await this.audit(
       'KYC_DOCUMENT_REVIEWED',
       'DriverDocument',

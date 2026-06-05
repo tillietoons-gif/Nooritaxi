@@ -41,6 +41,7 @@ import { VehiclesModule } from './vehicles/vehicles.module';
 
 import { NotificationsModule } from './notifications/notifications.module';
 import { AIModule } from './ai/ai.module';
+import { PlacesModule } from './places/places.module';
 
 @Module({
   imports: [
@@ -78,6 +79,7 @@ import { AIModule } from './ai/ai.module';
     VehiclesModule,
     NotificationsModule,
     AIModule,
+    PlacesModule,
   ],
   providers: [
     AppService,

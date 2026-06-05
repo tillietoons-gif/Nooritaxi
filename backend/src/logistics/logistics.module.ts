@@ -7,5 +7,6 @@ import { DispatchModule } from '../dispatch/dispatch.module';
   imports: [DispatchModule],
   controllers: [LogisticsController],
   providers: [LogisticsService],
+  exports: [LogisticsService],
 })
 export class LogisticsModule {}

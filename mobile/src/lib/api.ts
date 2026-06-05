@@ -150,13 +150,19 @@ export async function clearSession() {
 
 export async function apiFetch(path: string, init: RequestInit = {}) {
   const token = await getAuthToken();
+  const isFormData = init.body instanceof FormData;
+  const headers: Record<string, string> = {
+    ...(init.headers as Record<string, string> ?? {}),
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+
+  if (!isFormData && !headers['Content-Type']) {
+    headers['Content-Type'] = 'application/json';
+  }
+
   return fetch(`${API_URL}${path}`, {
     ...init,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(init.headers ?? {}),
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
+    headers,
   });
 }
 
@@ -293,6 +299,29 @@ export async function uploadKycDocument(driverId: string, type: string, url: str
     method: 'POST',
     body: JSON.stringify({ type, url }),
   });
+  return readJson<any>(response, 'Unable to upload KYC document');
+}
+
+export async function uploadKycDocumentFile(type: string, fileUri: string) {
+  const formData = new FormData();
+  formData.append('documentType', type);
+  
+  const filename = fileUri.split('/').pop() || `document-${Date.now()}.jpg`;
+  const match = /\.(\w+)$/.exec(filename);
+  const ext = match?.[1];
+  const mimeType = ext === 'pdf' ? 'application/pdf' : `image/${ext || 'jpeg'}`;
+
+  formData.append('file', {
+    uri: fileUri,
+    name: filename,
+    type: mimeType,
+  } as any);
+
+  const response = await apiFetch('/kyc/upload', {
+    method: 'POST',
+    body: formData,
+  });
+  
   return readJson<any>(response, 'Unable to upload KYC document');
 }
 

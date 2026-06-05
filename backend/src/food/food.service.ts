@@ -125,6 +125,25 @@ export class FoodService {
   }
 
   async updateOrder(id: string, data: any) {
+    const { actorId, ...orderData } = data ?? {};
+    const status = orderData.status;
+    if (
+      status &&
+      ![
+        'CART',
+        'PLACED',
+        'ACCEPTED',
+        'PREPARING',
+        'READY_FOR_PICKUP',
+        'OUT_FOR_DELIVERY',
+        'DELIVERED',
+        'CANCELLED',
+        'REFUNDED',
+      ].includes(String(status))
+    ) {
+      throw new BadRequestException('Invalid order status');
+    }
+
     const { order, before } = await this.prisma.$transaction(async (tx) => {
       const before = await tx.order.findUnique({
         where: { id },
@@ -132,7 +151,7 @@ export class FoodService {
       });
       const order = await tx.order.update({
         where: { id },
-        data,
+        data: orderData,
         include: { delivery: true, items: true, restaurant: true },
       });
 
@@ -179,7 +198,7 @@ export class FoodService {
       return { order, before };
     });
 
-    await this.audit('ORDER_UPDATED', 'Order', id, data.actorId, order, before);
+    await this.audit('ORDER_UPDATED', 'Order', id, actorId, order, before);
     return order;
   }
 

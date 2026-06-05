@@ -1,23 +1,28 @@
 "use client"
 
 import dynamic from 'next/dynamic';
+import { AuthGate } from '@/components/auth-gate';
 
 const LiveMap = dynamic(() => import('@/components/admin/LiveMap'), {
   ssr: false,
-  loading: () => <div className="flex h-[80vh] items-center justify-center">Loading Map...</div>,
+  loading: () => <div className="flex h-[calc(100vh-9rem)] items-center justify-center text-sm text-muted-foreground">Loading map...</div>,
 });
 
 export default function LiveMapPage() {
   return (
-    <div className="p-4 md:p-6">
-      <h1 className="text-2xl font-bold mb-4">Live Driver Tracking</h1>
-      <p className="text-gray-600 mb-6">
-        This map displays the real-time locations of all drivers with a status of ONLINE or BUSY.
-      </p>
-      
-      <div className="w-full h-[75vh] rounded-lg shadow-lg overflow-hidden border">
-        <LiveMap />
+    <AuthGate roles={["ADMIN", "SUPPORT"]}>
+      <div className="h-[calc(100vh-5rem)] min-h-[680px] bg-muted/20 p-3 md:p-5">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <div>
+            <h1 className="text-xl font-semibold tracking-tight">Live Map</h1>
+            <p className="text-sm text-muted-foreground">Drivers, surge zones, and custom rider places</p>
+          </div>
+        </div>
+
+        <div className="h-[calc(100%-4.25rem)] overflow-hidden rounded-lg border bg-background shadow-sm">
+          <LiveMap />
+        </div>
       </div>
-    </div>
+    </AuthGate>
   );
 }

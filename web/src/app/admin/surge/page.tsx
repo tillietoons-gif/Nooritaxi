@@ -17,11 +17,12 @@ type SurgeZone = {
   name: string
   multiplier: number
   isActive: boolean
+  isCurrentlyActive?: boolean
   activeFrom: string
   activeUntil: string
-  centerLat: number
-  centerLng: number
-  radiusKm: number
+  centerLat: number | null
+  centerLng: number | null
+  radiusKm: number | null
 }
 
 export default function SurgePage() {
@@ -36,11 +37,21 @@ export default function SurgePage() {
   const [radiusKm, setRadiusKm] = useState("5")
   const [hoursActive, setHoursActive] = useState("2")
 
+  async function getErrorMessage(res: Response, fallback: string) {
+    try {
+      const body = await res.json()
+      const message = Array.isArray(body.message) ? body.message.join(", ") : body.message
+      return message ? `${fallback}: ${message}` : `${fallback} (${res.status})`
+    } catch {
+      return `${fallback} (${res.status})`
+    }
+  }
+
   const load = useCallback(async () => {
     setLoading(true)
     try {
       const res = await authedFetch("/surge-zones")
-      if (!res.ok) throw new Error("Failed to load surge zones")
+      if (!res.ok) throw new Error(await getErrorMessage(res, "Failed to load surge zones"))
       setZones(await res.json())
       setError("")
     } catch (err) {
@@ -71,14 +82,15 @@ export default function SurgePage() {
           centerLat: 34.5553, // Kabul center for demo
           centerLng: 69.2075,
           isActive: true,
-          activeFrom,
-          activeUntil,
+          activeFrom: activeFrom.toISOString(),
+          activeUntil: activeUntil.toISOString(),
         })
       })
 
-      if (!res.ok) throw new Error("Failed to create zone")
+      if (!res.ok) throw new Error(await getErrorMessage(res, "Failed to create zone"))
       
       setName("")
+      setError("")
       await load()
     } catch (err) {
       setError((err as Error).message)
@@ -87,18 +99,26 @@ export default function SurgePage() {
   }
 
   async function toggleZone(id: string, currentlyActive: boolean) {
+    setLoading(true)
     try {
+      let res: Response
       if (currentlyActive) {
-        await authedFetch(`/surge-zones/${id}/deactivate`, { method: "PATCH" })
+        res = await authedFetch(`/surge-zones/${id}/deactivate`, { method: "PATCH" })
       } else {
-        await authedFetch(`/surge-zones/${id}`, {
+        res = await authedFetch(`/surge-zones/${id}`, {
           method: "PATCH",
-          body: JSON.stringify({ isActive: true, activeUntil: new Date(Date.now() + 2 * 3600 * 1000) })
+          body: JSON.stringify({
+            isActive: true,
+            activeUntil: new Date(Date.now() + 2 * 3600 * 1000).toISOString(),
+          })
         })
       }
+      if (!res.ok) throw new Error(await getErrorMessage(res, "Failed to update surge zone"))
+      setError("")
       await load()
     } catch (err) {
       setError((err as Error).message)
+      setLoading(false)
     }
   }
 
@@ -171,7 +191,7 @@ export default function SurgePage() {
                 ) : (
                   <div className="space-y-3">
                     {zones.map((zone) => {
-                      const isCurrentlyActive = zone.isActive && new Date(zone.activeUntil) > new Date()
+                      const isCurrentlyActive = zone.isCurrentlyActive ?? (zone.isActive && new Date(zone.activeUntil) > new Date())
                       return (
                         <div key={zone.id} className={`flex items-center justify-between p-4 rounded-xl border ${isCurrentlyActive ? 'border-primary bg-primary/5' : 'bg-muted/30 opacity-70'}`}>
                           <div>
@@ -184,7 +204,7 @@ export default function SurgePage() {
                               )}
                             </div>
                             <p className="text-sm text-muted-foreground">
-                              {t('surge.multiplier_label', { mult: zone.multiplier, rad: zone.radiusKm })}
+                              {t('surge.multiplier_label', { mult: zone.multiplier, rad: zone.radiusKm?.toFixed(1) ?? "n/a" })}
                             </p>
                             <p className="text-xs text-muted-foreground mt-1">
                               {t('surge.until', { date: new Date(zone.activeUntil).toLocaleString() })}

@@ -1,6 +1,7 @@
 "use client"
 
 import { FormEvent, useEffect, useState } from "react"
+import dynamic from "next/dynamic"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { Card, CardContent } from "@/components/ui/card"
@@ -10,6 +11,16 @@ import { Label } from "@/components/ui/label"
 import { HeadingMd, BodyMd } from "@/components/ui/typography"
 import { MapPin, Navigation, Shield, Clock, Car } from "lucide-react"
 import { authedFetch, getStoredUser, type AuthUser } from "@/lib/auth"
+import type { BookingPlace } from "@/components/booking/PlacesBookingMap"
+
+const PlacesBookingMap = dynamic(() => import("@/components/booking/PlacesBookingMap"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-full min-h-[420px] items-center justify-center bg-muted/40 text-sm text-muted-foreground">
+      Loading map...
+    </div>
+  ),
+})
 
 type Estimate = {
   fare: number
@@ -18,16 +29,41 @@ type Estimate = {
   surgeMultiplier: number
 }
 
+function distanceKm(a?: BookingPlace | null, b?: BookingPlace | null) {
+  if (!a || !b) return 5
+  const radiusKm = 6371
+  const dLat = ((b.lat - a.lat) * Math.PI) / 180
+  const dLng = ((b.lng - a.lng) * Math.PI) / 180
+  const lat1 = (a.lat * Math.PI) / 180
+  const lat2 = (b.lat * Math.PI) / 180
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2
+  return Math.max(1, Math.round(radiusKm * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h)) * 10) / 10)
+}
+
 export default function BookingPage() {
   const [user] = useState<AuthUser | null>(() => getStoredUser())
   const [pickupLocation, setPickupLocation] = useState("")
   const [dropoffLocation, setDropoffLocation] = useState("")
+  const [pickupPlace, setPickupPlace] = useState<BookingPlace | null>(null)
+  const [dropoffPlace, setDropoffPlace] = useState<BookingPlace | null>(null)
+  const [pickupSuggestions, setPickupSuggestions] = useState<BookingPlace[]>([])
+  const [dropoffSuggestions, setDropoffSuggestions] = useState<BookingPlace[]>([])
+  const [mapPlaces, setMapPlaces] = useState<BookingPlace[]>([])
   const [estimate, setEstimate] = useState<Estimate | null>(null)
   const [isEstimating, setIsEstimating] = useState(false)
   const [safetyCode, setSafetyCode] = useState("")
   const [status, setStatus] = useState("")
   const [error, setError] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  useEffect(() => {
+    authedFetch("/places?limit=25")
+      .then((res) => (res.ok ? res.json() : []))
+      .then((places: BookingPlace[]) => setMapPlaces(places))
+      .catch(() => setMapPlaces([]))
+  }, [])
 
   useEffect(() => {
     if (!user?.id || !pickupLocation || !dropoffLocation) {
@@ -38,7 +74,13 @@ export default function BookingPage() {
 
     setIsEstimating(true)
     const timeout = window.setTimeout(() => {
-      authedFetch("/trips/estimate?distance=5")
+      const distance = distanceKm(pickupPlace, dropoffPlace)
+      const params = new URLSearchParams({ distance: String(distance) })
+      if (pickupPlace) {
+        params.set("lat", String(pickupPlace.lat))
+        params.set("lng", String(pickupPlace.lng))
+      }
+      authedFetch(`/trips/estimate?${params.toString()}`)
         .then(async (response) => {
           if (!response.ok) throw new Error("Unable to estimate fare")
           return response.json()
@@ -49,16 +91,60 @@ export default function BookingPage() {
     }, 400)
 
     return () => window.clearTimeout(timeout)
-  }, [user?.id, pickupLocation, dropoffLocation])
+  }, [user?.id, pickupLocation, dropoffLocation, pickupPlace, dropoffPlace])
+
+  useEffect(() => {
+    const query = pickupLocation.trim()
+    if (pickupPlace?.name === pickupLocation || query.length < 2) {
+      setPickupSuggestions([])
+      return
+    }
+    const timeout = window.setTimeout(() => {
+      authedFetch(`/places?q=${encodeURIComponent(query)}&limit=6`)
+        .then((res) => (res.ok ? res.json() : []))
+        .then((places: BookingPlace[]) => setPickupSuggestions(places))
+        .catch(() => setPickupSuggestions([]))
+    }, 250)
+    return () => window.clearTimeout(timeout)
+  }, [pickupLocation, pickupPlace])
+
+  useEffect(() => {
+    const query = dropoffLocation.trim()
+    if (dropoffPlace?.name === dropoffLocation || query.length < 2) {
+      setDropoffSuggestions([])
+      return
+    }
+    const timeout = window.setTimeout(() => {
+      authedFetch(`/places?q=${encodeURIComponent(query)}&limit=6`)
+        .then((res) => (res.ok ? res.json() : []))
+        .then((places: BookingPlace[]) => setDropoffSuggestions(places))
+        .catch(() => setDropoffSuggestions([]))
+    }, 250)
+    return () => window.clearTimeout(timeout)
+  }, [dropoffLocation, dropoffPlace])
 
   function updatePickupLocation(value: string) {
     setPickupLocation(value)
+    setPickupPlace(null)
     if (!value.trim()) setEstimate(null)
   }
 
   function updateDropoffLocation(value: string) {
     setDropoffLocation(value)
+    setDropoffPlace(null)
     if (!value.trim()) setEstimate(null)
+  }
+
+  function selectPickup(place: BookingPlace) {
+    setPickupPlace(place)
+    setPickupLocation(place.name)
+    setPickupSuggestions([])
+  }
+
+  function selectDropoff(place: BookingPlace) {
+    setDropoffPlace(place)
+    setDropoffLocation(place.name)
+    setDropoffSuggestions([])
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -84,6 +170,11 @@ export default function BookingPage() {
           customerId: user.id,
           pickupLocation,
           dropoffLocation,
+          pickupLat: pickupPlace?.lat,
+          pickupLng: pickupPlace?.lng,
+          dropoffLat: dropoffPlace?.lat,
+          dropoffLng: dropoffPlace?.lng,
+          distance: distanceKm(pickupPlace, dropoffPlace),
           paymentMethod: "CASH",
         }),
       })
@@ -113,12 +204,38 @@ export default function BookingPage() {
                       <Label htmlFor="pickup" className="sr-only">Pickup Location</Label>
                       <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
                       <Input id="pickup" value={pickupLocation} onChange={(event) => updatePickupLocation(event.target.value)} placeholder="Pickup" className="pl-10 h-12 bg-muted/30 border-none" />
+                      {pickupSuggestions.length > 0 ? (
+                        <div className="absolute z-20 mt-2 w-full overflow-hidden rounded-lg border bg-background shadow-lg">
+                          {pickupSuggestions.map((place) => (
+                            <button key={place.id} type="button" className="block w-full px-3 py-2 text-left hover:bg-muted" onClick={() => selectPickup(place)}>
+                              <span className="block text-sm font-medium">{place.name}</span>
+                              <span className="block truncate text-xs text-muted-foreground">{place.address}</span>
+                            </button>
+                          ))}
+                        </div>
+                      ) : null}
                     </div>
                     <div className="relative">
                       <Label htmlFor="destination" className="sr-only">Destination Location</Label>
                       <Navigation className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-accent-foreground" />
                       <Input id="destination" value={dropoffLocation} onChange={(event) => updateDropoffLocation(event.target.value)} placeholder="Destination" className="pl-10 h-12 bg-muted/30 border-none" />
+                      {dropoffSuggestions.length > 0 ? (
+                        <div className="absolute z-20 mt-2 w-full overflow-hidden rounded-lg border bg-background shadow-lg">
+                          {dropoffSuggestions.map((place) => (
+                            <button key={place.id} type="button" className="block w-full px-3 py-2 text-left hover:bg-muted" onClick={() => selectDropoff(place)}>
+                              <span className="block text-sm font-medium">{place.name}</span>
+                              <span className="block truncate text-xs text-muted-foreground">{place.address}</span>
+                            </button>
+                          ))}
+                        </div>
+                      ) : null}
                     </div>
+                    {(pickupPlace || dropoffPlace) ? (
+                      <div className="grid gap-2 text-xs text-muted-foreground">
+                        {pickupPlace ? <p>Pickup selected: {pickupPlace.address}</p> : null}
+                        {dropoffPlace ? <p>Destination selected: {dropoffPlace.address}</p> : null}
+                      </div>
+                    ) : null}
                     <div className="rounded-lg border bg-background p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2"><Car className="h-4 w-4 text-primary" /><span className="text-sm font-medium">Fare estimate</span></div>
@@ -132,7 +249,7 @@ export default function BookingPage() {
                           )}
                         </span>
                       </div>
-                      <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground"><Clock className="h-3.5 w-3.5" />Estimated on a {estimate?.distance ?? 5} km city ride</div>
+                      <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground"><Clock className="h-3.5 w-3.5" />Estimated on a {estimate?.distance ?? distanceKm(pickupPlace, dropoffPlace)} km city ride</div>
                     </div>
                     {error ? <p className="text-sm text-destructive" role="alert">{error}</p> : null}
                     {status ? <p className="text-sm text-primary">{status}</p> : null}
@@ -142,7 +259,33 @@ export default function BookingPage() {
                 </CardContent></Card>
               <Card className="bg-primary/5 border-none shadow-none"><CardContent className="p-4 flex items-center gap-4"><Shield className="h-5 w-5 text-primary" /><BodyMd className="text-xs">Your safety is our priority. Trips are tracked and insured.</BodyMd></CardContent></Card>
             </div>
-            <div className="lg:col-span-3"><Card className="h-full border-none shadow-sm min-h-[400px] bg-secondary/30 relative flex flex-col items-center justify-center gap-3"><MapPin className="h-10 w-10 text-primary animate-bounce" /><BodyMd className="text-sm text-muted-foreground">{pickupLocation && dropoffLocation ? `${pickupLocation} to ${dropoffLocation}` : "Choose pickup and destination"}</BodyMd></Card></div>
+            <div className="lg:col-span-3">
+              <Card className="h-full min-h-[460px] overflow-hidden border-none shadow-sm">
+                <div className="relative h-full min-h-[460px]">
+                  <PlacesBookingMap
+                    places={mapPlaces}
+                    pickupPlace={pickupPlace}
+                    dropoffPlace={dropoffPlace}
+                    onSelectPickup={selectPickup}
+                    onSelectDropoff={selectDropoff}
+                  />
+                  <div className="pointer-events-none absolute bottom-4 left-4 right-4 z-[500] rounded-lg border bg-background/95 p-3 shadow">
+                    <BodyMd className="text-sm font-medium">
+                      {pickupLocation && dropoffLocation ? `${pickupLocation} to ${dropoffLocation}` : "Choose pickup and destination"}
+                    </BodyMd>
+                    {pickupPlace && dropoffPlace ? (
+                      <BodyMd className="text-xs text-muted-foreground">
+                        Route uses saved places: {pickupPlace.lat.toFixed(4)}, {pickupPlace.lng.toFixed(4)} to {dropoffPlace.lat.toFixed(4)}, {dropoffPlace.lng.toFixed(4)}
+                      </BodyMd>
+                    ) : (
+                      <BodyMd className="text-xs text-muted-foreground">
+                        Search above or tap a saved place marker on the map.
+                      </BodyMd>
+                    )}
+                  </div>
+                </div>
+              </Card>
+            </div>
           </div>
         </div>
       </main>

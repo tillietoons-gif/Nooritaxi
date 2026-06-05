@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -40,6 +41,7 @@ export function AdminListPage<T>({
   rowHref,
   rowKey,
 }: AdminListPageProps<T>) {
+  const router = useRouter()
   const [items, setItems] = useState<T[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
@@ -78,6 +80,15 @@ export function AdminListPage<T>({
 
   useEffect(() => {
     void load()
+  }, [load])
+
+  useEffect(() => {
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) void load()
+    }
+
+    window.addEventListener("pageshow", handlePageShow)
+    return () => window.removeEventListener("pageshow", handlePageShow)
   }, [load])
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
@@ -227,7 +238,7 @@ export function AdminListPage<T>({
                             key={k}
                             className="cursor-pointer hover:bg-primary/5 transition-colors"
                             onClick={() => {
-                              window.location.href = rowHref(row)
+                              router.push(rowHref(row))
                             }}
                           >
                             {inner}

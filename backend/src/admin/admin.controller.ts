@@ -13,6 +13,8 @@ import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { AdminService } from './admin.service';
+import { RequirePermission } from '../auth/decorators/permissions.decorator';
+import { PermissionsGuard } from '../auth/guards/permissions.guard';
 
 @Controller('admin')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -95,7 +97,19 @@ export class AdminController {
     return this.admin.listDrivers(this.parseListArgs(status, q, page, limit));
   }
 
+  @Get('drivers/:id')
+  getDriver(@Param('id') id: string) {
+    return this.admin.getDriver(id);
+  }
+
+  @Get('drivers/:id/operations')
+  getDriverOperations(@Param('id') id: string) {
+    return this.admin.getDriverOperations(id);
+  }
+
   @Get('users')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('admins.view')
   listUsers(
     @Query('status') status?: string,
     @Query('q') q?: string,
@@ -129,6 +143,15 @@ export class AdminController {
     return this.admin.updateOrderStatus(id, status, actor?.userId);
   }
 
+  @Patch('deliveries/:id/status')
+  updateDeliveryStatus(
+    @Param('id') id: string,
+    @Body('status') status: string,
+    @CurrentUser() actor: any,
+  ) {
+    return this.admin.updateDeliveryStatus(id, status, actor?.userId);
+  }
+
   @Patch('users/:id/status')
   updateUserStatus(
     @Param('id') id: string,
@@ -136,6 +159,24 @@ export class AdminController {
     @CurrentUser() actor: any,
   ) {
     return this.admin.updateUserStatus(id, status, actor?.userId);
+  }
+
+  @Patch('drivers/:id/status')
+  updateDriverStatus(
+    @Param('id') id: string,
+    @Body('status') status: string,
+    @CurrentUser() actor: any,
+  ) {
+    return this.admin.updateDriverStatus(id, status, actor?.id);
+  }
+
+  @Patch('drivers/:id/profile')
+  updateDriverProfile(
+    @Param('id') id: string,
+    @Body() body: any,
+    @CurrentUser() actor: any,
+  ) {
+    return this.admin.updateDriverProfile(id, body, actor?.id);
   }
 
   @Get('drivers/:id/documents')
@@ -154,7 +195,7 @@ export class AdminController {
       driverId,
       docId,
       status,
-      actor?.userId,
+      actor?.id,
     );
   }
 

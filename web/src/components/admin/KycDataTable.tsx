@@ -2,16 +2,40 @@
 
 import * as React from "react";
 import { KycReviewModal } from "./KycReviewModal";
-import { DriverDocument, updateDocumentStatus } from "@/lib/api";
+import { DriverDocument, getPendingKycDocuments, updateDocumentStatus } from "@/lib/api";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 interface KycDataTableProps {
-  initialDocuments: DriverDocument[];
+  initialDocuments?: DriverDocument[];
 }
 
-export function KycDataTable({ initialDocuments }: KycDataTableProps) {
+function driverName(doc: DriverDocument) {
+  return doc.driver?.user?.name || doc.driver?.name || doc.driver?.user?.phone || "Unknown";
+}
+
+export function KycDataTable({ initialDocuments = [] }: KycDataTableProps) {
   const [documents, setDocuments] = React.useState<DriverDocument[]>(initialDocuments);
   const [selectedDocument, setSelectedDocument] = React.useState<DriverDocument | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [error, setError] = React.useState("");
+
+  const loadDocuments = React.useCallback(async () => {
+    setIsLoading(true);
+    setError("");
+    try {
+      setDocuments(await getPendingKycDocuments());
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load KYC documents");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    void loadDocuments();
+  }, [loadDocuments]);
 
   const handleReview = (doc: DriverDocument) => {
     setSelectedDocument(doc);
@@ -21,7 +45,7 @@ export function KycDataTable({ initialDocuments }: KycDataTableProps) {
     setSelectedDocument(null);
   };
 
-  const handleUpdateStatus = async (status: 'APPROVED' | 'REJECTED') => {
+  const handleUpdateStatus = async (status: 'VERIFIED' | 'REJECTED') => {
     if (!selectedDocument) return;
 
     setIsSubmitting(true);
@@ -33,6 +57,7 @@ export function KycDataTable({ initialDocuments }: KycDataTableProps) {
       handleCloseModal();
     } catch (error) {
       console.error(error);
+      setError(error instanceof Error ? error.message : "Failed to update document");
     } finally {
       setIsSubmitting(false);
     }
@@ -40,9 +65,22 @@ export function KycDataTable({ initialDocuments }: KycDataTableProps) {
 
   return (
     <>
-      <div className="rounded-md border p-4">
-        <table className="w-full text-sm text-left">
-          <thead className="text-xs uppercase bg-gray-50 border-b">
+      <div className="rounded-lg border bg-background shadow-sm">
+        <div className="flex items-center justify-between gap-3 border-b p-4">
+          <div>
+            <h2 className="font-semibold">Pending Documents</h2>
+            <p className="text-sm text-muted-foreground">{documents.length} document{documents.length === 1 ? "" : "s"} awaiting review</p>
+          </div>
+          <Button variant="outline" onClick={() => void loadDocuments()} disabled={isLoading}>
+            Refresh
+          </Button>
+        </div>
+
+        {error ? <div className="m-4 rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">{error}</div> : null}
+
+        <div className="overflow-x-auto">
+        <table className="w-full text-left text-sm">
+          <thead className="border-b bg-muted/40 text-xs uppercase text-muted-foreground">
             <tr>
               <th className="px-6 py-3">Driver Name</th>
               <th className="px-6 py-3">Document Type</th>
@@ -52,41 +90,45 @@ export function KycDataTable({ initialDocuments }: KycDataTableProps) {
             </tr>
           </thead>
           <tbody>
-            {documents.length > 0 ? (
+            {isLoading ? (
+              <tr>
+                <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground">
+                  Loading pending documents...
+                </td>
+              </tr>
+            ) : documents.length > 0 ? (
               documents.map((doc) => (
-                <tr key={doc.id} className="bg-white border-b hover:bg-gray-50">
-                  <td className="px-6 py-4 font-medium">{doc.driver?.name || 'Unknown'}</td>
-                  <td className="px-6 py-4">{doc.documentType.replace('_', ' ')}</td>
+                <tr key={doc.id} className="border-b hover:bg-muted/30">
+                  <td className="px-6 py-4 font-medium">{driverName(doc)}</td>
+                  <td className="px-6 py-4">{doc.type.replaceAll('_', ' ')}</td>
                   <td className="px-6 py-4">{new Date(doc.createdAt).toLocaleDateString()}</td>
                   <td className="px-6 py-4">
-                    <span className="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded">{doc.status}</span>
+                    <Badge variant="secondary">{doc.status}</Badge>
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <button 
-                      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                      onClick={() => handleReview(doc)}
-                    >
+                    <Button size="sm" onClick={() => handleReview(doc)}>
                       Review
-                    </button>
+                    </Button>
                   </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
+                <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground">
                   No pending documents to review.
                 </td>
               </tr>
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       <KycReviewModal
         isOpen={!!selectedDocument}
         onClose={handleCloseModal}
         document={selectedDocument}
-        onApprove={() => handleUpdateStatus('APPROVED')}
+        onApprove={() => handleUpdateStatus('VERIFIED')}
         onReject={() => handleUpdateStatus('REJECTED')}
         isSubmitting={isSubmitting}
       />

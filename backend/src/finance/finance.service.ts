@@ -5,6 +5,24 @@ import { PrismaService } from '../prisma.service';
 export class FinanceService {
   constructor(private prisma: PrismaService) {}
 
+  async getCashCollections(limit = 50) {
+    const take = Number.isFinite(limit) ? Math.max(1, Math.min(Math.trunc(limit), 200)) : 50;
+
+    return this.prisma.cashCollection.findMany({
+      take,
+      include: {
+        admin: { select: { id: true, name: true, phone: true, email: true } },
+        settlement: {
+          include: {
+            user: { select: { name: true, phone: true } },
+            fleet: { select: { companyName: true, ownerName: true, phone: true } },
+          },
+        },
+      },
+      orderBy: { collectedAt: 'desc' },
+    });
+  }
+
   // 1. Get Commission Rules
   async getSystemCommissions() {
     return this.prisma.systemCommissionRule.findMany({
@@ -79,8 +97,9 @@ export class FinanceService {
   }
 
   // 5. Refund Requests Management
-  async getRefundRequests() {
+  async getRefundRequests(status?: 'PENDING' | 'APPROVED' | 'REJECTED') {
     return this.prisma.refundRequest.findMany({
+      where: status ? { status } : undefined,
       include: {
         user: { select: { name: true, phone: true } },
         trip: { select: { id: true, fare: true, createdAt: true } },

@@ -12,9 +12,9 @@ export class CorporateService {
   async getOrganizations() {
     return this.prisma.organization.findMany({
       include: {
-        _count: { select: { employees: true, invoices: true } }
+        _count: { select: { employees: true, invoices: true } },
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
     });
   }
 
@@ -26,8 +26,8 @@ export class CorporateService {
         branches: true,
         wallet: true,
         contracts: true,
-        _count: { select: { employees: true } }
-      }
+        _count: { select: { employees: true } },
+      },
     });
     if (!org) throw new NotFoundException('Organization not found');
     return org;
@@ -43,8 +43,8 @@ export class CorporateService {
         phone: data.phone,
         address: data.address,
         status: data.status || 'PENDING',
-        wallet: { create: { currency: 'AFN' } } // Auto create wallet
-      }
+        wallet: { create: { currency: 'AFN' } }, // Auto create wallet
+      },
     });
   }
 
@@ -59,7 +59,7 @@ export class CorporateService {
         user: { select: { name: true, phone: true } },
         department: true,
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
     });
   }
 
@@ -72,8 +72,8 @@ export class CorporateService {
         phone: data.phone,
         jobTitle: data.jobTitle,
         departmentId: data.departmentId,
-        role: data.role || 'EMPLOYEE'
-      }
+        role: data.role || 'EMPLOYEE',
+      },
     });
   }
 
@@ -84,7 +84,7 @@ export class CorporateService {
   async getBudgets(orgId: string) {
     return this.prisma.budget.findMany({
       where: { organizationId: orgId },
-      include: { department: true }
+      include: { department: true },
     });
   }
 
@@ -95,7 +95,7 @@ export class CorporateService {
         departmentId: data.departmentId,
         amount: data.amount,
         period: data.period,
-      }
+      },
     });
   }
 
@@ -105,7 +105,7 @@ export class CorporateService {
 
   async getPolicies(orgId: string) {
     return this.prisma.corporatePolicy.findMany({
-      where: { organizationId: orgId }
+      where: { organizationId: orgId },
     });
   }
 
@@ -115,8 +115,8 @@ export class CorporateService {
         organizationId: orgId,
         name: data.name,
         description: data.description,
-        rules: data.rules
-      }
+        rules: data.rules,
+      },
     });
   }
 
@@ -127,11 +127,14 @@ export class CorporateService {
   async getInvoices(orgId: string) {
     return this.prisma.invoice.findMany({
       where: { organizationId: orgId },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
     });
   }
 
-  async generateInvoice(orgId: string, data: { periodStart: Date, periodEnd: Date, total: number }) {
+  async generateInvoice(
+    orgId: string,
+    data: { periodStart: Date; periodEnd: Date; total: number },
+  ) {
     return this.prisma.invoice.create({
       data: {
         organizationId: orgId,
@@ -139,8 +142,8 @@ export class CorporateService {
         periodStart: new Date(data.periodStart),
         periodEnd: new Date(data.periodEnd),
         total: data.total,
-        status: 'DRAFT'
-      }
+        status: 'DRAFT',
+      },
     });
   }
 
@@ -151,7 +154,7 @@ export class CorporateService {
   async getContracts() {
     return this.prisma.contract.findMany({
       include: { organization: { select: { companyName: true } } },
-      orderBy: { endDate: 'asc' }
+      orderBy: { endDate: 'asc' },
     });
   }
 }

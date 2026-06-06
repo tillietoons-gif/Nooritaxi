@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Param,
+  UseGuards,
+} from '@nestjs/common';
 import { RolesService } from './roles.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
@@ -27,13 +36,18 @@ export class RolesController {
 
   @Post()
   @RequirePermission('roles.create')
-  createRole(@Body() data: { name: string; description?: string; permissions: string[] }) {
+  createRole(
+    @Body() data: { name: string; description?: string; permissions: string[] },
+  ) {
     return this.rolesService.createRole(data);
   }
 
   @Put(':id')
   @RequirePermission('roles.edit')
-  updateRole(@Param('id') id: string, @Body() data: { name: string; description?: string; permissions: string[] }) {
+  updateRole(
+    @Param('id') id: string,
+    @Body() data: { name: string; description?: string; permissions: string[] },
+  ) {
     return this.rolesService.updateRole(id, data);
   }
 
@@ -46,8 +60,8 @@ export class RolesController {
   @Post('assign/:adminId')
   @RequirePermission('admins.edit')
   assignAdminRoles(
-    @Param('adminId') adminId: string, 
-    @Body() data: { assignments: { roleId: string, cityScope?: string }[] }
+    @Param('adminId') adminId: string,
+    @Body() data: { assignments: { roleId: string; cityScope?: string }[] },
   ) {
     return this.rolesService.assignAdminRoles(adminId, data.assignments);
   }

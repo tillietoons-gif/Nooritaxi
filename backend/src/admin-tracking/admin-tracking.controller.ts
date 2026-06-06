@@ -21,12 +21,12 @@ export class AdminTrackingController {
       },
       include: {
         user: {
-          select: { name: true }
-        }
-      }
+          select: { name: true },
+        },
+      },
     });
 
-    return activeDrivers.map(d => ({
+    return activeDrivers.map((d) => ({
       id: d.userId,
       lat: d.currentLat,
       lng: d.currentLng,

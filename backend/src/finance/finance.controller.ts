@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Put, Body, Param, Query, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { FinanceService } from './finance.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RequirePermission } from '../auth/decorators/permissions.decorator';
@@ -12,7 +22,9 @@ export class FinanceController {
   @Get('cash-collections')
   @RequirePermission('finance.view')
   getCashCollections(@Query('limit') limit?: string) {
-    return this.financeService.getCashCollections(limit ? Number(limit) : undefined);
+    return this.financeService.getCashCollections(
+      limit ? Number(limit) : undefined,
+    );
   }
 
   @Get('commissions')
@@ -45,7 +57,9 @@ export class FinanceController {
 
   @Get('refunds')
   @RequirePermission('finance.view')
-  getRefundRequests(@Query('status') status?: 'PENDING' | 'APPROVED' | 'REJECTED') {
+  getRefundRequests(
+    @Query('status') status?: 'PENDING' | 'APPROVED' | 'REJECTED',
+  ) {
     return this.financeService.getRefundRequests(status);
   }
 

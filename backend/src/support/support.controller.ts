@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Put, Body, Param, Query, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { SupportService } from './support.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -17,7 +27,10 @@ export class SupportController {
   }
 
   @Get('tickets')
-  getTickets(@Query('status') status?: string, @Query('priority') priority?: string) {
+  getTickets(
+    @Query('status') status?: string,
+    @Query('priority') priority?: string,
+  ) {
     return this.supportService.getTickets(status, priority);
   }
 
@@ -27,17 +40,28 @@ export class SupportController {
   }
 
   @Put('tickets/:id/status')
-  updateTicketStatus(@Request() req, @Param('id') id: string, @Body('status') status: string) {
+  updateTicketStatus(
+    @Request() req,
+    @Param('id') id: string,
+    @Body('status') status: string,
+  ) {
     return this.supportService.updateTicketStatus(id, status, req.user.id);
   }
 
   @Put('tickets/:id/assign')
-  assignTicket(@Param('id') id: string, @Body('assigneeId') assigneeId: string) {
+  assignTicket(
+    @Param('id') id: string,
+    @Body('assigneeId') assigneeId: string,
+  ) {
     return this.supportService.assignTicket(id, assigneeId);
   }
 
   @Post('tickets/:id/messages')
-  addMessage(@Request() req, @Param('id') id: string, @Body('message') message: string) {
+  addMessage(
+    @Request() req,
+    @Param('id') id: string,
+    @Body('message') message: string,
+  ) {
     return this.supportService.addMessage(id, req.user.id, message);
   }
 }

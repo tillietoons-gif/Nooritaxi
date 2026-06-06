@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Put, Body, Param, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Body,
+  Param,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { MarketingService } from './marketing.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RequirePermission } from '../auth/decorators/permissions.decorator';
@@ -23,7 +32,10 @@ export class MarketingController {
 
   @Put('promotions/:id/status')
   @RequirePermission('marketing.edit')
-  togglePromotionStatus(@Param('id') id: string, @Body('isActive') isActive: boolean) {
+  togglePromotionStatus(
+    @Param('id') id: string,
+    @Body('isActive') isActive: boolean,
+  ) {
     return this.marketingService.togglePromotionStatus(id, isActive);
   }
 

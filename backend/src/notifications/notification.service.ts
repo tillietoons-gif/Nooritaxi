@@ -9,18 +9,27 @@ export class NotificationService {
    * PUSH NOTIFICATIONS
    * Expects Firebase Admin SDK setup via environment variables
    */
-  async sendPushNotification(userId: string, title: string, body: string, data?: any) {
+  async sendPushNotification(
+    userId: string,
+    title: string,
+    body: string,
+    data?: any,
+  ) {
     // 1. Fetch user devices
-    const devices = await this.prisma.pushDevice.findMany({ where: { userId } });
+    const devices = await this.prisma.pushDevice.findMany({
+      where: { userId },
+    });
     if (!devices.length) return false;
 
-    const tokens = devices.map(d => d.token);
-    
+    const tokens = devices.map((d) => d.token);
+
     // TODO: Await actual API Key for Firebase Admin injection
     // const message = { notification: { title, body }, data, tokens };
     // await firebaseAdmin.messaging().sendMulticast(message);
 
-    console.log(`[PUSH NOTIFICATION MOCK] Sent to ${tokens.length} devices for User ${userId}: ${title} - ${body}`);
+    console.log(
+      `[PUSH NOTIFICATION MOCK] Sent to ${tokens.length} devices for User ${userId}: ${title} - ${body}`,
+    );
     return true;
   }
 
@@ -39,13 +48,18 @@ export class NotificationService {
   /**
    * IN-APP NOTIFICATIONS
    */
-  async createInAppNotification(userId: string, title: string, message: string, type: any) {
+  async createInAppNotification(
+    userId: string,
+    title: string,
+    message: string,
+    type: any,
+  ) {
     return this.prisma.notification.create({
       data: {
         userId,
         title,
         body: message,
-      }
+      },
     });
   }
 }

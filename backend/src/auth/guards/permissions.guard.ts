@@ -1,4 +1,9 @@
-import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { PrismaService } from '../../prisma.service';
 import { PERMISSIONS_KEY } from '../decorators/permissions.decorator';
@@ -6,13 +11,16 @@ import { UserRole } from '@prisma/client';
 
 @Injectable()
 export class PermissionsGuard implements CanActivate {
-  constructor(private reflector: Reflector, private prisma: PrismaService) {}
+  constructor(
+    private reflector: Reflector,
+    private prisma: PrismaService,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const requiredPermissions = this.reflector.getAllAndOverride<string[]>(PERMISSIONS_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
+    const requiredPermissions = this.reflector.getAllAndOverride<string[]>(
+      PERMISSIONS_KEY,
+      [context.getHandler(), context.getClass()],
+    );
 
     if (!requiredPermissions || requiredPermissions.length === 0) {
       return true;
@@ -47,7 +55,7 @@ export class PermissionsGuard implements CanActivate {
     }
 
     const userPermissions = new Set<string>();
-    
+
     // Check if any role is a Super Admin
     let isSuperAdmin = false;
     for (const ar of adminRoles) {
@@ -63,7 +71,9 @@ export class PermissionsGuard implements CanActivate {
       return true;
     }
 
-    const hasPermission = requiredPermissions.every((perm) => userPermissions.has(perm));
+    const hasPermission = requiredPermissions.every((perm) =>
+      userPermissions.has(perm),
+    );
     if (!hasPermission) {
       throw new ForbiddenException('Insufficient permissions');
     }

@@ -7,6 +7,6 @@ import { PrismaModule } from '../prisma/prisma.module';
   imports: [PrismaModule],
   controllers: [FraudController],
   providers: [FraudService],
-  exports: [FraudService]
+  exports: [FraudService],
 })
 export class FraudModule {}

@@ -8,13 +8,13 @@ export class CMSService {
   async getPages() {
     return this.prisma.contentItem.findMany({
       orderBy: { createdAt: 'desc' },
-      include: { author: { select: { name: true } } }
+      include: { author: { select: { name: true } } },
     });
   }
 
   async getPage(slug: string) {
     const page = await this.prisma.contentItem.findUnique({
-      where: { slug }
+      where: { slug },
     });
     if (!page) throw new NotFoundException('Page not found');
     return page;
@@ -30,14 +30,14 @@ export class CMSService {
         locale: data.locale || 'en',
         isPublished: data.isPublished ?? false,
         authorId,
-      }
+      },
     });
   }
 
   async updatePage(slug: string, data: any) {
     return this.prisma.contentItem.update({
       where: { slug },
-      data
+      data,
     });
   }
 }

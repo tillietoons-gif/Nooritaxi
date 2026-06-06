@@ -30,6 +30,12 @@
 
 **Action:** Identify asynchronous operations that do not depend on each other and parallelize them using `Promise.all`. This can reduce response times by 30-50% in multi-query operations.
 
+## 2025-06-05 - Concurrent Dashboard Metric Retrieval
+
+**Learning:** Dashboard metrics often require multiple independent `count` queries to different tables (e.g., open tickets, urgent alerts, today's resolutions). Running these sequentially blocks the event loop unnecessarily.
+
+**Action:** Use `Promise.all` to execute multiple `prisma.model.count()` calls concurrently. This was applied to `SupportService` and `OperationsService` dashboards, resulting in faster page loads for administrative overviews.
+
 ## Mobile App Performance and Fixes
 - Centralized API calls in `mobile/src/lib/api.ts` to ensure consistent Authorization headers and error handling.
 - Optimized Food and Restaurant screens by reducing redundant fetch calls and improving loading states.

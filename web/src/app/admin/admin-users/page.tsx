@@ -23,18 +23,10 @@ type AdminUser = {
   roles: { id: string; name: string; isSystem: boolean }[]
 }
 
-type Role = {
-  id: string
-  name: string
-  description?: string | null
-  isSystem: boolean
-}
-
 export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [users, setUsers] = useState<AdminUser[]>([])
-  const [roles, setRoles] = useState<Role[]>([])
   const [search, setSearch] = useState("")
   const [error, setError] = useState<string | null>(null)
 
@@ -44,14 +36,11 @@ export default function AdminUsersPage() {
     setError(null)
 
     try {
-      const [usrRes, rolRes] = await Promise.all([
-        authedFetch("/admin/admin-users"),
-        authedFetch("/admin/roles")
-      ])
+      const usrRes = await authedFetch("/admin/admin-users")
 
       if (usrRes.ok) setUsers(await usrRes.json())
-      if (rolRes.ok) setRoles(await rolRes.json())
     } catch (err) {
+      console.error(err)
       setError(err instanceof Error ? err.message : "Failed to load admin users")
     } finally {
       setLoading(false)
@@ -73,6 +62,7 @@ export default function AdminUsersPage() {
     <AuthGate roles={["ADMIN"]}>
       <main className="min-h-screen px-4 py-8 md:px-8">
         <div className="mx-auto max-w-7xl space-y-6">
+          {error && <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm font-bold">{error}</div>}
           <AdminPageHeader
             title="Administrator Access"
             subtitle="Manage internal users, security roles, and platform permissions."

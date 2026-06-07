@@ -59,14 +59,14 @@ const GenAIGlobe = () => {
       <Globe className="absolute h-12 w-12 text-primary/50" />
       {particles.map((p) => (
         <motion.div
-          key={particle.id}
+          key={p.id}
           className="absolute w-2 h-2 bg-gold/60 rounded-full blur-[1px]"
           animate={{ 
             y: [-30, 30, -30],
             x: [-30, 30, -30],
             opacity: [0.2, 1, 0.2] 
           }}
-          transition={{ duration: particle.duration, repeat: Infinity, delay: particle.delay, ease: "easeInOut" }}
+          transition={{ duration: p.duration, repeat: Infinity, delay: p.delay, ease: "easeInOut" }}
           style={{ 
             top: p.top,
             left: p.left

@@ -2,15 +2,9 @@
 
 import { useState, useEffect, useCallback } from "react"
 import {
-  Users,
   Search,
   RefreshCw,
-  ShieldCheck,
-  PencilLine,
-  KeyRound,
-  LoaderCircle,
-  Copy,
-  Check
+  KeyRound
 } from "lucide-react"
 
 import { AuthGate } from "@/components/auth-gate"
@@ -20,14 +14,6 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { AdminPageHeader } from "@/components/admin/admin-page-header"
 import { authedFetch } from "@/lib/auth"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter
-} from "@/components/ui/dialog"
 
 type AdminUser = {
   id: string
@@ -50,11 +36,6 @@ export default function AdminUsersPage() {
   const [users, setUsers] = useState<AdminUser[]>([])
   const [roles, setRoles] = useState<Role[]>([])
   const [search, setSearch] = useState("")
-  const [selectedAdmin, setSelectedAdmin] = useState<AdminUser | null>(null)
-  const [resetTarget, setResetTarget] = useState<AdminUser | null>(null)
-  const [form, setForm] = useState<Record<string, string>>({})
-  const [saving, setSaving] = useState(false)
-  const [submitError, setSubmitError] = useState("")
   const [error, setError] = useState<string | null>(null)
 
   const load = useCallback(async (isSilent = false) => {

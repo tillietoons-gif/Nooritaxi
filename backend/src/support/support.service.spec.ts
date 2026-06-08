@@ -30,8 +30,8 @@ describe('SupportService', () => {
 
   describe('getDashboardMetrics', () => {
     it('should return dashboard metrics with correct counts', async () => {
-      const countMock = prisma.supportTicket.count as jest.Mock;
-      countMock
+      const countMock = prisma.supportTicket.count;
+      (countMock as jest.Mock)
         .mockResolvedValueOnce(10) // totalOpen
         .mockResolvedValueOnce(5) // totalUrgent
         .mockResolvedValueOnce(3); // resolvedToday

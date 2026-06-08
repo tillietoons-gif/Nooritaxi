@@ -20,7 +20,9 @@ interface AuthenticatedUser {
   namespace: 'support',
   cors: { origin: '*' },
 })
-export class SupportGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class SupportGateway
+  implements OnGatewayConnection, OnGatewayDisconnect
+{
   @WebSocketServer()
   server: Server;
 

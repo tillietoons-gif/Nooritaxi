@@ -7,11 +7,29 @@ export class OperationsService {
 
   // 1. Mission Control Dashboard Metrics
   async getDashboardMetrics() {
-    const activeDrivers = await this.prisma.driver.count({ where: { status: { in: ['ONLINE', 'BUSY'] } } });
-    const activeTrips = await this.prisma.trip.count({ where: { status: { in: ['ACCEPTED', 'DRIVER_ARRIVED', 'IN_PROGRESS'] } } });
-    const pendingTrips = await this.prisma.trip.count({ where: { status: 'REQUESTED' } });
-    const sosAlerts = await this.prisma.sosAlert.count({ where: { status: 'ACTIVE' } });
-    const openIncidents = await this.prisma.incident.count({ where: { status: { in: ['OPEN', 'INVESTIGATING'] } } });
+    const [
+      activeDrivers,
+      activeTrips,
+      pendingTrips,
+      sosAlerts,
+      openIncidents,
+    ] = await Promise.all([
+      this.prisma.driver.count({
+        where: { status: { in: ['ONLINE', 'BUSY'] } },
+      }),
+      this.prisma.trip.count({
+        where: { status: { in: ['ACCEPTED', 'DRIVER_ARRIVED', 'IN_PROGRESS'] } },
+      }),
+      this.prisma.trip.count({
+        where: { status: 'REQUESTED' },
+      }),
+      this.prisma.sosAlert.count({
+        where: { status: 'ACTIVE' },
+      }),
+      this.prisma.incident.count({
+        where: { status: { in: ['OPEN', 'INVESTIGATING'] } },
+      }),
+    ]);
 
     return {
       activeDrivers,
@@ -32,10 +50,12 @@ export class OperationsService {
       orderBy: { createdAt: 'desc' },
       include: {
         assignedTo: { select: { name: true } },
-        trip: { select: { id: true, pickupLocation: true, dropoffLocation: true } },
+        trip: {
+          select: { id: true, pickupLocation: true, dropoffLocation: true },
+        },
         driver: { select: { user: { select: { name: true, phone: true } } } },
         user: { select: { name: true, phone: true } },
-      }
+      },
     });
   }
 
@@ -47,7 +67,7 @@ export class OperationsService {
         trip: true,
         driver: { include: { user: true } },
         user: true,
-      }
+      },
     });
     if (!incident) throw new NotFoundException('Incident not found');
     return incident;
@@ -62,7 +82,7 @@ export class OperationsService {
         tripId: data.tripId,
         driverId: data.driverId,
         userId: data.userId,
-      }
+      },
     });
   }
 
@@ -79,7 +99,7 @@ export class OperationsService {
       orderBy: { createdAt: 'desc' },
       include: {
         user: { select: { name: true, phone: true } },
-      }
+      },
     });
   }
 
@@ -90,12 +110,12 @@ export class OperationsService {
       data: {
         driverId,
         status: 'ACCEPTED',
-      }
+      },
     });
 
     await this.prisma.driver.update({
       where: { id: driverId },
-      data: { status: 'BUSY' }
+      data: { status: 'BUSY' },
     });
 
     await this.prisma.operationsAuditLog.create({
@@ -105,14 +125,20 @@ export class OperationsService {
         targetId: tripId,
         targetType: 'TRIP',
         details: { driverId },
-      }
+      },
     });
 
     return trip;
   }
 
   // 5. Communication Broadcast
-  async sendBroadcast(data: { title: string; message: string; targetAudience: string; channels: string[]; adminId: string }) {
+  async sendBroadcast(data: {
+    title: string;
+    message: string;
+    targetAudience: string;
+    channels: string[];
+    adminId: string;
+  }) {
     return this.prisma.communicationBroadcast.create({
       data: {
         title: data.title,
@@ -120,7 +146,7 @@ export class OperationsService {
         targetAudience: data.targetAudience,
         channels: data.channels,
         sentById: data.adminId,
-      }
+      },
     });
   }
 
@@ -129,13 +155,25 @@ export class OperationsService {
     // Highly simplified spatial query replacement for the UI map
     const drivers = await this.prisma.driver.findMany({
       where: { status: { in: ['ONLINE', 'BUSY'] } },
-      select: { id: true, currentLat: true, currentLng: true, status: true, user: { select: { name: true } } },
+      select: {
+        id: true,
+        currentLat: true,
+        currentLng: true,
+        status: true,
+        user: { select: { name: true } },
+      },
       take: 200,
     });
 
     const activeTrips = await this.prisma.trip.findMany({
       where: { status: 'IN_PROGRESS' },
-      select: { id: true, pickupLat: true, pickupLng: true, dropoffLat: true, dropoffLng: true },
+      select: {
+        id: true,
+        pickupLat: true,
+        pickupLng: true,
+        dropoffLat: true,
+        dropoffLng: true,
+      },
       take: 100,
     });
 

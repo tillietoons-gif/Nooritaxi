@@ -1,4 +1,10 @@
-import { IsInt, IsNotEmpty, IsPositive, IsString, MinLength } from 'class-validator';
+import {
+  IsInt,
+  IsNotEmpty,
+  IsPositive,
+  IsString,
+  MinLength,
+} from 'class-validator';
 
 export class RedeemPointsDto {
   @IsInt()

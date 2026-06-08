@@ -27,12 +27,19 @@ export class DriverTierService {
       });
 
       if (tierConfigs.length === 0) {
-        this.logger.warn('No driver tier configurations found in the database. Aborting job.');
+        this.logger.warn(
+          'No driver tier configurations found in the database. Aborting job.',
+        );
         return;
       }
 
       const drivers = await this.prisma.driver.findMany({
-        select: { id: true, completedTrips: true, ratingAverage: true, tier: true },
+        select: {
+          id: true,
+          completedTrips: true,
+          ratingAverage: true,
+          tier: true,
+        },
       });
 
       const updatePromises: Promise<Driver>[] = [];
@@ -51,7 +58,9 @@ export class DriverTierService {
         }
 
         if (driver.tier !== newTier) {
-          this.logger.log(`Driver ${driver.id} tier changed: ${driver.tier} -> ${newTier}`);
+          this.logger.log(
+            `Driver ${driver.id} tier changed: ${driver.tier} -> ${newTier}`,
+          );
           const updatePromise = this.prisma.driver.update({
             where: { id: driver.id },
             data: { tier: newTier },
@@ -62,14 +71,19 @@ export class DriverTierService {
 
       if (updatePromises.length > 0) {
         await Promise.all(updatePromises);
-        this.logger.log(`Successfully updated tiers for ${updatePromises.length} drivers.`);
+        this.logger.log(
+          `Successfully updated tiers for ${updatePromises.length} drivers.`,
+        );
       } else {
         this.logger.log('No driver tiers required an update.');
       }
 
       this.logger.log('Driver tier evaluation job finished successfully.');
     } catch (error: any) {
-      this.logger.error('Failed to run driver tier evaluation job.', error.stack);
+      this.logger.error(
+        'Failed to run driver tier evaluation job.',
+        error.stack,
+      );
     }
   }
 

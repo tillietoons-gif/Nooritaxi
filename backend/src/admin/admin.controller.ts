@@ -219,12 +219,7 @@ export class AdminController {
     @Body('status') status: string,
     @CurrentUser() actor: any,
   ) {
-    return this.admin.updateDocumentStatus(
-      driverId,
-      docId,
-      status,
-      actor?.id,
-    );
+    return this.admin.updateDocumentStatus(driverId, docId, status, actor?.id);
   }
 
   @Get('sos')

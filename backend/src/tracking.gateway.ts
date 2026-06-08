@@ -72,7 +72,7 @@ export class TrackingGateway {
       lng: data.lng,
       timestamp: new Date().toISOString(),
     });
-    
+
     // Broadcast to admins
     this.server.to('adminTracking').emit('driverLocationUpdated', {
       driverId: userId,
@@ -86,7 +86,10 @@ export class TrackingGateway {
   @UseGuards(WsJwtGuard)
   @SubscribeMessage('joinAdminTracking')
   handleJoinAdminTracking(@ConnectedSocket() client: Socket) {
-    if (client.data.user?.role !== 'ADMIN' && client.data.user?.role !== 'SUPPORT') {
+    if (
+      client.data.user?.role !== 'ADMIN' &&
+      client.data.user?.role !== 'SUPPORT'
+    ) {
       throw new WsException('Unauthorized');
     }
     client.join('adminTracking');

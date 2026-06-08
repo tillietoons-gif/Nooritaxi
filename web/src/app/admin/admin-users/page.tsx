@@ -2,11 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react"
 import {
-  Users,
   Search,
   RefreshCw,
-  ShieldCheck,
-  PencilLine,
   KeyRound,
   LoaderCircle,
   Copy,
@@ -54,11 +51,6 @@ export default function AdminUsersPage() {
   const [users, setUsers] = useState<AdminUser[]>([])
   const [roles, setRoles] = useState<Role[]>([])
   const [search, setSearch] = useState("")
-  const [selectedAdmin, setSelectedAdmin] = useState<AdminUser | null>(null)
-  const [resetTarget, setResetTarget] = useState<AdminUser | null>(null)
-  const [form, setForm] = useState<Record<string, string>>({})
-  const [saving, setSaving] = useState(false)
-  const [submitError, setSubmitError] = useState("")
   const [error, setError] = useState<string | null>(null)
 
   const load = useCallback(async (isSilent = false) => {

@@ -6,7 +6,9 @@ export class FinanceService {
   constructor(private prisma: PrismaService) {}
 
   async getCashCollections(limit = 50) {
-    const take = Number.isFinite(limit) ? Math.max(1, Math.min(Math.trunc(limit), 200)) : 50;
+    const take = Number.isFinite(limit)
+      ? Math.max(1, Math.min(Math.trunc(limit), 200))
+      : 50;
 
     return this.prisma.cashCollection.findMany({
       take,
@@ -15,7 +17,9 @@ export class FinanceService {
         settlement: {
           include: {
             user: { select: { name: true, phone: true } },
-            fleet: { select: { companyName: true, ownerName: true, phone: true } },
+            fleet: {
+              select: { companyName: true, ownerName: true, phone: true },
+            },
           },
         },
       },
@@ -31,7 +35,12 @@ export class FinanceService {
   }
 
   // 2. Set Commission Rule
-  async setSystemCommission(data: { serviceType: string; commissionType: 'FIXED' | 'PERCENTAGE'; value: number; cityId?: string }) {
+  async setSystemCommission(data: {
+    serviceType: string;
+    commissionType: 'FIXED' | 'PERCENTAGE';
+    value: number;
+    cityId?: string;
+  }) {
     return this.prisma.systemCommissionRule.create({
       data: {
         serviceType: data.serviceType,
@@ -43,7 +52,9 @@ export class FinanceService {
   }
 
   // 3. Get Active Settlements (Who owes what)
-  async getSettlements(status?: 'PENDING' | 'PARTIAL' | 'COMPLETED' | 'OVERDUE') {
+  async getSettlements(
+    status?: 'PENDING' | 'PARTIAL' | 'COMPLETED' | 'OVERDUE',
+  ) {
     return this.prisma.settlement.findMany({
       where: status ? { status } : undefined,
       include: {
@@ -55,7 +66,14 @@ export class FinanceService {
   }
 
   // 4. Record Cash Collection from Driver/Fleet
-  async collectCash(data: { settlementId: string; amount: number; collectedBy: string; collectedFrom: string; receiptNo?: string; notes?: string }) {
+  async collectCash(data: {
+    settlementId: string;
+    amount: number;
+    collectedBy: string;
+    collectedFrom: string;
+    receiptNo?: string;
+    notes?: string;
+  }) {
     return this.prisma.$transaction(async (tx) => {
       // 1. Create Cash Collection Record
       const collection = await tx.cashCollection.create({
@@ -70,13 +88,17 @@ export class FinanceService {
       });
 
       // 2. Update Settlement Balance
-      const settlement = await tx.settlement.findUnique({ where: { id: data.settlementId } });
+      const settlement = await tx.settlement.findUnique({
+        where: { id: data.settlementId },
+      });
       if (!settlement) throw new NotFoundException('Settlement not found');
 
       // Reduce the negative netBalance (they owe us) by the cash amount collected
-      const updatedNetBalance = Number(settlement.netBalance) + Number(data.amount);
-      
-      let status: 'PENDING' | 'PARTIAL' | 'COMPLETED' | 'OVERDUE' = settlement.status;
+      const updatedNetBalance =
+        Number(settlement.netBalance) + Number(data.amount);
+
+      let status: 'PENDING' | 'PARTIAL' | 'COMPLETED' | 'OVERDUE' =
+        settlement.status;
       if (updatedNetBalance >= 0) {
         status = 'COMPLETED';
       } else if (Number(data.amount) > 0) {
@@ -109,7 +131,10 @@ export class FinanceService {
     });
   }
 
-  async processRefund(id: string, data: { status: 'APPROVED' | 'REJECTED', adminId: string }) {
+  async processRefund(
+    id: string,
+    data: { status: 'APPROVED' | 'REJECTED'; adminId: string },
+  ) {
     return this.prisma.refundRequest.update({
       where: { id },
       data: {
@@ -133,10 +158,14 @@ export class FinanceService {
     });
 
     return {
-      outstandingReceivables: Math.abs(Number(pendingSettlements._sum.netBalance || 0)), // Cash drivers owe platform
+      outstandingReceivables: Math.abs(
+        Number(pendingSettlements._sum.netBalance || 0),
+      ), // Cash drivers owe platform
       totalCashCollected: Number(totalCollected._sum.amount || 0),
-      totalPlatformRevenue: 154000.50, // Mocked for dashboard
-      activeRefunds: await this.prisma.refundRequest.count({ where: { status: 'PENDING' } }),
+      totalPlatformRevenue: 154000.5, // Mocked for dashboard
+      activeRefunds: await this.prisma.refundRequest.count({
+        where: { status: 'PENDING' },
+      }),
     };
   }
 }

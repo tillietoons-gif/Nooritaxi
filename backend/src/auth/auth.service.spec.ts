@@ -54,7 +54,10 @@ describe('AuthService', () => {
 
   it('resets the password when the OTP is valid', async () => {
     const codeHash = await bcrypt.hash('123456', 10);
-    usersService.findOne.mockResolvedValue({ id: 'user-1', phone: '+93774920490' });
+    usersService.findOne.mockResolvedValue({
+      id: 'user-1',
+      phone: '+93774920490',
+    });
     prisma.phoneOtp.findFirst.mockResolvedValue({
       id: 'otp-1',
       phone: '+93774920490',
@@ -86,12 +89,17 @@ describe('AuthService', () => {
       }),
     });
     const updatedPassword = prisma.user.update.mock.calls[0][0].data.password;
-    expect(await bcrypt.compare('RecoveredAdmin123!', updatedPassword)).toBe(true);
+    expect(await bcrypt.compare('RecoveredAdmin123!', updatedPassword)).toBe(
+      true,
+    );
   });
 
   it('rejects password reset when the OTP does not match', async () => {
     const codeHash = await bcrypt.hash('654321', 10);
-    usersService.findOne.mockResolvedValue({ id: 'user-1', phone: '+93774920490' });
+    usersService.findOne.mockResolvedValue({
+      id: 'user-1',
+      phone: '+93774920490',
+    });
     prisma.phoneOtp.findFirst.mockResolvedValue({
       id: 'otp-1',
       phone: '+93774920490',

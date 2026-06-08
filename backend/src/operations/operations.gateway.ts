@@ -1,13 +1,21 @@
-import { WebSocketGateway, WebSocketServer, OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect } from '@nestjs/websockets';
+import {
+  WebSocketGateway,
+  WebSocketServer,
+  OnGatewayInit,
+  OnGatewayConnection,
+  OnGatewayDisconnect,
+} from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { UseGuards } from '@nestjs/common';
 import { WsJwtGuard } from '../auth/ws-jwt.guard';
 
 @WebSocketGateway({
   cors: { origin: '*' },
-  namespace: '/occ'
+  namespace: '/occ',
 })
-export class OperationsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
+export class OperationsGateway
+  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
+{
   @WebSocketServer() server: Server;
 
   afterInit(server: Server) {
@@ -24,7 +32,7 @@ export class OperationsGateway implements OnGatewayInit, OnGatewayConnection, On
   }
 
   // System-wide Event Emitters used by other modules to trigger OCC live updates
-  
+
   emitDriverLocationUpdate(driverId: string, lat: number, lng: number) {
     this.server.emit('driver.location.updated', { driverId, lat, lng });
   }

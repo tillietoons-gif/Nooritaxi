@@ -16,9 +16,12 @@ async function bootstrap() {
     configService.get<string>('CORS_ORIGIN'),
   );
 
-  app.use((helmet as any).default?.() || (helmet as any)({
-    crossOriginResourcePolicy: false,
-  }));
+  app.use(
+    (helmet as any).default?.() ||
+      (helmet as any)({
+        crossOriginResourcePolicy: false,
+      }),
+  );
   app.enableCors({
     origin: (origin, callback) => {
       callback(null, isAllowedCorsOrigin(origin, allowedOrigins));

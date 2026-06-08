@@ -195,8 +195,8 @@ export default function BookingPage() {
       <Header />
       <main className="flex-1 bg-muted/20 py-12">
         <div className="container mx-auto px-4 max-w-5xl">
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-            <div className="lg:col-span-2 space-y-6">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-5">
+            <div className="order-2 space-y-6 lg:order-1 lg:col-span-2">
               <Card className="border-none shadow-sm"><CardContent className="p-6 space-y-6">
                   <HeadingMd>Book a Ride</HeadingMd>
                   <form onSubmit={handleSubmit} className="space-y-4">
@@ -259,9 +259,9 @@ export default function BookingPage() {
                 </CardContent></Card>
               <Card className="bg-primary/5 border-none shadow-none"><CardContent className="p-4 flex items-center gap-4"><Shield className="h-5 w-5 text-primary" /><BodyMd className="text-xs">Your safety is our priority. Trips are tracked and insured.</BodyMd></CardContent></Card>
             </div>
-            <div className="lg:col-span-3">
-              <Card className="h-full min-h-[460px] overflow-hidden border-none shadow-sm">
-                <div className="relative h-full min-h-[460px]">
+            <div className="order-1 lg:order-2 lg:col-span-3">
+              <Card className="h-full min-h-[420px] overflow-hidden border-none shadow-sm sm:min-h-[460px]">
+                <div className="relative h-full min-h-[420px] sm:min-h-[460px]">
                   <PlacesBookingMap
                     places={mapPlaces}
                     pickupPlace={pickupPlace}
@@ -269,16 +269,26 @@ export default function BookingPage() {
                     onSelectPickup={selectPickup}
                     onSelectDropoff={selectDropoff}
                   />
-                  <div className="pointer-events-none absolute bottom-4 left-4 right-4 z-[500] rounded-lg border bg-background/95 p-3 shadow">
-                    <BodyMd className="text-sm font-medium">
+                  <div className="pointer-events-none absolute bottom-3 left-3 right-3 z-[500] rounded-[1.4rem] border border-white/70 bg-background/90 px-4 py-3 shadow-[0_18px_40px_rgba(0,33,20,0.12)] backdrop-blur-xl sm:bottom-4 sm:left-4 sm:right-4 sm:rounded-[1.6rem]">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                      <BodyMd className="text-sm font-semibold">
                       {pickupLocation && dropoffLocation ? `${pickupLocation} to ${dropoffLocation}` : "Choose pickup and destination"}
-                    </BodyMd>
+                      </BodyMd>
+                      <div className="flex flex-wrap gap-2 text-[11px] font-black uppercase tracking-[0.16em] text-muted-foreground">
+                        <span className="rounded-full border border-primary/15 bg-primary/5 px-2.5 py-1">
+                          {estimate?.distance ?? distanceKm(pickupPlace, dropoffPlace)} km
+                        </span>
+                        <span className="rounded-full border border-accent/30 bg-accent/10 px-2.5 py-1 text-foreground">
+                          {estimate ? `${estimate.currency} ${estimate.fare.toLocaleString()}` : "Live estimate"}
+                        </span>
+                      </div>
+                    </div>
                     {pickupPlace && dropoffPlace ? (
-                      <BodyMd className="text-xs text-muted-foreground">
+                      <BodyMd className="mt-2 text-xs text-muted-foreground">
                         Route uses saved places: {pickupPlace.lat.toFixed(4)}, {pickupPlace.lng.toFixed(4)} to {dropoffPlace.lat.toFixed(4)}, {dropoffPlace.lng.toFixed(4)}
                       </BodyMd>
                     ) : (
-                      <BodyMd className="text-xs text-muted-foreground">
+                      <BodyMd className="mt-2 text-xs text-muted-foreground">
                         Search above or tap a saved place marker on the map.
                       </BodyMd>
                     )}

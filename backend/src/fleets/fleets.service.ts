@@ -9,9 +9,9 @@ export class FleetsService {
     return this.prisma.fleet.findMany({
       include: {
         _count: {
-          select: { drivers: true, vehicles: true }
-        }
-      }
+          select: { drivers: true, vehicles: true },
+        },
+      },
     });
   }
 
@@ -22,10 +22,10 @@ export class FleetsService {
         drivers: true,
         vehicles: true,
         managers: {
-          include: { user: true }
+          include: { user: true },
         },
-        commissionRules: true
-      }
+        commissionRules: true,
+      },
     });
 
     if (!fleet) throw new NotFoundException('Fleet not found');
@@ -43,22 +43,22 @@ export class FleetsService {
         taxNumber: data.taxNumber,
         businessLicense: data.businessLicense,
         cityId: data.cityId,
-        status: data.status || 'PENDING'
-      }
+        status: data.status || 'PENDING',
+      },
     });
   }
 
   async update(id: string, data: any) {
     return this.prisma.fleet.update({
       where: { id },
-      data
+      data,
     });
   }
 
   async addDriver(fleetId: string, driverId: string) {
     return this.prisma.driver.update({
       where: { id: driverId },
-      data: { fleetId }
+      data: { fleetId },
     });
   }
 
@@ -66,8 +66,8 @@ export class FleetsService {
     return this.prisma.vehicle.create({
       data: {
         ...data,
-        fleetId
-      }
+        fleetId,
+      },
     });
   }
 
@@ -78,18 +78,18 @@ export class FleetsService {
         amount: data.amount,
         method: data.method,
         accountDetails: data.accountDetails,
-        notes: data.notes
-      }
+        notes: data.notes,
+      },
     });
   }
 
   async getEarnings(fleetId: string) {
     // This is a simplified earnings aggregator
     return {
-      daily: 1250.00,
-      weekly: 8400.50,
-      monthly: 32000.00,
-      pendingPayout: 4500.00
+      daily: 1250.0,
+      weekly: 8400.5,
+      monthly: 32000.0,
+      pendingPayout: 4500.0,
     };
   }
 
@@ -98,9 +98,9 @@ export class FleetsService {
       where: { id: fleetId },
       include: {
         _count: {
-          select: { drivers: true, vehicles: true }
-        }
-      }
+          select: { drivers: true, vehicles: true },
+        },
+      },
     });
 
     if (!fleet) throw new NotFoundException('Fleet not found');
@@ -111,7 +111,7 @@ export class FleetsService {
       onlineDrivers: Math.floor(fleet._count.drivers * 0.6), // Mocked for UI
       activeTrips: Math.floor(fleet._count.drivers * 0.3),
       utilizationRate: 75,
-      cancellationRate: 4.2
+      cancellationRate: 4.2,
     };
   }
 }

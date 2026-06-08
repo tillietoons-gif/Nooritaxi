@@ -7,6 +7,6 @@ import { PrismaModule } from '../prisma/prisma.module';
   imports: [PrismaModule],
   controllers: [CMSController],
   providers: [CMSService],
-  exports: [CMSService]
+  exports: [CMSService],
 })
 export class CMSModule {}

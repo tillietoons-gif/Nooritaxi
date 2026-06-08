@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Put, Body, Param, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Body,
+  Param,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { OperationsService } from './operations.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RequirePermission } from '../auth/decorators/permissions.decorator';
@@ -53,8 +62,15 @@ export class OperationsController {
 
   @Post('dispatch/manual')
   @RequirePermission('operations.edit')
-  manualDispatch(@Request() req, @Body() data: { tripId: string, driverId: string }) {
-    return this.opsService.manualDispatch(data.tripId, data.driverId, req.user.userId);
+  manualDispatch(
+    @Request() req,
+    @Body() data: { tripId: string; driverId: string },
+  ) {
+    return this.opsService.manualDispatch(
+      data.tripId,
+      data.driverId,
+      req.user.userId,
+    );
   }
 
   @Post('broadcast')

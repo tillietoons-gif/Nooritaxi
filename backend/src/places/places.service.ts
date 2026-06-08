@@ -26,10 +26,14 @@ export class PlacesService {
   searchPlaces(q?: string, city?: string, limit = 10) {
     const safeLimit = Math.min(Math.max(Number(limit) || 10, 1), 25);
     const query = q?.trim();
-    const aliasQueries = query ? [...new Set([query, query.toLowerCase(), query.toUpperCase()])] : [];
+    const aliasQueries = query
+      ? [...new Set([query, query.toLowerCase(), query.toUpperCase()])]
+      : [];
     const where: Prisma.CustomPlaceWhereInput = {
       isActive: true,
-      ...(city?.trim() ? { city: { equals: city.trim(), mode: 'insensitive' } } : {}),
+      ...(city?.trim()
+        ? { city: { equals: city.trim(), mode: 'insensitive' } }
+        : {}),
       ...(query
         ? {
             OR: [
@@ -62,7 +66,9 @@ export class PlacesService {
   }
 
   async updatePlace(id: string, input: PlaceInput) {
-    const existing = await this.prisma.customPlace.findUnique({ where: { id } });
+    const existing = await this.prisma.customPlace.findUnique({
+      where: { id },
+    });
     if (!existing) throw new NotFoundException('Place not found');
 
     const data = this.validatePlace(input, false);
@@ -73,7 +79,9 @@ export class PlacesService {
   }
 
   async deactivatePlace(id: string) {
-    const existing = await this.prisma.customPlace.findUnique({ where: { id } });
+    const existing = await this.prisma.customPlace.findUnique({
+      where: { id },
+    });
     if (!existing) throw new NotFoundException('Place not found');
     return this.prisma.customPlace.update({
       where: { id },
@@ -82,7 +90,8 @@ export class PlacesService {
   }
 
   private validatePlace(input: PlaceInput, requireAll: boolean) {
-    const data: Prisma.CustomPlaceUncheckedCreateInput = {} as Prisma.CustomPlaceUncheckedCreateInput;
+    const data: Prisma.CustomPlaceUncheckedCreateInput =
+      {} as Prisma.CustomPlaceUncheckedCreateInput;
 
     if (requireAll || input.name != null) {
       const name = String(input.name ?? '').trim();

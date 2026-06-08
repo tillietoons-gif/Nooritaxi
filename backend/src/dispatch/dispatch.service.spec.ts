@@ -50,7 +50,11 @@ describe('DispatchService', () => {
 
     prisma.driver.findMany.mockResolvedValue([nearbyDriver, farDriver]);
 
-    const result = await service.findNearestOnlineDriver(pickupLat, pickupLng, 5);
+    const result = await service.findNearestOnlineDriver(
+      pickupLat,
+      pickupLng,
+      5,
+    );
 
     expect(prisma.driver.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -91,7 +95,11 @@ describe('DispatchService', () => {
     // Both are at same distance, B has better rating
     prisma.driver.findMany.mockResolvedValue([driverA, driverB]);
 
-    const result = await service.findNearestOnlineDriver(pickupLat, pickupLng, 10);
+    const result = await service.findNearestOnlineDriver(
+      pickupLat,
+      pickupLng,
+      10,
+    );
     expect(result?.userId).toBe('driver-b');
   });
 });

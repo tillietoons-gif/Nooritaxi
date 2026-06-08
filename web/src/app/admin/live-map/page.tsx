@@ -13,13 +13,13 @@ export default function LiveMapPage() {
   return (
     <AuthGate roles={["ADMIN", "SUPPORT"]}>
       <main className="flex-1 px-4 py-8 md:px-8">
-        <div className="mx-auto max-w-7xl space-y-6 h-full flex flex-col">
+        <div className="mx-auto flex h-full max-w-7xl flex-col gap-6">
           <AdminPageHeader
             title="Live Map"
-            subtitle="Drivers, surge zones, and custom rider places"
+            subtitle="Drivers, surge zones, and custom rider places styled for the Noori operations workspace."
           />
 
-          <div className="flex-1 min-h-[600px] overflow-hidden rounded-lg border bg-background shadow-sm relative z-10">
+          <div className="relative z-10 min-h-[640px] flex-1 overflow-hidden rounded-[1.75rem] border border-primary/15 bg-background/70 shadow-[0_24px_55px_rgba(0,33,20,0.12)]">
             <LiveMap />
           </div>
         </div>

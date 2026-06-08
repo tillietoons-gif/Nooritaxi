@@ -9,9 +9,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { NooriMapControls } from "@/components/maps/noori-map-controls";
 import { apiUrl, getToken } from "@/lib/auth";
 
 import "leaflet/dist/leaflet.css";
+
+const BRAND_PRIMARY = "#006947";
+const BRAND_DEEP = "#004d34";
+const BRAND_ACCENT = "#d4af37";
 
 interface DriverLocation {
   id: string;
@@ -57,17 +62,25 @@ type ViewportControllerProps = {
 const mapCenter: L.LatLngExpression = [34.5281, 69.1723];
 
 function getStatusColor(status?: string) {
-  return status === "BUSY" ? "#f59e0b" : "#16a34a";
+  return status === "BUSY" ? BRAND_ACCENT : BRAND_PRIMARY;
 }
 
-function createDriverIcon(status?: string, selected = false) {
+function getStatusLabel(status?: string) {
+  return status === "BUSY" ? "Busy" : "Online";
+}
+
+function createDriverIcon(status: string | undefined, selected = false, driverName?: string) {
   const color = getStatusColor(status);
-  const size = selected ? 34 : 28;
-  const ring = selected ? "0 0 0 6px rgba(37, 99, 235, 0.18)" : "0 0 0 4px rgba(255, 255, 255, 0.85)";
+  const size = selected ? 38 : 30;
+  const label = driverName?.trim().charAt(0).toUpperCase() || "D";
+  const textColor = status === "BUSY" ? "#1f2937" : "#ffffff";
+  const ring = selected
+    ? `0 0 0 8px rgba(212, 175, 55, 0.22), 0 18px 34px rgba(0, 33, 20, 0.24)`
+    : `0 0 0 6px ${status === "BUSY" ? "rgba(212,175,55,0.2)" : "rgba(0,105,71,0.18)"}, 0 12px 24px rgba(0, 33, 20, 0.2)`;
 
   return L.divIcon({
     className: "",
-    html: `<div style="width:${size}px;height:${size}px;border-radius:9999px;background:${color};border:3px solid white;box-shadow:${ring},0 10px 20px rgba(15,23,42,.25);display:flex;align-items:center;justify-content:center;color:white;font-size:13px;font-weight:800;">D</div>`,
+    html: `<div style="width:${size}px;height:${size}px;border-radius:9999px;background:${color};border:3px solid rgba(255,255,255,.96);box-shadow:${ring};display:flex;align-items:center;justify-content:center;color:${textColor};font-size:13px;font-weight:900;letter-spacing:.04em;">${label}</div>`,
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
     popupAnchor: [0, -(size / 2)],
@@ -77,7 +90,7 @@ function createDriverIcon(status?: string, selected = false) {
 function createPlaceIcon() {
   return L.divIcon({
     className: "",
-    html: `<div style="width:24px;height:24px;border-radius:9999px;background:#f97316;border:3px solid white;box-shadow:0 8px 18px rgba(15,23,42,.24);display:flex;align-items:center;justify-content:center;"><div style="width:7px;height:7px;border-radius:9999px;background:white;"></div></div>`,
+    html: `<div style="width:26px;height:26px;border-radius:9999px;background:${BRAND_DEEP};border:3px solid rgba(255,255,255,.96);box-shadow:0 0 0 6px rgba(0,77,52,0.15),0 12px 24px rgba(0,33,20,.2);display:flex;align-items:center;justify-content:center;"><div style="width:8px;height:8px;border-radius:9999px;background:${BRAND_ACCENT};"></div></div>`,
     iconSize: [24, 24],
     iconAnchor: [12, 12],
     popupAnchor: [0, -12],
@@ -99,11 +112,11 @@ function getSurgeZoneRing(zone: SurgeZone): [number, number][] {
 function getZonePathOptions(zone: SurgeZone) {
   const active = zone.isCurrentlyActive ?? zone.isActive;
   return {
-    color: active ? "#dc2626" : "#64748b",
-    fillColor: active ? "#ef4444" : "#94a3b8",
-    fillOpacity: active ? 0.18 : 0.08,
-    opacity: active ? 0.9 : 0.45,
-    weight: active ? 2 : 1,
+    color: active ? BRAND_ACCENT : BRAND_PRIMARY,
+    fillColor: active ? BRAND_ACCENT : BRAND_PRIMARY,
+    fillOpacity: active ? 0.24 : 0.09,
+    opacity: active ? 0.95 : 0.52,
+    weight: active ? 3 : 2,
   };
 }
 
@@ -170,6 +183,14 @@ export default function LiveMap() {
   const visibleDrivers = visibleLayers.drivers ? drivers : [];
   const visibleZones = visibleLayers.zones ? surgeZones : [];
   const visiblePlaces = visibleLayers.places ? places : [];
+  const fitPoints = useMemo(
+    () => [
+      ...visibleDrivers.map((driver) => [driver.lat, driver.lng] as [number, number]),
+      ...visibleZones.flatMap((zone) => getSurgeZoneRing(zone)),
+      ...visiblePlaces.map((place) => [place.lat, place.lng] as [number, number]),
+    ],
+    [visibleDrivers, visiblePlaces, visibleZones],
+  );
   const normalizedSearch = modalSearch.trim().toLowerCase();
   const filteredDrivers = drivers.filter((driver) =>
     [driver.name, driver.id, driver.status].some((value) => value?.toLowerCase().includes(normalizedSearch)),
@@ -312,7 +333,7 @@ export default function LiveMap() {
   if (error) {
     return (
       <div className="flex h-full items-center justify-center bg-background p-6">
-        <div className="max-w-md rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
+        <div className="max-w-md rounded-[1.4rem] border border-destructive/40 bg-destructive/10 p-5 text-sm text-destructive shadow-[0_24px_55px_rgba(0,33,20,0.12)]">
           {error}
         </div>
       </div>
@@ -320,30 +341,47 @@ export default function LiveMap() {
   }
 
   return (
-    <div className="grid h-full min-h-0 bg-background lg:grid-cols-[minmax(0,1fr)_340px]">
-      <div className="relative min-h-[460px]">
-        <div className="absolute left-3 right-3 top-3 z-[500] flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
-          <div className="flex w-fit flex-wrap items-center gap-2 rounded-lg border bg-background/95 p-2 shadow-sm backdrop-blur">
-            <Badge variant={isLiveConnected ? "default" : "secondary"} className="gap-1.5">
+    <div className="grid h-full min-h-0 gap-4 bg-transparent lg:grid-cols-[minmax(0,1fr)_360px]">
+      <div className="noori-map-shell relative min-h-[520px]">
+        <div className="absolute left-4 right-4 top-4 z-[500] flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+          <div className="w-full max-w-md rounded-[1.45rem] border border-primary/15 bg-background/88 px-4 py-3 shadow-[0_18px_40px_rgba(0,33,20,0.14)] backdrop-blur-xl">
+            <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.24em] text-primary/80">
+              <Radio className={`h-3.5 w-3.5 ${isLiveConnected ? "animate-pulse" : ""}`} />
+              Noori Fleet Grid
+            </div>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <Badge variant={isLiveConnected ? "default" : "secondary"} className="gap-1.5 rounded-full px-3 py-1 font-semibold">
               {isLiveConnected ? <Wifi className="h-3.5 w-3.5" /> : <WifiOff className="h-3.5 w-3.5" />}
               {isLiveConnected ? "Live" : "Polling"}
-            </Badge>
-            <span className="px-1 text-xs text-muted-foreground">Updated {formatTime(lastUpdated)}</span>
+              </Badge>
+              <span className="text-xs text-muted-foreground">Updated {formatTime(lastUpdated)}</span>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+              <div className="rounded-2xl border border-primary/10 bg-primary/6 px-3 py-2">
+                <span className="block text-[10px] font-black uppercase tracking-[0.22em] text-primary/70">Tracked</span>
+                <strong className="mt-1 block text-xl font-black text-foreground">{drivers.length}</strong>
+              </div>
+              <div className="rounded-2xl border border-accent/30 bg-accent/10 px-3 py-2">
+                <span className="block text-[10px] font-black uppercase tracking-[0.22em] text-foreground/70">Active surge</span>
+                <strong className="mt-1 block text-xl font-black text-foreground">{totals.activeSurgeZones}</strong>
+              </div>
+            </div>
           </div>
 
-          <div className="flex w-fit flex-wrap items-center gap-2 rounded-lg border bg-background/95 p-2 shadow-sm backdrop-blur">
-            <Button size="sm" variant={visibleLayers.drivers ? "default" : "outline"} onClick={() => toggleLayer("drivers")}>
+          <div className="flex w-full max-w-xl flex-wrap items-center gap-2 rounded-[1.35rem] border border-primary/15 bg-background/88 p-2 shadow-[0_18px_40px_rgba(0,33,20,0.14)] backdrop-blur-xl xl:w-fit">
+            <Button size="sm" className="rounded-full" variant={visibleLayers.drivers ? "default" : "outline"} onClick={() => toggleLayer("drivers")}>
               Drivers
             </Button>
-            <Button size="sm" variant={visibleLayers.zones ? "default" : "outline"} onClick={() => toggleLayer("zones")}>
+            <Button size="sm" className="rounded-full" variant={visibleLayers.zones ? "default" : "outline"} onClick={() => toggleLayer("zones")}>
               Surge
             </Button>
-            <Button size="sm" variant={visibleLayers.places ? "default" : "outline"} onClick={() => toggleLayer("places")}>
+            <Button size="sm" className="rounded-full" variant={visibleLayers.places ? "default" : "outline"} onClick={() => toggleLayer("places")}>
               Places
             </Button>
             <Button
               size="icon"
               variant="outline"
+              className="rounded-full"
               onClick={() => loadDrivers(true)}
               disabled={isRefreshing}
               aria-label="Refresh map data"
@@ -353,6 +391,7 @@ export default function LiveMap() {
             <Button
               size="icon"
               variant="outline"
+              className="rounded-full"
               onClick={() => {
                 setSelectedDriverId(null);
                 setFitVersion((version) => version + 1);
@@ -366,27 +405,46 @@ export default function LiveMap() {
         </div>
 
         {liveError ? (
-          <div className="absolute bottom-4 left-4 z-[500] max-w-sm rounded-md bg-destructive/90 px-3 py-2 text-sm text-destructive-foreground shadow">
+          <div className="absolute bottom-4 left-4 z-[500] max-w-sm rounded-2xl bg-destructive/92 px-4 py-3 text-sm text-destructive-foreground shadow-[0_18px_40px_rgba(0,33,20,0.18)]">
             {liveError}
           </div>
         ) : null}
 
-        <MapContainer center={mapCenter} zoom={13} style={{ height: "100%", width: "100%" }}>
+        <MapContainer center={mapCenter} zoom={13} zoomControl={false} className="noori-map-canvas h-full w-full">
           <ViewportController drivers={visibleDrivers} surgeZones={visibleZones} places={visiblePlaces} fitVersion={fitVersion} selectedDriver={selectedDriver} />
+          <NooriMapControls
+            fitPoints={fitPoints}
+            className="pointer-events-auto absolute bottom-4 left-4 z-[650] flex flex-row gap-2 sm:bottom-auto sm:left-auto sm:right-4 sm:top-28 sm:flex-col xl:top-4"
+          />
           <TileLayer
+            className="noori-map-base-tiles"
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-            url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+            url="https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png"
+          />
+          <TileLayer
+            className="noori-map-label-tiles"
+            attribution='&copy; <a href="https://carto.com/attributions">CARTO</a>'
+            url="https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png"
           />
           {visibleZones.map((zone) => {
             const positions = getSurgeZoneRing(zone);
             return (
               <Polygon key={zone.id} positions={positions} pathOptions={getZonePathOptions(zone)}>
                 <Popup>
-                  <div className="space-y-1">
-                    <p className="font-semibold">{zone.name}</p>
-                    <p>Multiplier: {zone.multiplier}x</p>
-                    <p>Status: {(zone.isCurrentlyActive ?? zone.isActive) ? "Active" : "Inactive"}</p>
-                    <p>Until: {new Date(zone.activeUntil).toLocaleString()}</p>
+                  <div className="noori-map-popup-card">
+                    <h4>{zone.name}</h4>
+                    <p>Surge pricing overlay</p>
+                    <div className="noori-map-popup-meta">
+                      <div>
+                        <span>Multiplier</span>
+                        <strong>{zone.multiplier}x</strong>
+                      </div>
+                      <div>
+                        <span>Status</span>
+                        <strong>{(zone.isCurrentlyActive ?? zone.isActive) ? "Active" : "Inactive"}</strong>
+                      </div>
+                    </div>
+                    <p>Until {new Date(zone.activeUntil).toLocaleString()}</p>
                   </div>
                 </Popup>
               </Polygon>
@@ -395,18 +453,24 @@ export default function LiveMap() {
           {visibleDrivers.map((driver) => (
             <Marker
               key={driver.id}
-              icon={createDriverIcon(driver.status, driver.id === selectedDriverId)}
+              icon={createDriverIcon(driver.status, driver.id === selectedDriverId, driver.name)}
               position={[driver.lat, driver.lng]}
               eventHandlers={{ click: () => setSelectedDriverId(driver.id) }}
             >
               <Popup>
-                <div className="space-y-1">
-                  <p className="font-semibold">{driver.name}</p>
-                  <p>ID: {driver.id.slice(0, 8)}...</p>
-                  <p>Status: {driver.status ?? "ONLINE"}</p>
-                  <p>
-                    Lat: {driver.lat.toFixed(4)}, Lng: {driver.lng.toFixed(4)}
-                  </p>
+                <div className="noori-map-popup-card">
+                  <h4>{driver.name}</h4>
+                  <p>Fleet node {driver.id.slice(0, 8)}...</p>
+                  <div className="noori-map-popup-meta">
+                    <div>
+                      <span>Status</span>
+                      <strong>{getStatusLabel(driver.status)}</strong>
+                    </div>
+                    <div>
+                      <span>Coordinates</span>
+                      <strong>{driver.lat.toFixed(3)}, {driver.lng.toFixed(3)}</strong>
+                    </div>
+                  </div>
                 </div>
               </Popup>
             </Marker>
@@ -414,55 +478,62 @@ export default function LiveMap() {
           {visiblePlaces.map((place) => (
             <Marker key={place.id} icon={createPlaceIcon()} position={[place.lat, place.lng]}>
               <Popup>
-                <div className="space-y-1">
-                  <p className="font-semibold">{place.name}</p>
+                <div className="noori-map-popup-card">
+                  <h4>{place.name}</h4>
                   <p>{place.address}</p>
-                  {place.category ? <p>Category: {place.category}</p> : null}
-                  <p>
-                    Lat: {place.lat.toFixed(4)}, Lng: {place.lng.toFixed(4)}
-                  </p>
+                  <div className="noori-map-popup-meta">
+                    <div>
+                      <span>Category</span>
+                      <strong>{place.category ?? "Saved place"}</strong>
+                    </div>
+                    <div>
+                      <span>City</span>
+                      <strong>{place.city}</strong>
+                    </div>
+                  </div>
                 </div>
               </Popup>
             </Marker>
           ))}
         </MapContainer>
 
-        <div className="absolute bottom-3 right-3 z-[500] rounded-lg border bg-background/95 p-2 text-xs shadow-sm backdrop-blur">
-          <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-            <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-green-600" />Online</span>
-            <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-amber-500" />Busy</span>
-            <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-orange-500" />Place</span>
-            <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-sm bg-red-500/70" />Surge</span>
+        <div className="absolute bottom-4 right-4 z-[500] rounded-[1.35rem] border border-primary/15 bg-background/88 p-3 text-xs shadow-[0_18px_40px_rgba(0,33,20,0.14)] backdrop-blur-xl">
+          <div className="mb-2 text-[10px] font-black uppercase tracking-[0.22em] text-muted-foreground">Legend</div>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+            <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-primary" />Online</span>
+            <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-accent" />Busy</span>
+            <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-[#004d34]" />Place</span>
+            <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-sm bg-accent/70" />Surge</span>
           </div>
         </div>
       </div>
 
-      <aside className="min-h-0 border-t bg-background lg:border-l lg:border-t-0">
+      <aside className="min-h-0 overflow-hidden rounded-[1.75rem] border border-primary/12 bg-background/84 shadow-[0_24px_55px_rgba(0,33,20,0.12)] backdrop-blur-xl">
         <div className="flex h-full min-h-0 flex-col">
-          <div className="border-b p-4">
+          <div className="border-b border-primary/10 bg-gradient-to-br from-primary/10 via-background to-accent/10 p-5">
             <div>
-              <h2 className="text-base font-semibold">Operations</h2>
+              <h2 className="text-base font-black uppercase tracking-tight">Operations</h2>
               <p className="text-xs text-muted-foreground">{drivers.length} drivers with coordinates</p>
             </div>
 
             <div className="mt-4 grid grid-cols-2 gap-2">
-              <div className="rounded-md border p-3">
+              <div className="rounded-2xl border border-primary/10 bg-background/85 p-3">
                 <Users className="mb-2 h-4 w-4 text-primary" />
                 <p className="text-2xl font-semibold">{drivers.length}</p>
                 <p className="text-xs text-muted-foreground">Tracked</p>
               </div>
-              <div className="rounded-md border p-3">
-                <Radio className="mb-2 h-4 w-4 text-green-600" />
+              <div className="rounded-2xl border border-primary/10 bg-background/85 p-3">
+                <Radio className="mb-2 h-4 w-4 text-primary" />
                 <p className="text-2xl font-semibold">{totals.online}</p>
                 <p className="text-xs text-muted-foreground">Online</p>
               </div>
-              <div className="rounded-md border p-3">
-                <LocateFixed className="mb-2 h-4 w-4 text-amber-600" />
+              <div className="rounded-2xl border border-accent/25 bg-accent/10 p-3">
+                <LocateFixed className="mb-2 h-4 w-4 text-accent" />
                 <p className="text-2xl font-semibold">{totals.busy}</p>
                 <p className="text-xs text-muted-foreground">Busy</p>
               </div>
-              <div className="rounded-md border p-3">
-                <Zap className="mb-2 h-4 w-4 text-red-600" />
+              <div className="rounded-2xl border border-primary/10 bg-background/85 p-3">
+                <Zap className="mb-2 h-4 w-4 text-primary" />
                 <p className="text-2xl font-semibold">{totals.activeSurgeZones}</p>
                 <p className="text-xs text-muted-foreground">Active surge</p>
               </div>
@@ -472,7 +543,7 @@ export default function LiveMap() {
               <button
                 type="button"
                 onClick={() => openModal("drivers")}
-                className="flex w-full items-center justify-between rounded-md border p-3 text-left transition-colors hover:bg-muted/50"
+                className="flex w-full items-center justify-between rounded-2xl border border-primary/10 bg-background/85 p-3 text-left transition-colors hover:bg-primary/5"
               >
                 <span className="flex items-center gap-2 text-sm font-medium">
                   <Users className="h-4 w-4 text-primary" />
@@ -483,10 +554,10 @@ export default function LiveMap() {
               <button
                 type="button"
                 onClick={() => openModal("places")}
-                className="flex w-full items-center justify-between rounded-md border p-3 text-left transition-colors hover:bg-muted/50"
+                className="flex w-full items-center justify-between rounded-2xl border border-primary/10 bg-background/85 p-3 text-left transition-colors hover:bg-primary/5"
               >
                 <span className="flex items-center gap-2 text-sm font-medium">
-                  <MapPin className="h-4 w-4 text-orange-600" />
+                  <MapPin className="h-4 w-4 text-accent" />
                   Custom Places
                 </span>
                 <Badge variant="secondary">{places.length}</Badge>
@@ -494,10 +565,10 @@ export default function LiveMap() {
               <button
                 type="button"
                 onClick={() => openModal("zones")}
-                className="flex w-full items-center justify-between rounded-md border p-3 text-left transition-colors hover:bg-muted/50"
+                className="flex w-full items-center justify-between rounded-2xl border border-primary/10 bg-background/85 p-3 text-left transition-colors hover:bg-primary/5"
               >
                 <span className="flex items-center gap-2 text-sm font-medium">
-                  <Layers className="h-4 w-4 text-red-600" />
+                  <Layers className="h-4 w-4 text-primary" />
                   Surge Zones
                 </span>
                 <Badge variant={totals.activeSurgeZones ? "destructive" : "secondary"}>{surgeZones.length}</Badge>
@@ -505,8 +576,8 @@ export default function LiveMap() {
             </div>
           </div>
 
-          <div className="flex-1 p-4">
-            <div className="rounded-md border bg-muted/20 p-4 text-sm text-muted-foreground">
+          <div className="flex-1 p-5">
+            <div className="rounded-[1.35rem] border border-primary/10 bg-muted/20 p-4 text-sm text-muted-foreground">
               Use the map controls to show or hide layers. Open a modal to search and inspect drivers, custom places, or surge zones.
             </div>
           </div>

@@ -1,7 +1,7 @@
 "use client"
-import { useMemo } from "react"
+import React, { useMemo, useState, useEffect } from "react"
 import Link from "next/link"
-import { motion, useScroll, useTransform } from "framer-motion"
+import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
@@ -26,11 +26,11 @@ import { useUserBehavior } from "@/components/user-behavior-provider"
 
 import { useTranslation } from "react-i18next"
 
-const ADAPTIVE_FEATURES = [
-  { title: "Dynamic UI", desc: "Widgets rearrange based on your frequency.", icon: Layers },
-  { title: "Smart Defaults", desc: "Your most common routes pre-filled.", icon: Zap },
-  { title: "Predictive Routing", desc: "AI forecasts demand before it happens.", icon: Activity },
-  { title: "Localized Context", desc: "Adaptive language and regional settings.", icon: Globe },
+const getAdaptiveFeatures = (t: any) => [
+  { title: t("adaptive.feature1_title", "Dynamic UI"), desc: t("adaptive.feature1_desc", "Widgets rearrange based on your frequency."), icon: Layers },
+  { title: t("adaptive.feature2_title", "Smart Defaults"), desc: t("adaptive.feature2_desc", "Your most common routes pre-filled."), icon: Zap },
+  { title: t("adaptive.feature3_title", "Predictive Routing"), desc: t("adaptive.feature3_desc", "AI forecasts demand before it happens."), icon: Activity },
+  { title: t("adaptive.feature4_title", "Localized Context"), desc: t("adaptive.feature4_desc", "Adaptive language and regional settings."), icon: Globe },
 ];
 
 const GLOBE_PARTICLES = [
@@ -43,11 +43,13 @@ const GLOBE_PARTICLES = [
 ];
 
 const GenAIGlobe = () => {
+  const shouldReduceMotion = useReducedMotion();
   return (
     <div className="h-full w-full bg-primary/5 rounded-2xl flex items-center justify-center overflow-hidden relative">
       <div className="absolute inset-0 opacity-20"><PatternOverlay /></div>
       <motion.div 
-        animate={{ rotate: 360 }} 
+        whileInView={shouldReduceMotion ? { rotate: 0 } : { rotate: 360 }} 
+        viewport={{ once: false, margin: "100px" }}
         transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
         className="relative w-40 h-40"
       >
@@ -60,11 +62,12 @@ const GenAIGlobe = () => {
         <motion.div
           key={p.id}
           className="absolute w-2 h-2 bg-gold/60 rounded-full blur-[1px]"
-          animate={{ 
+          whileInView={shouldReduceMotion ? { y: 0, x: 0, opacity: 1 } : { 
             y: [-30, 30, -30],
             x: [-30, 30, -30],
             opacity: [0.2, 1, 0.2] 
           }}
+          viewport={{ once: false, margin: "100px" }}
           transition={{ duration: p.duration, repeat: Infinity, delay: p.delay, ease: "easeInOut" }}
           style={{ 
             top: p.top,
@@ -77,6 +80,7 @@ const GenAIGlobe = () => {
 }
 
 const GenAIParcelFlow = () => {
+  const shouldReduceMotion = useReducedMotion();
   return (
     <div className="h-full w-full bg-primary/5 rounded-2xl flex items-center justify-center overflow-hidden relative">
       <div className="absolute inset-0 opacity-10"><PatternOverlay /></div>
@@ -86,12 +90,14 @@ const GenAIParcelFlow = () => {
         
         <motion.div 
           className="absolute w-24 h-[2px] bg-gold/80 shadow-[0_0_15px_rgba(255,215,0,0.8)]"
-          animate={{ x: ['-300%', '300%'] }}
+          whileInView={shouldReduceMotion ? { x: 0 } : { x: ['-300%', '300%'] }}
+          viewport={{ once: false, margin: "100px" }}
           transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }}
         />
         <motion.div 
           className="absolute h-24 w-[2px] bg-primary/80 shadow-[0_0_15px_rgba(0,105,71,0.8)]"
-          animate={{ y: ['-300%', '300%'] }}
+          whileInView={shouldReduceMotion ? { y: 0 } : { y: ['-300%', '300%'] }}
+          viewport={{ once: false, margin: "100px" }}
           transition={{ duration: 3, repeat: Infinity, ease: "linear", delay: 1 }}
         />
         
@@ -104,6 +110,7 @@ const GenAIParcelFlow = () => {
 }
 
 const GenAILayers = () => {
+  const shouldReduceMotion = useReducedMotion();
   return (
     <div className="h-full w-full bg-primary/5 rounded-2xl flex items-center justify-center overflow-hidden relative group">
       <div className="absolute inset-0 opacity-10"><PatternOverlay /></div>
@@ -112,11 +119,12 @@ const GenAILayers = () => {
           <motion.div
             key={i}
             className="absolute inset-0 bg-gradient-to-br from-primary/10 to-gold/5 backdrop-blur-xl border border-primary/20 rounded-2xl shadow-[0_0_30px_rgba(0,105,71,0.1)]"
-            animate={{ 
+            whileInView={shouldReduceMotion ? { y: 0, rotate: 0, scale: 1 } : { 
               y: [0, -15 + i * 8, 0],
               rotate: [0, -3 + i * 3, 0],
               scale: [1, 1.05 - i * 0.02, 1]
             }}
+            viewport={{ once: false, margin: "100px" }}
             transition={{ duration: 5, repeat: Infinity, delay: i * 0.3, ease: "easeInOut" }}
             style={{ zIndex: 3 - i, transformOrigin: 'bottom center' }}
           />
@@ -130,6 +138,7 @@ const GenAILayers = () => {
 }
 
 const GenAITracking = () => {
+  const shouldReduceMotion = useReducedMotion();
   return (
     <div className="h-full w-full bg-gold/5 rounded-2xl flex items-center justify-center overflow-hidden relative">
       <div className="absolute inset-0 opacity-10"><PatternOverlay /></div>
@@ -137,7 +146,8 @@ const GenAITracking = () => {
       <motion.div 
         className="absolute inset-0 rounded-full border-r-2 border-t-2 border-primary/30 origin-center"
         style={{ width: '250%', height: '250%', top: '-75%', left: '-75%' }}
-        animate={{ rotate: 360 }}
+        whileInView={shouldReduceMotion ? { rotate: 0 } : { rotate: 360 }}
+        viewport={{ once: false, margin: "100px" }}
         transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
       >
          <div className="w-1/2 h-1/2 bg-gradient-to-tr from-transparent to-primary/10 rounded-tr-full" />
@@ -148,7 +158,8 @@ const GenAITracking = () => {
       <div className="absolute w-80 h-80 border border-gold/5 rounded-full" />
       
       <motion.div
-        animate={{ scale: [1, 1.1, 1], opacity: [0.7, 1, 0.7] }}
+        whileInView={shouldReduceMotion ? { scale: 1, opacity: 1 } : { scale: [1, 1.1, 1], opacity: [0.7, 1, 0.7] }}
+        viewport={{ once: false, margin: "100px" }}
         transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
         className="relative z-10 bg-background/80 rounded-full p-4 border border-gold/20 shadow-[0_0_30px_rgba(255,215,0,0.15)]"
       >
@@ -162,16 +173,24 @@ export default function LandingPage() {
   const { behavior } = useUserBehavior()
   const { t } = useTranslation()
   const { scrollY } = useScroll()
+  const shouldReduceMotion = useReducedMotion()
   const opacity = useTransform(scrollY, [0, 200], [1, 0])
   const y1 = useTransform(scrollY, [0, 500], [0, -100])
 
-  const greeting = behavior.timeOfDay === "morning"
-    ? "Good Morning"
-    : behavior.timeOfDay === "afternoon"
-      ? "Good Afternoon"
-      : behavior.timeOfDay === "evening"
-        ? "Good Evening"
-        : "Good Night";
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const greeting = mounted ? (
+    behavior.timeOfDay === "morning"
+      ? t("hero.greeting_morning", "Good Morning")
+      : behavior.timeOfDay === "afternoon"
+        ? t("hero.greeting_afternoon", "Good Afternoon")
+        : behavior.timeOfDay === "evening"
+          ? t("hero.greeting_evening", "Good Evening")
+          : t("hero.greeting_night", "Good Night")
+  ) : t("hero.greeting_default", "Welcome");
 
   const services = useMemo(() => [
     {
@@ -226,6 +245,8 @@ export default function LandingPage() {
     });
   }, [services, behavior.preferredService]);
 
+  const adaptiveFeatures = getAdaptiveFeatures(t);
+
   return (
     <div className="flex flex-col min-h-screen selection:bg-primary/20 selection:text-primary">
       <Header />
@@ -234,9 +255,11 @@ export default function LandingPage() {
         {/* HERO SECTION */}
         <section className="relative min-h-[100vh] flex items-center overflow-hidden pt-20">
           <div className="absolute inset-0 z-0 opacity-40 dark:opacity-20 pointer-events-none">
-            <Scene3D cameraPosition={[0, 0, 8]}>
-              <LogisticsNetwork />
-            </Scene3D>
+            {mounted && !shouldReduceMotion && (
+              <Scene3D cameraPosition={[0, 0, 8]}>
+                <LogisticsNetwork />
+              </Scene3D>
+            )}
           </div>
 
           <div className="container mx-auto px-4 relative z-10">
@@ -249,7 +272,7 @@ export default function LandingPage() {
             >
               <div className="flex items-center gap-3 mb-8">
                 <div className="h-[1px] w-12 bg-primary/30" />
-                <LabelMd className="text-primary font-bold tracking-widest">{greeting}, {behavior.visitCount > 1 ? "Welcome Back" : "Explore Future Mobility"}</LabelMd>
+                <LabelMd className="text-primary font-bold tracking-widest">{greeting}, {mounted && behavior.visitCount > 1 ? t("hero.welcome_back", "Welcome Back") : t("hero.explore_future", "Explore Future Mobility")}</LabelMd>
               </div>
 
               <HeadingLg className="mb-8 leading-[1.1] text-balance">
@@ -263,7 +286,7 @@ export default function LandingPage() {
               <div className="flex flex-col sm:flex-row gap-6">
                 <Button size="xl" className="rounded-full px-10 h-16 text-lg font-black bg-primary hover:bg-primary/90 shadow-[0_20px_50px_rgba(0,105,71,0.3)] group" asChild>
                   <Link href="/signup">
-                    {t("hero.cta_primary", "Get Started")} <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                    {t("hero.cta_primary", "Get Started")} <ArrowRight className="ms-2 h-5 w-5 transition-transform rtl:-scale-x-100 group-hover:rtl:-translate-x-1 group-hover:translate-x-1" />
                   </Link>
                 </Button>
                 <Button variant="outline" size="xl" className="rounded-full px-10 h-16 text-lg font-black glass border-primary/20 hover:bg-primary/5" asChild>
@@ -276,7 +299,7 @@ export default function LandingPage() {
           {/* Scroll Indicator */}
           <motion.div
             className="absolute bottom-10 left-1/2 -translate-x-1/2"
-            animate={{ y: [0, 10, 0] }}
+            animate={shouldReduceMotion ? { y: 0 } : { y: [0, 10, 0] }}
             transition={{ duration: 2, repeat: Infinity }}
           >
             <div className="w-6 h-10 rounded-full border-2 border-primary/20 flex justify-center p-1">
@@ -290,7 +313,7 @@ export default function LandingPage() {
           <div className="container mx-auto px-4">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-20">
               <div className="max-w-2xl space-y-6">
-                <Badge className="bg-primary/5 text-primary border-primary/10 px-4 py-1 rounded-full font-bold">{t("services.badge", "Services")}</Badge>
+                <Badge variant="glass-primary" className="px-4 py-1 rounded-full font-bold">{t("services.badge", "Services")}</Badge>
                 <HeadingMd className="font-black">{t("services.heading", "Unrivaled Infrastructure. Intelligent Design.")}</HeadingMd>
               </div>
               <BodyMd className="max-w-sm text-lg text-muted-foreground">
@@ -307,7 +330,7 @@ export default function LandingPage() {
                   header={service.header}
                   icon={service.icon}
                   size={service.size}
-                  className="cursor-pointer"
+                  className=""
                 />
               ))}
             </BentoGrid>
@@ -325,18 +348,18 @@ export default function LandingPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
               <div className="space-y-12">
                 <div className="space-y-6">
-                  <Badge className="bg-gold/10 text-gold border-gold/20 font-bold px-4 py-1.5 rounded-full">Adaptive Intelligence</Badge>
-                  <HeadingMd className="font-black text-4xl md:text-6xl leading-tight">A Platform that <br/><span className="text-primary">Learns from You.</span></HeadingMd>
+                  <Badge variant="glass-gold" className="font-bold px-4 py-1.5 rounded-full">{t("adaptive.badge", "Adaptive Intelligence")}</Badge>
+                  <HeadingMd className="font-black text-4xl md:text-6xl leading-tight">{t("adaptive.heading1", "A Platform that")} <br/><span className="text-primary">{t("adaptive.heading2", "Learns from You.")}</span></HeadingMd>
                   <BodyLg className="text-xl leading-relaxed">
-                    Noori adapts its interface in real-time based on your usage patterns. Returning users see their most-used tools prioritized instantly.
+                    {t("adaptive.subheading", "Noori adapts its interface in real-time based on your usage patterns. Returning users see their most-used tools prioritized instantly.")}
                   </BodyLg>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                  {ADAPTIVE_FEATURES.map((feat, idx) => (
+                  {adaptiveFeatures.map((feat, idx) => (
                     <motion.div
                       key={idx}
-                      whileHover={{ scale: 1.02 }}
+                      whileHover={shouldReduceMotion ? { scale: 1 } : { scale: 1.02 }}
                       className="flex flex-col p-6 rounded-2xl glass-premium"
                     >
                       <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary mb-4">
@@ -353,7 +376,8 @@ export default function LandingPage() {
                 <div className="aspect-square glass-premium rounded-[3rem] p-12 relative flex items-center justify-center overflow-hidden">
                    <div className="absolute inset-0 bg-primary opacity-5" />
                    <motion.div
-                    animate={{ rotate: 360 }}
+                    whileInView={shouldReduceMotion ? { rotate: 0 } : { rotate: 360 }}
+                    viewport={{ once: false }}
                     transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
                     className="absolute w-[150%] h-[150%] border border-primary/10 rounded-full"
                    />
@@ -362,11 +386,11 @@ export default function LandingPage() {
                         <NooriLogo size={60} color="white" />
                       </div>
                       <div className="space-y-2">
-                        <HeadingSm>System Integrity 99.9%</HeadingSm>
-                        <BodyMd>Operating at peak efficiency</BodyMd>
+                        <HeadingSm>{t("adaptive.integrity", "System Integrity 99.9%")}</HeadingSm>
+                        <BodyMd>{t("adaptive.status", "Operating at peak efficiency")}</BodyMd>
                       </div>
                       <Button className="rounded-full h-12 px-8 bg-primary font-bold" asChild>
-                        <Link href="/dashboard">View Dashboard</Link>
+                        <Link href="/dashboard">{t("adaptive.cta", "View Dashboard")}</Link>
                       </Button>
                    </div>
                 </div>
@@ -383,18 +407,18 @@ export default function LandingPage() {
                 <PatternOverlay />
               </div>
               <div className="relative z-10 max-w-4xl mx-auto space-y-12">
-                <HeadingLg className="leading-tight font-black">Ready for the Next <br/>Era of Mobility?</HeadingLg>
+                <HeadingLg className="leading-tight font-black">{t("cta.heading1", "Ready for the Next")} <br/>{t("cta.heading2", "Era of Mobility?")}</HeadingLg>
                 <BodyLg className="max-w-2xl mx-auto text-2xl font-medium text-muted-foreground">
-                  Join the elite businesses and individuals scaling with Noori. Experience logistics without friction.
+                  {t("cta.subheading", "Join the elite businesses and individuals scaling with Noori. Experience logistics without friction.")}
                 </BodyLg>
                 <div className="flex flex-col sm:flex-row gap-6 justify-center">
                   <Button size="xl" className="h-20 px-12 rounded-full text-xl font-black shadow-2xl shadow-primary/40 group" asChild>
                     <Link href="/signup">
-                      Start Your Journey <ChevronRight className="ml-2 h-6 w-6 transition-transform group-hover:translate-x-1" />
+                      {t("cta.primary", "Start Your Journey")} <ChevronRight className="ms-2 h-6 w-6 transition-transform rtl:-scale-x-100 group-hover:rtl:-translate-x-1 group-hover:translate-x-1" />
                     </Link>
                   </Button>
                   <Button variant="outline" size="xl" className="h-20 px-12 rounded-full text-xl font-black glass border-primary/20" asChild>
-                    <Link href="/contact">Contact Sales</Link>
+                    <Link href="/contact">{t("cta.secondary", "Contact Sales")}</Link>
                   </Button>
                 </div>
               </div>

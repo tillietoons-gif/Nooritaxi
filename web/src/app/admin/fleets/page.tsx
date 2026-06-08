@@ -17,7 +17,7 @@ export default function FleetsAdminPage() {
 
   return (
     <AuthGate roles={["ADMIN"]}>
-      <main className="min-h-screen px-4 py-8 md:px-8">
+      <main className="flex-1 px-4 py-8 md:px-8">
         <div className="mx-auto max-w-7xl space-y-6">
           <AdminPageHeader
             title="Fleet Management"

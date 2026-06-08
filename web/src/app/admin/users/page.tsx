@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { authedFetch } from "@/lib/auth"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
+import { Ban, CheckCircle } from "lucide-react"
 
 type AdminUser = {
   id: string
@@ -24,13 +25,13 @@ export default function AdminUsersPage() {
   const [refreshKey, setRefreshKey] = useState(0)
 
   async function updateUserStatus(id: string, newStatus: string) {
-    if (!confirm(`Are you sure you want to ${newStatus === 'SUSPENDED' ? 'suspend' : 'activate'} user ${id}?`)) return
+    if (!confirm(`${t("admin.are_you_sure_status", "Are you sure you want to change the status of this user?")}`)) return
     try {
       const res = await authedFetch(`/admin/users/${id}/status`, { 
         method: "PATCH",
         body: JSON.stringify({ status: newStatus })
       })
-      if (!res.ok) throw new Error(`Failed to ${newStatus.toLowerCase()} user`)
+      if (!res.ok) throw new Error(t("admin.failed_to_update_status", "Failed to update user status"))
       setRefreshKey((k) => k + 1)
     } catch (err) {
       alert((err as Error).message)
@@ -41,34 +42,36 @@ export default function AdminUsersPage() {
     <AuthGate roles={["ADMIN", "SUPPORT"]}>
       <AdminListPage<AdminUser>
         key={refreshKey}
-        title="Users"
+        title={t("admin.users_title", "Users")}
         endpoint="/admin/users"
         statusOptions={USER_STATUSES}
-        searchPlaceholder="Search by name, phone, email…"
+        searchPlaceholder={t("admin.search_users_placeholder", "Search by name, phone, email…")}
         rowKey={(r) => r.id}
         columns={[
-          { key: "name", header: "Name", render: (r) => r.name ?? "—" },
-          { key: "phone", header: "Phone", render: (r) => r.phone ?? "—" },
-          { key: "email", header: "Email", render: (r) => r.email ?? "—" },
-          { key: "role", header: "Role", render: (r) => r.role },
-          { key: "status", header: "Status", render: (r) => <StatusBadge status={r.status} /> },
+          { key: "name", header: t("admin.name", "Name"), render: (r) => <span className="font-medium">{r.name ?? "—"}</span> },
+          { key: "phone", header: t("admin.phone", "Phone"), render: (r) => r.phone ?? "—" },
+          { key: "email", header: t("admin.email", "Email"), render: (r) => <span className="text-muted-foreground">{r.email ?? "—"}</span> },
+          { key: "role", header: t("admin.role", "Role"), render: (r) => <span className="text-xs font-bold uppercase tracking-wider">{r.role}</span> },
+          { key: "status", header: t("admin.status", "Status"), render: (r) => <StatusBadge status={r.status} /> },
           {
             key: "createdAt",
-            header: "Joined",
-            render: (r) => new Date(r.createdAt).toLocaleString(),
+            header: t("admin.joined", "Joined"),
+            render: (r) => <span className="text-muted-foreground text-xs">{new Date(r.createdAt).toLocaleString()}</span>,
           },
           {
             key: "actions",
-            header: "Actions",
+            header: t("admin.actions", "Actions"),
             render: (r) => (
               <div className="flex gap-2">
                 {r.status !== "SUSPENDED" && (
-                  <Button variant="destructive" size="sm" onClick={() => updateUserStatus(r.id, "SUSPENDED")}>
+                  <Button variant="outline" size="sm" onClick={() => updateUserStatus(r.id, "SUSPENDED")} className="border-destructive/20 text-destructive hover:bg-destructive hover:text-white transition-colors">
+                    <Ban className="h-4 w-4 me-2" />
                     {t('admin.suspend', 'Suspend')}
                   </Button>
                 )}
                 {r.status === "SUSPENDED" && (
-                  <Button variant="default" size="sm" onClick={() => updateUserStatus(r.id, "ACTIVE")}>
+                  <Button variant="outline" size="sm" onClick={() => updateUserStatus(r.id, "ACTIVE")} className="border-primary/20 text-primary hover:bg-primary hover:text-white transition-colors">
+                    <CheckCircle className="h-4 w-4 me-2" />
                     {t('admin.activate', 'Activate')}
                   </Button>
                 )}

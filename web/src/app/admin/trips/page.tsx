@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { authedFetch } from "@/lib/auth"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
+import { Ban } from "lucide-react"
 
 type Trip = {
   id: string
@@ -33,13 +34,13 @@ export default function AdminTripsPage() {
   const [refreshKey, setRefreshKey] = useState(0)
 
   async function cancelTrip(id: string) {
-    if (!confirm(`Cancel trip ${id}?`)) return
+    if (!confirm(t('admin.confirmCancelTrip', `Cancel trip {{id}}?`, { id }))) return
     try {
       const res = await authedFetch(`/admin/trips/${id}/status`, { 
         method: "PATCH",
         body: JSON.stringify({ status: "CANCELLED" }) 
       })
-      if (!res.ok) throw new Error("Failed to cancel trip")
+      if (!res.ok) throw new Error(t('admin.failedCancelTrip', "Failed to cancel trip"))
       setRefreshKey((k) => k + 1)
     } catch (err) {
       alert((err as Error).message)
@@ -50,57 +51,58 @@ export default function AdminTripsPage() {
     <AuthGate roles={["ADMIN", "SUPPORT"]}>
       <AdminListPage<Trip>
         key={refreshKey}
-        title="Trips"
+        title={t('admin.trips', 'Trips')}
         endpoint="/admin/trips"
         statusOptions={TRIP_STATUSES}
-        searchPlaceholder="Search by id, address, customer, driver…"
+        searchPlaceholder={t('admin.searchTrips', 'Search by id, address, customer, driver…')}
         rowKey={(r) => r.id}
         columns={[
           {
             key: "id",
-            header: "Trip",
+            header: t('admin.trip', 'Trip'),
             render: (r) => <span className="font-mono text-xs">{r.id.slice(-8)}</span>,
           },
           {
             key: "route",
-            header: "Route",
+            header: t('admin.route', 'Route'),
             render: (r) => (
               <div className="max-w-xs">
                 <p className="truncate">{r.pickupLocation}</p>
-                <p className="truncate text-xs text-muted-foreground">→ {r.dropoffLocation}</p>
+                <p className="truncate text-xs text-muted-foreground rtl:-scale-x-100 w-fit">→ <span className="rtl:-scale-x-100 inline-block">{r.dropoffLocation}</span></p>
               </div>
             ),
           },
           {
             key: "customer",
-            header: "Customer",
+            header: t('admin.customer', 'Customer'),
             render: (r) => r.customer?.name ?? r.customer?.phone ?? "—",
           },
           {
             key: "driver",
-            header: "Driver",
+            header: t('admin.driver', 'Driver'),
             render: (r) =>
               r.driver?.name ?? r.driver?.phone
                 ? `${r.driver?.name ?? r.driver?.phone}${r.vehicle?.plateNumber ? ` · ${r.vehicle.plateNumber}` : ""}`
-                : "Unassigned",
+                : t('admin.unassigned', 'Unassigned'),
           },
           {
             key: "fare",
-            header: "Fare",
+            header: t('admin.fare', 'Fare'),
             render: (r) => (r.fare != null ? `${Number(r.fare).toLocaleString()} AFN` : "—"),
           },
-          { key: "status", header: "Status", render: (r) => <StatusBadge status={r.status} /> },
+          { key: "status", header: t('admin.status', 'Status'), render: (r) => <StatusBadge status={r.status} /> },
           {
             key: "createdAt",
-            header: "Created",
+            header: t('admin.created', 'Created'),
             render: (r) => new Date(r.createdAt).toLocaleString(),
           },
           {
             key: "actions",
-            header: "Actions",
+            header: t('admin.actions', 'Actions'),
             render: (r) =>
               r.status !== "CANCELLED" && r.status !== "COMPLETED" ? (
                 <Button variant="destructive" size="sm" onClick={() => cancelTrip(r.id)}>
+                  <Ban className="me-2 h-4 w-4" />
                   {t('admin.cancel', 'Cancel')}
                 </Button>
               ) : null,

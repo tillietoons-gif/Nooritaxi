@@ -5,6 +5,8 @@ import { AuthGate } from "@/components/auth-gate"
 import { AdminListPage, StatusBadge } from "@/components/admin/admin-list-page"
 import { Button } from "@/components/ui/button"
 import { authedFetch } from "@/lib/auth"
+import { useTranslation } from "react-i18next"
+import { Ban, AlertTriangle, ArrowRight } from "lucide-react"
 
 type Delivery = {
   id: string
@@ -46,6 +48,7 @@ const NEXT_STATUS: Partial<Record<string, string>> = {
 }
 
 export default function AdminDeliveriesPage() {
+  const { t } = useTranslation()
   const [refreshKey, setRefreshKey] = useState(0)
   const [updatingId, setUpdatingId] = useState<string | null>(null)
 
@@ -59,7 +62,7 @@ export default function AdminDeliveriesPage() {
       if (!res.ok) {
         const body = await res.json().catch(() => null)
         const message = Array.isArray(body?.message) ? body.message.join(", ") : body?.message
-        throw new Error(message ? `Failed to update delivery: ${message}` : `Failed to update delivery (${res.status})`)
+        throw new Error(message ? t('admin.failedUpdateDeliveryWithReason', `Failed to update delivery: {{message}}`, { message }) : t('admin.failedUpdateDelivery', `Failed to update delivery (${res.status})`))
       }
       setRefreshKey((key) => key + 1)
     } catch (err) {
@@ -73,25 +76,25 @@ export default function AdminDeliveriesPage() {
     <AuthGate roles={["ADMIN", "SUPPORT"]}>
       <AdminListPage<Delivery>
         key={refreshKey}
-        title="Deliveries"
+        title={t('admin.deliveries', "Deliveries")}
         endpoint="/admin/deliveries"
         statusOptions={DELIVERY_STATUSES}
-        searchPlaceholder="Search by id, pickup, or dropoff..."
+        searchPlaceholder={t('admin.searchDeliveries', "Search by id, pickup, or dropoff...")}
         rowKey={(delivery) => delivery.id}
         columns={[
           {
             key: "id",
-            header: "Delivery",
+            header: t('admin.delivery', "Delivery"),
             render: (delivery) => (
               <div>
                 <span className="font-mono text-xs">{delivery.id.slice(-8)}</span>
-                <p className="text-xs text-muted-foreground">{delivery.orderId ? "Food order" : "Parcel"}</p>
+                <p className="text-xs text-muted-foreground">{delivery.orderId ? t('admin.foodOrder', "Food order") : t('admin.parcel', "Parcel")}</p>
               </div>
             ),
           },
           {
             key: "pickup",
-            header: "Pickup",
+            header: t('admin.pickup', "Pickup"),
             render: (delivery) => (
               <div className="max-w-xs">
                 {delivery.pickupName ? <p className="font-medium">{delivery.pickupName}</p> : null}
@@ -101,7 +104,7 @@ export default function AdminDeliveriesPage() {
           },
           {
             key: "dropoff",
-            header: "Dropoff",
+            header: t('admin.dropoff', "Dropoff"),
             render: (delivery) => (
               <div className="max-w-xs">
                 {delivery.dropoffName ? <p className="font-medium">{delivery.dropoffName}</p> : null}
@@ -111,30 +114,30 @@ export default function AdminDeliveriesPage() {
           },
           {
             key: "driver",
-            header: "Driver",
+            header: t('admin.driver', "Driver"),
             render: (delivery) =>
               delivery.driver?.name ?? delivery.driver?.phone
                 ? `${delivery.driver?.name ?? delivery.driver?.phone}${delivery.vehicle?.plateNumber ? ` · ${delivery.vehicle.plateNumber}` : ""}`
-                : "Unassigned",
+                : t('admin.unassigned', "Unassigned"),
           },
           {
             key: "fee",
-            header: "Fee",
+            header: t('admin.fee', "Fee"),
             render: (delivery) => (delivery.fee != null ? `${Number(delivery.fee).toLocaleString()} AFN` : "-"),
           },
           {
             key: "status",
-            header: "Status",
+            header: t('admin.status', "Status"),
             render: (delivery) => <StatusBadge status={delivery.status} />,
           },
           {
             key: "requestedAt",
-            header: "Requested",
+            header: t('admin.requested', "Requested"),
             render: (delivery) => new Date(delivery.requestedAt ?? delivery.createdAt).toLocaleString(),
           },
           {
             key: "actions",
-            header: "Actions",
+            header: t('admin.actions', "Actions"),
             render: (delivery) => {
               const nextStatus = NEXT_STATUS[delivery.status]
               const isTerminal = ["DELIVERED", "FAILED", "CANCELLED"].includes(delivery.status)
@@ -146,6 +149,7 @@ export default function AdminDeliveriesPage() {
                       onClick={() => updateDeliveryStatus(delivery.id, nextStatus)}
                       disabled={updatingId === delivery.id}
                     >
+                      <ArrowRight className="me-2 h-4 w-4" />
                       {nextStatus.replaceAll("_", " ")}
                     </Button>
                   ) : null}
@@ -157,7 +161,8 @@ export default function AdminDeliveriesPage() {
                         onClick={() => updateDeliveryStatus(delivery.id, "FAILED")}
                         disabled={updatingId === delivery.id}
                       >
-                        Fail
+                        <AlertTriangle className="me-2 h-4 w-4" />
+                        {t('admin.fail', "Fail")}
                       </Button>
                       <Button
                         size="sm"
@@ -165,7 +170,8 @@ export default function AdminDeliveriesPage() {
                         onClick={() => updateDeliveryStatus(delivery.id, "CANCELLED")}
                         disabled={updatingId === delivery.id}
                       >
-                        Cancel
+                        <Ban className="me-2 h-4 w-4" />
+                        {t('admin.cancel', "Cancel")}
                       </Button>
                     </>
                   ) : null}

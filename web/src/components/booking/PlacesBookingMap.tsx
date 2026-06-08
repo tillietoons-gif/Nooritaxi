@@ -87,8 +87,8 @@ export default function PlacesBookingMap({
     <MapContainer center={defaultCenter} zoom={13} className="h-full min-h-[420px] w-full">
       <FitMap places={visiblePlaces} pickupPlace={pickupPlace} dropoffPlace={dropoffPlace} />
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+        url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
       />
       {route ? <Polyline positions={route} pathOptions={{ color: "#2563eb", weight: 4, opacity: 0.75 }} /> : null}
       {visiblePlaces.map((place) => {

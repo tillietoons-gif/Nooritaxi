@@ -13,6 +13,8 @@ const badgeVariants = cva(
         outline: "text-foreground",
         success: "border-transparent bg-success text-white hover:bg-success/80",
         verified: "border-transparent bg-accent text-accent-foreground flex gap-1",
+        "glass-primary": "bg-primary/5 text-primary border-primary/10",
+        "glass-gold": "bg-gold/10 text-gold border-gold/20",
       },
     },
     defaultVariants: { variant: "default" },

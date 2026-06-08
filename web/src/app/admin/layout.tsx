@@ -15,7 +15,7 @@ export default function AdminLayout({
           <PatternOverlay />
         </div>
 
-        <div className="relative z-10 flex-1">
+        <div className="relative z-10 flex-1 flex flex-col">
           <AdminShellHeader />
           {children}
         </div>

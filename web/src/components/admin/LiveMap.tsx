@@ -374,8 +374,8 @@ export default function LiveMap() {
         <MapContainer center={mapCenter} zoom={13} style={{ height: "100%", width: "100%" }}>
           <ViewportController drivers={visibleDrivers} surgeZones={visibleZones} places={visiblePlaces} fitVersion={fitVersion} selectedDriver={selectedDriver} />
           <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+            url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
           />
           {visibleZones.map((zone) => {
             const positions = getSurgeZoneRing(zone);

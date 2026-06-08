@@ -6,8 +6,10 @@ import { AuthGate } from "@/components/auth-gate"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { BodyMd, HeadingMd } from "@/components/ui/typography"
+import { BodyMd, HeadingMd, HeadingSm } from "@/components/ui/typography"
+import { GlassSurface } from "@/components/ui/glass-surface"
 import { authedFetch } from "@/lib/auth"
+import { useTranslation } from "react-i18next"
 import {
   Activity,
   AlertTriangle,
@@ -21,6 +23,7 @@ import {
   HandCoins,
   Headphones,
   KeySquare,
+  Layers,
   LifeBuoy,
   Map,
   MapPin,
@@ -116,6 +119,7 @@ function supportRequester(ticket: SupportTicket) {
 }
 
 export default function AdminPage() {
+  const { t } = useTranslation()
   const [overview, setOverview] = useState<Overview>(EMPTY_OVERVIEW)
   const [openTickets, setOpenTickets] = useState<SupportTicket[]>([])
   const [sosAlerts, setSosAlerts] = useState<SosAlert[]>([])
@@ -146,7 +150,7 @@ export default function AdminPage() {
   }, [load, ticketsPage])
 
   async function resolveSos(id: string) {
-    if (!confirm("Mark this SOS as resolved?")) return
+    if (!confirm(t("admin.mark_resolved", "Mark Resolved") + "?")) return
     try {
       const response = await authedFetch(`/admin/sos/${id}/resolve`, { method: "PATCH" })
       if (!response.ok) throw new Error("Failed to resolve SOS")
@@ -167,30 +171,50 @@ export default function AdminPage() {
     { label: "Active Deliveries", value: overview.activeDeliveries, icon: Package, href: "/admin/deliveries" },
   ]
 
-  const modules: MetricCard[] = [
-    { label: "Surge Zones", value: "Control", icon: Activity, href: "/admin/surge" },
-    { label: "Live Map", value: "Real-time", icon: Map, href: "/admin/live-map" },
-    { label: "Custom Places", value: "Search", icon: MapPin, href: "/admin/places" },
-    { label: "KYC Review", value: (overview.pendingKyc ?? 0) > 0 ? `${overview.pendingKyc} pending` : "Manage", icon: UserCheck, href: "/admin/kyc" },
-    { label: "Loyalty System", value: "Configure", icon: Award, href: "/admin/loyalty" },
-    { label: "Driver Tiers", value: "Manage", icon: TrendingUp, href: "/admin/driver-tiers" },
-    { label: "Ratings & Reviews", value: "Moderation", icon: Star, href: "/admin/reviews" },
-    { label: "Vehicles", value: "Registry", icon: Car, href: "/admin/vehicles" },
-    { label: "Finance", value: "Cash Center", icon: Banknote, href: "/admin/finance" },
-    { label: "Cash Collections", value: "Receivables", icon: HandCoins, href: "/admin/cash-collections" },
-    { label: "Refunds", value: "Requests", icon: Undo2, href: "/admin/refunds" },
-    { label: "Subscriptions", value: "Plans & VIPs", icon: Crown, href: "/admin/subscriptions" },
-    { label: "Corporate", value: "B2B Accounts", icon: Building2, href: "/admin/corporate" },
-    { label: "Airport", value: "Ops & Queues", icon: PlaneTakeoff, href: "/admin/airport" },
-    { label: "Marketing", value: "Campaigns", icon: Tag, href: "/admin/marketing" },
-    { label: "CMS Engine", value: "Content", icon: FileText, href: "/admin/cms" },
-    { label: "OCC Console", value: "Mission Control", icon: Network, href: "/admin/operations" },
-    { label: "Fraud Center", value: "Dashboard", icon: AlertTriangle, href: "/admin/fraud" },
-    { label: "Fraud Alerts", value: "Live Feed", icon: ShieldAlert, href: "/admin/fraud/alerts" },
-    { label: "Customer Support", value: "Help Desk", icon: LifeBuoy, href: "/admin/support" },
-    { label: "Roles", value: "RBAC", icon: Shield, href: "/admin/roles" },
-    { label: "Permissions", value: "Matrix", icon: KeySquare, href: "/admin/permissions" },
-    { label: "Admin Users", value: "Directory", icon: ShieldAlert, href: "/admin/admin-users" },
+  const moduleGroups = [
+    {
+      title: "Operations & Fleet",
+      modules: [
+        { label: "Live Map", value: "Real-time", icon: Map, href: "/admin/live-map" },
+        { label: "OCC Console", value: "Mission Control", icon: Network, href: "/admin/operations" },
+        { label: "Airport", value: "Ops & Queues", icon: PlaneTakeoff, href: "/admin/airport" },
+        { label: "Surge Zones", value: "Control", icon: Activity, href: "/admin/surge" },
+        { label: "Vehicles", value: "Registry", icon: Car, href: "/admin/vehicles" },
+        { label: "Driver Tiers", value: "Manage", icon: TrendingUp, href: "/admin/driver-tiers" },
+      ]
+    },
+    {
+      title: "Finance & Growth",
+      modules: [
+        { label: "Finance", value: "Cash Center", icon: Banknote, href: "/admin/finance" },
+        { label: "Cash Collections", value: "Receivables", icon: HandCoins, href: "/admin/cash-collections" },
+        { label: "Refunds", value: "Requests", icon: Undo2, href: "/admin/refunds" },
+        { label: "Marketing", value: "Campaigns", icon: Tag, href: "/admin/marketing" },
+        { label: "Loyalty System", value: "Configure", icon: Award, href: "/admin/loyalty" },
+        { label: "Subscriptions", value: "Plans & VIPs", icon: Crown, href: "/admin/subscriptions" },
+        { label: "Corporate", value: "B2B Accounts", icon: Building2, href: "/admin/corporate" },
+      ]
+    },
+    {
+      title: "Trust & Safety",
+      modules: [
+        { label: "KYC Review", value: (overview.pendingKyc ?? 0) > 0 ? `${overview.pendingKyc} pending` : "Manage", icon: UserCheck, href: "/admin/kyc" },
+        { label: "Customer Support", value: "Help Desk", icon: LifeBuoy, href: "/admin/support" },
+        { label: "Ratings & Reviews", value: "Moderation", icon: Star, href: "/admin/reviews" },
+        { label: "Fraud Center", value: "Dashboard", icon: AlertTriangle, href: "/admin/fraud" },
+        { label: "Fraud Alerts", value: "Live Feed", icon: ShieldAlert, href: "/admin/fraud/alerts" },
+      ]
+    },
+    {
+      title: "System & Config",
+      modules: [
+        { label: "Custom Places", value: "Search", icon: MapPin, href: "/admin/places" },
+        { label: "CMS Engine", value: "Content", icon: FileText, href: "/admin/cms" },
+        { label: "Roles", value: "RBAC", icon: Shield, href: "/admin/roles" },
+        { label: "Permissions", value: "Matrix", icon: KeySquare, href: "/admin/permissions" },
+        { label: "Admin Users", value: "Directory", icon: ShieldAlert, href: "/admin/admin-users" },
+      ]
+    }
   ]
 
   const supportCount = (keyword: string) =>
@@ -213,228 +237,268 @@ export default function AdminPage() {
     { label: "Active deliveries", value: overview.activeDeliveries, icon: Package, href: "/admin/deliveries" },
   ]
 
+  const SkeletonValue = () => <div className="h-7 w-16 animate-pulse rounded-md bg-muted/50 mt-1" />
+  const SkeletonText = () => <div className="h-4 w-12 animate-pulse rounded bg-muted/50 mt-1.5" />
+
   return (
     <AuthGate roles={["ADMIN", "SUPPORT"]}>
-      <div className="flex min-h-screen flex-col bg-background">
-        <main className="flex-1 px-4 py-6 md:px-8">
-          <div className="mx-auto max-w-7xl space-y-6">
+      <div className="flex flex-1 flex-col">
+        <main className="flex-1 px-4 py-8 md:px-8">
+          <div className="mx-auto max-w-7xl space-y-10">
+            {/* Header */}
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
-                <HeadingMd className="text-2xl">Noori Operations</HeadingMd>
-                <BodyMd className="text-muted-foreground">
-                  Admin control center for mobility, food, delivery, wallet, safety, support, and risk operations.
+                <HeadingMd className="text-3xl font-black">{t("admin.title", "Noori Operations")}</HeadingMd>
+                <BodyMd className="mt-2 text-muted-foreground text-lg">
+                  {t("admin.description", "Admin control center for mobility, food, delivery, wallet, safety, and support.")}
                 </BodyMd>
               </div>
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <Button variant="outline" onClick={() => void load(ticketsPage)} disabled={loading}>
-                  <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-                  Refresh
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <Button variant="outline" className="glass h-11 px-6 rounded-full" onClick={() => void load(ticketsPage)} disabled={loading}>
+                  <RefreshCw className={`h-4 w-4 me-2 ${loading ? "animate-spin" : ""}`} />
+                  {t("admin.refresh", "Refresh")}
                 </Button>
-                <Button variant="outline" asChild>
+                <Button className="h-11 px-6 rounded-full bg-primary hover:bg-primary/90 text-white font-bold shadow-[0_0_20px_rgba(0,105,71,0.25)] hover:shadow-[0_0_25px_rgba(0,105,71,0.4)] transition-all" asChild>
                   <a href="#open-tickets">
-                    <ShieldCheck className="h-4 w-4" />
-                    {formatValue(overview.openTickets)} open tickets
+                    <ShieldCheck className="h-4 w-4 me-2" />
+                    {overview.openTickets > 0 ? overview.openTickets : "No"} {t("admin.open_support_tickets", "Open Support Tickets").toLowerCase()}
                   </a>
                 </Button>
               </div>
             </div>
 
             {errors.length > 0 ? (
-              <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+              <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive font-medium">
                 {errors.map((message) => (
-                  <p key={message}>{message}</p>
+                  <p key={message} className="flex items-center gap-2"><AlertTriangle className="h-4 w-4" /> {message}</p>
                 ))}
               </div>
             ) : null}
 
+            {/* Top Metrics Grid */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {metrics.map((metric) => {
                 const Icon = metric.icon
                 return (
-                  <Link key={metric.label} href={metric.href} className="block">
-                    <Card className="h-full transition-colors hover:bg-muted/30">
-                      <CardContent className="flex min-h-28 items-center justify-between p-5">
-                        <div>
-                          <p className="text-sm text-muted-foreground">{metric.label}</p>
-                          <p className="mt-1 text-2xl font-bold">{loading ? "..." : formatValue(metric.value)}</p>
+                  <Link key={metric.label} href={metric.href} className="block group outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-2xl">
+                    <GlassSurface variant="default" intensity="low" className="h-full transition-all group-hover:bg-primary/5 group-hover:border-primary/20 rounded-2xl overflow-hidden shadow-sm">
+                      <div className="flex min-h-[120px] items-center justify-between p-6 relative">
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-bl-[100px] -z-10 transition-transform duration-500 group-hover:scale-125 rtl:right-auto rtl:left-0 rtl:rounded-bl-none rtl:rounded-br-[100px]" />
+                        <div className="z-10">
+                          <p className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">{metric.label}</p>
+                          {loading ? <SkeletonValue /> : <p className="mt-2 text-4xl font-black text-foreground group-hover:text-primary transition-colors">{formatValue(metric.value)}</p>}
                         </div>
-                        <Icon className="h-6 w-6 text-primary" />
-                      </CardContent>
-                    </Card>
+                        <div className="h-12 w-12 rounded-full bg-background flex items-center justify-center border border-muted z-10 group-hover:bg-primary group-hover:text-white group-hover:border-primary transition-colors shadow-sm">
+                            <Icon className="h-5 w-5" />
+                        </div>
+                      </div>
+                    </GlassSurface>
                   </Link>
                 )
               })}
             </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Admin Modules</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                  {modules.map((module) => {
-                    const Icon = module.icon
-                    return (
-                      <Link
-                        key={module.label}
-                        href={module.href}
-                        className="rounded-lg border p-4 transition-colors hover:bg-muted/30"
-                      >
-                        <div className="flex items-center justify-between gap-3">
+            <div className="grid gap-8 lg:grid-cols-3 xl:grid-cols-4">
+              {/* Main Modules Area */}
+              <div className="lg:col-span-2 xl:col-span-3 space-y-10">
+                {moduleGroups.map((group) => (
+                   <div key={group.title} className="space-y-4">
+                     <HeadingSm className="text-xl font-bold flex items-center gap-3">
+                       <div className="w-2.5 h-6 rounded-full bg-primary" />
+                       {group.title}
+                     </HeadingSm>
+                     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                       {group.modules.map((module) => {
+                          const Icon = module.icon
+                          return (
+                            <Link
+                              key={module.label}
+                              href={module.href}
+                              className="group flex items-center justify-between gap-4 rounded-2xl border bg-card p-5 shadow-sm transition-all duration-300 hover:border-primary/30 hover:bg-primary/5 hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/5 outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                            >
+                              <div>
+                                <p className="font-bold text-base text-foreground group-hover:text-primary transition-colors">{module.label}</p>
+                                {loading ? <SkeletonText /> : <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{formatValue(module.value)}</p>}
+                              </div>
+                              <div className="h-10 w-10 flex items-center justify-center rounded-full bg-muted/50 group-hover:bg-primary/10 transition-colors">
+                                <Icon className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                              </div>
+                            </Link>
+                          )
+                       })}
+                     </div>
+                   </div>
+                ))}
+              </div>
+
+              {/* Sidebar */}
+              <div className="space-y-8">
+                  {/* Live Marketplace Widget */}
+                  <Card className="border-none shadow-[0_8px_30px_rgba(0,0,0,0.06)] overflow-hidden relative rounded-3xl">
+                    <div className="absolute top-0 right-0 w-40 h-40 bg-primary/5 rounded-bl-full -z-10 rtl:right-auto rtl:left-0 rtl:rounded-bl-none rtl:rounded-br-full" />
+                    <CardHeader className="pb-2 pt-6 px-6">
+                      <CardTitle className="flex items-center gap-2 text-xl">
+                        <Activity className="h-6 w-6 text-primary" />
+                        {t("admin.live_marketplace", "Live Marketplace")}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid gap-3 p-6 pt-4">
+                      {marketplace.map((item) => {
+                        const Icon = item.icon
+                        return (
+                          <Link
+                            key={item.label}
+                            href={item.href}
+                            className="group flex items-center justify-between rounded-xl border bg-background p-4 transition-all hover:border-primary/40 hover:bg-primary/5 shadow-sm hover:shadow-md outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                          >
+                            <div>
+                               <div className="flex items-center gap-2 mb-2 text-muted-foreground group-hover:text-primary transition-colors">
+                                  <Icon className="h-4 w-4" />
+                                  <span className="font-semibold text-xs uppercase tracking-wider">{item.label}</span>
+                               </div>
+                               {loading ? <SkeletonValue /> : <p className="text-3xl font-black">{item.value.toLocaleString()}</p>}
+                            </div>
+                            <div className="flex flex-col items-end gap-1">
+                                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                                   <ArrowRight className="h-4 w-4 rtl:-scale-x-100" />
+                                </div>
+                                <span className="text-[9px] uppercase font-bold text-muted-foreground">{t("admin.in_progress", "in progress")}</span>
+                            </div>
+                          </Link>
+                        )
+                      })}
+                    </CardContent>
+                  </Card>
+
+                  {/* Priority Queues Widget */}
+                  <Card className="border-none shadow-[0_8px_30px_rgba(0,0,0,0.06)] rounded-3xl">
+                    <CardHeader className="pb-2 pt-6 px-6">
+                      <CardTitle className="flex items-center gap-2 text-xl">
+                         <Layers className="h-6 w-6 text-primary" />
+                         {t("admin.priority_queues", "Priority Queues")}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3 p-6 pt-4">
+                      {queues.map((queue) => (
+                        <div key={queue.label} className="flex items-center justify-between rounded-xl border bg-card p-4 shadow-sm transition-colors hover:bg-muted/50">
                           <div>
-                            <p className="font-medium">{module.label}</p>
-                            <p className="mt-1 text-sm text-muted-foreground">{loading ? "..." : formatValue(module.value)}</p>
+                            <p className="font-bold text-sm">{queue.label}</p>
+                            <p className="text-xs font-medium text-muted-foreground mt-1">{queue.value} items</p>
                           </div>
-                          <Icon className="h-5 w-5 text-primary" />
+                          <Badge variant={queue.tone === "High" ? "destructive" : "secondary"} className={`px-3 py-1 text-xs ${queue.tone === "High" ? "animate-pulse" : ""}`}>{queue.tone}</Badge>
                         </div>
-                      </Link>
-                    )
-                  })}
-                </div>
-              </CardContent>
-            </Card>
+                      ))}
+                    </CardContent>
+                  </Card>
 
-            <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Live Marketplace</CardTitle>
-                </CardHeader>
-                <CardContent className="grid gap-3 md:grid-cols-3">
-                  {marketplace.map((item) => {
-                    const Icon = item.icon
-                    return (
-                      <Link
-                        key={item.label}
-                        href={item.href}
-                        className="rounded-lg border p-4 transition-colors hover:bg-muted/30"
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="font-medium">{item.label}</span>
-                          <Icon className="h-4 w-4 text-primary" />
-                        </div>
-                        <p className="mt-4 text-3xl font-bold">{loading ? "..." : item.value.toLocaleString()}</p>
-                        <p className="flex items-center gap-1 text-sm text-muted-foreground">
-                          In progress now <ArrowRight className="h-3 w-3" />
-                        </p>
-                      </Link>
-                    )
-                  })}
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Priority Queues</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {queues.map((queue) => (
-                    <div key={queue.label} className="flex items-center justify-between rounded-lg border p-3">
-                      <div>
-                        <p className="font-medium">{queue.label}</p>
-                        <p className="text-sm text-muted-foreground">{queue.value} items</p>
-                      </div>
-                      <Badge variant={queue.tone === "High" ? "destructive" : "secondary"}>{queue.tone}</Badge>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
+                  {/* SOS Alerts Sidebar Widget */}
+                  {sosAlerts.length > 0 ? (
+                    <Card className="border-destructive shadow-[0_8px_30px_rgba(255,0,0,0.1)] rounded-3xl overflow-hidden relative">
+                      <div className="absolute inset-0 bg-destructive/5 pointer-events-none" />
+                      <CardHeader className="bg-destructive/10 text-destructive border-b border-destructive/10">
+                        <CardTitle className="flex items-center gap-2 text-xl">
+                          <ShieldAlert className="h-6 w-6 animate-pulse" />
+                          {t("admin.sos_title", "Active SOS Alerts")}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-0 relative z-10">
+                        <ul className="divide-y divide-destructive/10">
+                          {sosAlerts.map((alert) => (
+                            <li key={alert.id} className="flex flex-col gap-4 p-5">
+                              <div>
+                                <p className="font-bold text-destructive text-base">
+                                  {t("admin.sos_triggered", "SOS triggered by")} {alert.user?.name || alert.user?.phone || "Unknown"}
+                                </p>
+                                <p className="mt-1.5 text-sm font-medium text-destructive/80">
+                                  {alert.tripId ? `Trip ID: ${alert.tripId.slice(-8)}` : "No active trip"}
+                                  {alert.lat && alert.lng ? ` • Loc: ${alert.lat.toFixed(4)}, ${alert.lng.toFixed(4)}` : ""}
+                                </p>
+                                <p className="mt-2 font-mono text-xs opacity-70">{new Date(alert.createdAt).toLocaleString()}</p>
+                              </div>
+                              <Button
+                                variant="outline"
+                                className="w-full border-destructive text-destructive hover:bg-destructive hover:text-white font-bold"
+                                onClick={() => void resolveSos(alert.id)}
+                              >
+                                {t("admin.mark_resolved", "Mark Resolved")}
+                              </Button>
+                            </li>
+                          ))}
+                        </ul>
+                      </CardContent>
+                    </Card>
+                  ) : null}
+              </div>
             </div>
 
-            {sosAlerts.length > 0 ? (
-              <Card className="border-destructive shadow-sm">
-                <CardHeader className="bg-destructive/10 text-destructive">
-                  <CardTitle className="flex items-center gap-2">
-                    <ShieldCheck className="h-5 w-5" />
-                    Active SOS Alerts
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <ul className="divide-y">
-                    {sosAlerts.map((alert) => (
-                      <li key={alert.id} className="flex flex-col justify-between gap-4 p-4 md:flex-row md:items-center">
-                        <div>
-                          <p className="font-bold text-destructive">
-                            SOS triggered by {alert.user?.name || alert.user?.phone || "Unknown"}
-                          </p>
-                          <p className="mt-1 text-sm text-muted-foreground">
-                            {alert.tripId ? `Trip ID: ${alert.tripId.slice(-8)}` : "No active trip"}
-                            {alert.lat && alert.lng ? ` - Location: ${alert.lat.toFixed(4)}, ${alert.lng.toFixed(4)}` : ""}
-                          </p>
-                          <p className="mt-2 font-mono text-xs">{new Date(alert.createdAt).toLocaleString()}</p>
-                        </div>
-                        <Button
-                          variant="outline"
-                          className="border-destructive text-destructive hover:bg-destructive hover:text-white"
-                          onClick={() => void resolveSos(alert.id)}
-                        >
-                          Mark Resolved
-                        </Button>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-            ) : null}
-
-            <Card id="open-tickets">
-              <CardHeader className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <Headphones className="h-5 w-5" />
-                    Open Support Tickets
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground">Latest open support requests visible to admin and support roles.</p>
+            {/* Support Tickets Area */}
+            <Card id="open-tickets" className="border-none shadow-[0_8px_30px_rgba(0,0,0,0.06)] rounded-3xl overflow-hidden">
+              <div className="bg-muted/30 px-6 py-6 border-b">
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2 text-xl">
+                      <Headphones className="h-6 w-6 text-primary" />
+                      {t("admin.open_support_tickets", "Open Support Tickets")}
+                    </CardTitle>
+                    <p className="text-sm font-medium text-muted-foreground mt-2">Latest open support requests visible to admin and support roles.</p>
+                  </div>
+                  <Button asChild variant="outline" className="rounded-full font-bold">
+                    <Link href="/admin/support">Open Support Center</Link>
+                  </Button>
                 </div>
-                <Button asChild variant="outline" size="sm">
-                  <Link href="/admin/support">Open Support Center</Link>
-                </Button>
-              </CardHeader>
-              <CardContent>
+              </div>
+              <CardContent className="p-0">
                 {loading ? (
-                  <p className="text-sm text-muted-foreground">Loading tickets...</p>
+                  <div className="p-8 text-center text-muted-foreground font-medium animate-pulse">{t("admin.loading_tickets", "Loading tickets…")}</div>
                 ) : openTickets.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No open tickets. All clear.</p>
+                  <div className="p-12 text-center text-muted-foreground flex flex-col items-center">
+                    <div className="h-16 w-16 bg-muted rounded-full flex items-center justify-center mb-4">
+                       <ShieldCheck className="h-8 w-8 text-primary" />
+                    </div>
+                    <p className="text-lg font-bold">{t("admin.no_tickets", "No open tickets. All clear.")}</p>
+                  </div>
                 ) : (
                   <>
                     <ul className="divide-y">
                       {openTickets.map((ticket) => (
-                        <li key={ticket.id} className="flex items-center justify-between gap-4 py-3">
+                        <li key={ticket.id} className="flex items-center justify-between gap-4 px-6 py-4 hover:bg-muted/20 transition-colors">
                           <div className="min-w-0">
-                            <p className="truncate font-medium">{ticket.subject ?? ticket.category ?? "Support request"}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {supportRequester(ticket)}
-                              {ticket.category ? ` - ${ticket.category}` : ""}
-                              {ticket.createdAt ? ` - ${new Date(ticket.createdAt).toLocaleString()}` : ""}
+                            <p className="truncate font-bold text-base">{ticket.subject ?? ticket.category ?? "Support request"}</p>
+                            <p className="text-sm font-medium text-muted-foreground mt-1">
+                              <span className="text-foreground">{supportRequester(ticket)}</span>
+                              {ticket.category ? ` • ${ticket.category}` : ""}
+                              {ticket.createdAt ? ` • ${new Date(ticket.createdAt).toLocaleString()}` : ""}
                             </p>
                           </div>
                           <Badge
                             variant={["HIGH", "URGENT"].includes((ticket.priority ?? "").toUpperCase()) ? "destructive" : "secondary"}
+                            className="px-3 py-1"
                           >
                             {ticket.priority ?? "NORMAL"}
                           </Badge>
                         </li>
                       ))}
                     </ul>
-                    <div className="mt-4 flex items-center justify-between">
-                      <p className="text-xs text-muted-foreground">
-                        Page {ticketsPage} - showing {openTickets.length} of {overview.openTickets}
+                    <div className="bg-muted/10 p-6 flex flex-col sm:flex-row gap-4 items-center justify-between border-t">
+                      <p className="text-sm font-medium text-muted-foreground">
+                        {t("admin.page", "Page")} {ticketsPage} — showing {openTickets.length} of {overview.openTickets}
                       </p>
                       <div className="flex gap-2">
                         <Button
-                          size="sm"
+                          className="rounded-full"
                           variant="outline"
                           disabled={ticketsPage === 1 || loading}
                           onClick={() => setTicketsPage((page) => Math.max(page - 1, 1))}
                         >
-                          Previous
+                          {t("admin.previous", "Previous")}
                         </Button>
                         <Button
-                          size="sm"
+                          className="rounded-full"
                           variant="outline"
                           disabled={openTickets.length < TICKETS_PER_PAGE || loading}
                           onClick={() => setTicketsPage((page) => page + 1)}
                         >
-                          Next
+                          {t("admin.next", "Next")}
                         </Button>
                       </div>
                     </div>

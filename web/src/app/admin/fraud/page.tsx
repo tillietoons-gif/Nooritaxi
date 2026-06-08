@@ -217,7 +217,7 @@ export default function FraudDashboardPage() {
 
   return (
     <AuthGate roles={["ADMIN"]}>
-      <div className="flex min-h-screen flex-col bg-background/50">
+      <div className="flex flex-1 flex-col">
         <main className="flex-1 px-4 py-8 md:px-8">
           <div className="mx-auto max-w-7xl space-y-6">
             <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">

@@ -8,7 +8,7 @@ import { AdminPageHeader } from "@/components/admin/admin-page-header"
 export default function LiveMapCenterPage() {
   return (
     <AuthGate roles={["ADMIN"]}>
-      <main className="h-screen flex flex-col overflow-hidden">
+      <main className="flex-1 flex flex-col overflow-hidden">
         <div className="px-4 py-8 md:px-8 border-b border-primary/10 bg-background/20 backdrop-blur-xl relative z-20 shadow-lg">
           <div className="mx-auto max-w-7xl">
             <AdminPageHeader

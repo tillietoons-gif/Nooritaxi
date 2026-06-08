@@ -135,12 +135,12 @@ export default function AdminUsersPage() {
                           </td>
                           <td className="px-6 py-4">
                             <div className="flex flex-wrap gap-1">
-                              {u.roles.map(r => (
+                              {u.roles?.map(r => (
                                 <Badge key={r.id} variant={r.isSystem ? "default" : "secondary"} className="text-[9px] font-black uppercase tracking-widest">
                                   {r.name}
                                 </Badge>
                               ))}
-                              {u.roles.length === 0 && <span className="text-xs text-muted-foreground italic">No roles assigned</span>}
+                              {(!u.roles || u.roles.length === 0) && <span className="text-xs text-muted-foreground italic">No roles assigned</span>}
                             </div>
                           </td>
                           <td className="px-6 py-4 text-right">

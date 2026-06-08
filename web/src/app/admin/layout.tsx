@@ -1,4 +1,5 @@
 import { AuthGate } from "@/components/auth-gate"
+import { AdminShellHeader } from "@/components/admin/admin-shell-header"
 import { PatternOverlay } from "@/components/ui/pattern-overlay"
 
 export default function AdminLayout({
@@ -15,6 +16,7 @@ export default function AdminLayout({
         </div>
 
         <div className="relative z-10 flex-1">
+          <AdminShellHeader />
           {children}
         </div>
       </div>

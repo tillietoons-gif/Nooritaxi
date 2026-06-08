@@ -3,7 +3,6 @@
 import Link from "next/link"
 import { useCallback, useEffect, useState } from "react"
 import { AuthGate } from "@/components/auth-gate"
-import { Header } from "@/components/layout/header"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -217,7 +216,6 @@ export default function AdminPage() {
   return (
     <AuthGate roles={["ADMIN", "SUPPORT"]}>
       <div className="flex min-h-screen flex-col bg-background">
-        <Header />
         <main className="flex-1 px-4 py-6 md:px-8">
           <div className="mx-auto max-w-7xl space-y-6">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">

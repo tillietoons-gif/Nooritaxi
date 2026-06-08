@@ -7,7 +7,7 @@ export class SubscriptionsService {
 
   async getPlans() {
     return this.prisma.subscriptionPlan.findMany({
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
     });
   }
 
@@ -20,8 +20,8 @@ export class SubscriptionsService {
         price: data.price,
         billingCycle: data.billingCycle,
         features: data.features,
-        isActive: data.isActive ?? true
-      }
+        isActive: data.isActive ?? true,
+      },
     });
   }
 
@@ -31,18 +31,22 @@ export class SubscriptionsService {
       include: {
         plan: true,
         user: { select: { name: true, phone: true } },
-        driver: { select: { user: { select: { name: true } } } }
-      }
+        driver: { select: { user: { select: { name: true } } } },
+      },
     });
   }
 
   async assignSubscription(data: any) {
-    const plan = await this.prisma.subscriptionPlan.findUnique({ where: { id: data.planId } });
+    const plan = await this.prisma.subscriptionPlan.findUnique({
+      where: { id: data.planId },
+    });
     if (!plan) throw new NotFoundException('Plan not found');
 
     const endDate = new Date();
-    if (plan.billingCycle === 'MONTHLY') endDate.setMonth(endDate.getMonth() + 1);
-    if (plan.billingCycle === 'YEARLY') endDate.setFullYear(endDate.getFullYear() + 1);
+    if (plan.billingCycle === 'MONTHLY')
+      endDate.setMonth(endDate.getMonth() + 1);
+    if (plan.billingCycle === 'YEARLY')
+      endDate.setFullYear(endDate.getFullYear() + 1);
 
     return this.prisma.activeSubscription.create({
       data: {
@@ -51,7 +55,7 @@ export class SubscriptionsService {
         driverId: data.driverId,
         merchantId: data.merchantId,
         endDate,
-      }
+      },
     });
   }
 }

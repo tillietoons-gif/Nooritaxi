@@ -1,4 +1,8 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { LoyaltyTransactionType, Prisma } from '@prisma/client';
 
@@ -8,7 +12,11 @@ export class LoyaltyService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  async addPointsForTrip(userId: string, tripId: string, tripFare: number): Promise<void> {
+  async addPointsForTrip(
+    userId: string,
+    tripId: string,
+    tripFare: number,
+  ): Promise<void> {
     const pointsToAdd = Math.floor(tripFare * this.POINTS_PER_FARE_UNIT);
 
     if (pointsToAdd <= 0) {
@@ -24,12 +32,12 @@ export class LoyaltyService {
           },
           lifetime: {
             increment: pointsToAdd,
-          }
+          },
         },
         create: {
           userId,
           points: pointsToAdd,
-          lifetime: pointsToAdd
+          lifetime: pointsToAdd,
         },
       });
 

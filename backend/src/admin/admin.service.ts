@@ -169,13 +169,9 @@ export class AdminService {
       actorId,
       ...(status === 'DELIVERED' ? { deliveredAt: new Date() } : {}),
     });
-    await this.audit(
-      'ADMIN_DELIVERY_STATUS_UPDATED',
-      'Delivery',
-      id,
-      actorId,
-      { status },
-    );
+    await this.audit('ADMIN_DELIVERY_STATUS_UPDATED', 'Delivery', id, actorId, {
+      status,
+    });
     return updated;
   }
 
@@ -262,7 +258,9 @@ export class AdminService {
       this.prisma.review.count({ where }),
     ]);
 
-    const targetUserIds = [...new Set(items.map((review) => review.targetUserId).filter(Boolean))] as string[];
+    const targetUserIds = [
+      ...new Set(items.map((review) => review.targetUserId).filter(Boolean)),
+    ] as string[];
     const targetUsers = targetUserIds.length
       ? await this.prisma.user.findMany({
           where: { id: { in: targetUserIds } },
@@ -284,7 +282,11 @@ export class AdminService {
     };
   }
 
-  async updateReviewVisibility(id: string, isVisible: boolean, actorId?: string) {
+  async updateReviewVisibility(
+    id: string,
+    isVisible: boolean,
+    actorId?: string,
+  ) {
     const review = await this.prisma.review.findUnique({ where: { id } });
     if (!review) throw new NotFoundException('Review not found');
 
@@ -508,8 +510,9 @@ export class AdminService {
         completedDeliveries: completedDeliveries.length,
         totalTripFare,
         totalDeliveryFees,
-        openIncidents: incidents.filter((incident) => incident.status !== 'CLOSED')
-          .length,
+        openIncidents: incidents.filter(
+          (incident) => incident.status !== 'CLOSED',
+        ).length,
         unresolvedFraudAlerts: fraudAlerts.filter((alert) => !alert.isResolved)
           .length,
       },
@@ -626,7 +629,7 @@ export class AdminService {
           ...(typeof body?.nationalIdNumber === 'string'
             ? { nationalIdNumber: body.nationalIdNumber.trim() || null }
             : {}),
-          ...(tier ? { tier: tier as any } : {}),
+          ...(tier ? { tier: tier } : {}),
           ...(typeof body?.acceptsCash === 'boolean'
             ? { acceptsCash: body.acceptsCash }
             : {}),
@@ -637,7 +640,7 @@ export class AdminService {
       });
 
       const vehicleData = {
-        ...(vehicleType ? { type: vehicleType as any } : {}),
+        ...(vehicleType ? { type: vehicleType } : {}),
         ...(typeof body?.vehicleMake === 'string'
           ? { make: body.vehicleMake.trim() || null }
           : {}),
@@ -758,7 +761,13 @@ export class AdminService {
   }
 
   // ------- Users -------
-  async listUsers({ status, q, page, limit, role }: ListArgs & { role?: string }) {
+  async listUsers({
+    status,
+    q,
+    page,
+    limit,
+    role,
+  }: ListArgs & { role?: string }) {
     const safeLimit = clampLimit(limit);
     const safePage = clampPage(page);
 

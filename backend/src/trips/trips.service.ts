@@ -27,49 +27,63 @@ export class TripsService {
       data.pickupLng,
     );
     const { baseFare, fare } = this.estimateRideFare(distance, surgeMultiplier);
-    
-    const { ride, matchedDriverTokens } = await this.prisma.$transaction(async (tx) => {
-      const createdRide = await tx.trip.create({
-        data: {
-          ...data,
-          distance,
-          baseFare,
-          fare,
-          surgeMultiplier,
-          safetyCode: data.safetyCode ?? Math.floor(1000 + Math.random() * 9000).toString(),
-        },
-      });
 
-      const matchedDriver = data.driverId
-        ? null
-        : await this.dispatch.findNearestOnlineDriver(data.pickupLat, data.pickupLng, 10, tx);
-      const assignedDriverUserId = data.driverId ?? matchedDriver?.userId;
-      const assignedVehicleId = data.vehicleId ?? matchedDriver?.vehicles[0]?.id;
+    const { ride, matchedDriverTokens } = await this.prisma.$transaction(
+      async (tx) => {
+        const createdRide = await tx.trip.create({
+          data: {
+            ...data,
+            distance,
+            baseFare,
+            fare,
+            surgeMultiplier,
+            safetyCode:
+              data.safetyCode ??
+              Math.floor(1000 + Math.random() * 9000).toString(),
+          },
+        });
 
-      if (!assignedDriverUserId) return { ride: createdRide, matchedDriverTokens: [] };
+        const matchedDriver = data.driverId
+          ? null
+          : await this.dispatch.findNearestOnlineDriver(
+              data.pickupLat,
+              data.pickupLng,
+              10,
+              tx,
+            );
+        const assignedDriverUserId = data.driverId ?? matchedDriver?.userId;
+        const assignedVehicleId =
+          data.vehicleId ?? matchedDriver?.vehicles[0]?.id;
 
-      const updatedRide = await tx.trip.update({
-        where: { id: createdRide.id },
-        data: {
-          driverId: assignedDriverUserId,
-          vehicleId: assignedVehicleId,
-          status: TripStatus.ACCEPTED,
-          acceptedAt: new Date(),
-        },
-      });
+        if (!assignedDriverUserId)
+          return { ride: createdRide, matchedDriverTokens: [] };
 
-      await tx.driver.updateMany({
-        where: { userId: assignedDriverUserId },
-        data: { status: DriverStatus.BUSY },
-      });
+        const updatedRide = await tx.trip.update({
+          where: { id: createdRide.id },
+          data: {
+            driverId: assignedDriverUserId,
+            vehicleId: assignedVehicleId,
+            status: TripStatus.ACCEPTED,
+            acceptedAt: new Date(),
+          },
+        });
 
-      const devices = await tx.pushDevice.findMany({
-        where: { userId: assignedDriverUserId, isActive: true },
-        select: { token: true },
-      });
+        await tx.driver.updateMany({
+          where: { userId: assignedDriverUserId },
+          data: { status: DriverStatus.BUSY },
+        });
 
-      return { ride: updatedRide, matchedDriverTokens: devices.map((device: any) => device.token) };
-    });
+        const devices = await tx.pushDevice.findMany({
+          where: { userId: assignedDriverUserId, isActive: true },
+          select: { token: true },
+        });
+
+        return {
+          ride: updatedRide,
+          matchedDriverTokens: devices.map((device: any) => device.token),
+        };
+      },
+    );
 
     if (matchedDriverTokens.length) {
       await this.push.sendToTokens(
@@ -203,7 +217,10 @@ export class TripsService {
   }
 
   private isPointInBoundingBox(lat: number, lng: number, ring: number[][]) {
-    let minLat = Infinity, maxLat = -Infinity, minLng = Infinity, maxLng = -Infinity;
+    let minLat = Infinity,
+      maxLat = -Infinity,
+      minLng = Infinity,
+      maxLng = -Infinity;
     for (const [rLng, rLat] of ring) {
       if (rLat < minLat) minLat = rLat;
       if (rLat > maxLat) maxLat = rLat;

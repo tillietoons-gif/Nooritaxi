@@ -6,10 +6,16 @@ import { Driver } from '@prisma/client';
 export class DispatchService {
   constructor(private prisma: PrismaService) {}
 
-  async findNearestOnlineDriver(pickupLat: number, pickupLng: number, maxDistanceKm = 10, tx: any = this.prisma) {
+  async findNearestOnlineDriver(
+    pickupLat: number,
+    pickupLng: number,
+    maxDistanceKm = 10,
+    tx: any = this.prisma,
+  ) {
     // 1. Spatial bounding box to leverage DB indexes (approx 111km per degree)
     const latDelta = maxDistanceKm / 111;
-    const lngDelta = maxDistanceKm / (111 * Math.cos((pickupLat * Math.PI) / 180));
+    const lngDelta =
+      maxDistanceKm / (111 * Math.cos((pickupLat * Math.PI) / 180));
 
     // Fetch online drivers within the bounding box
     const drivers = await tx.driver.findMany({
@@ -28,14 +34,24 @@ export class DispatchService {
         driver,
         distance:
           driver.currentLat != null && driver.currentLng != null
-            ? this.distanceKm(pickupLat, pickupLng, driver.currentLat, driver.currentLng)
+            ? this.distanceKm(
+                pickupLat,
+                pickupLng,
+                driver.currentLat,
+                driver.currentLng,
+              )
             : Infinity,
       }))
       .filter((d: { distance: number }) => d.distance <= maxDistanceKm)
-      .sort((a: { distance: number; driver: Driver }, b: { distance: number; driver: Driver }) => {
-        if (a.distance !== b.distance) return a.distance - b.distance;
-        return b.driver.ratingAverage - a.driver.ratingAverage;
-      });
+      .sort(
+        (
+          a: { distance: number; driver: Driver },
+          b: { distance: number; driver: Driver },
+        ) => {
+          if (a.distance !== b.distance) return a.distance - b.distance;
+          return b.driver.ratingAverage - a.driver.ratingAverage;
+        },
+      );
 
     // 3. Parallel routing distance check for the top 3 candidates to minimize latency
     const topCandidates = sortedDrivers.slice(0, 3);
@@ -44,13 +60,16 @@ export class DispatchService {
         candidate.distance = await this.calculateRouteDistance(
           pickupLat,
           pickupLng,
-          candidate.driver.currentLat!,
-          candidate.driver.currentLng!,
+          candidate.driver.currentLat,
+          candidate.driver.currentLng,
         );
       }),
     );
 
-    topCandidates.sort((a: { distance: number }, b: { distance: number }) => a.distance - b.distance);
+    topCandidates.sort(
+      (a: { distance: number }, b: { distance: number }) =>
+        a.distance - b.distance,
+    );
 
     return topCandidates[0]?.driver;
   }

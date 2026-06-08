@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 
 type Point = { lat: number; lng: number };
@@ -38,8 +43,10 @@ export class SurgeService {
     }
 
     const highestMultiplier = Math.max(...multipliers);
-    this.logger.log(`Surge multiplier for (${lat}, ${lng}): ${highestMultiplier}`);
-    
+    this.logger.log(
+      `Surge multiplier for (${lat}, ${lng}): ${highestMultiplier}`,
+    );
+
     return highestMultiplier;
   }
 
@@ -98,7 +105,10 @@ export class SurgeService {
     if (!Number.isFinite(multiplier) || multiplier < 1 || multiplier > 5) {
       throw new BadRequestException('Multiplier must be between 1 and 5');
     }
-    if (Number.isNaN(activeFrom.getTime()) || Number.isNaN(activeUntil.getTime())) {
+    if (
+      Number.isNaN(activeFrom.getTime()) ||
+      Number.isNaN(activeUntil.getTime())
+    ) {
       throw new BadRequestException('Valid active dates are required');
     }
     if (activeUntil <= activeFrom) {
@@ -128,7 +138,7 @@ export class SurgeService {
         isActive: data.isActive ?? true,
         activeFrom,
         activeUntil,
-      }
+      },
     });
     return this.toDto(zone);
   }
@@ -144,7 +154,7 @@ export class SurgeService {
     try {
       const zone = await this.prisma.surgeZone.update({
         where: { id },
-        data
+        data,
       });
       return this.toDto(zone);
     } catch {
@@ -161,7 +171,12 @@ export class SurgeService {
 
     if (Array.isArray(polygon)) {
       const legacyPoints = polygon as Point[];
-      if (!legacyPoints.every((point) => typeof point.lat === 'number' && typeof point.lng === 'number')) {
+      if (
+        !legacyPoints.every(
+          (point) =>
+            typeof point.lat === 'number' && typeof point.lng === 'number',
+        )
+      ) {
         return null;
       }
       return legacyPoints.map((point) => [point.lng, point.lat]);
@@ -181,7 +196,12 @@ export class SurgeService {
       if (lng < minLng) minLng = lng;
       if (lng > maxLng) maxLng = lng;
     }
-    return point.lat >= minLat && point.lat <= maxLat && point.lng >= minLng && point.lng <= maxLng;
+    return (
+      point.lat >= minLat &&
+      point.lat <= maxLat &&
+      point.lng >= minLng &&
+      point.lng <= maxLng
+    );
   }
 
   private toDto(zone: any) {
@@ -197,10 +217,19 @@ export class SurgeService {
     const maxLat = lats.length ? Math.max(...lats) : null;
     const minLng = lngs.length ? Math.min(...lngs) : null;
     const maxLng = lngs.length ? Math.max(...lngs) : null;
-    const centerLat = minLat == null || maxLat == null ? null : (minLat + maxLat) / 2;
-    const centerLng = minLng == null || maxLng == null ? null : (minLng + maxLng) / 2;
-    const radiusKm = minLat == null || maxLat == null ? null : Math.abs(maxLat - minLat) / 2 / 0.009;
-    const isCurrentlyActive = Boolean(zone.isActive && zone.activeFrom <= new Date() && zone.activeUntil >= new Date());
+    const centerLat =
+      minLat == null || maxLat == null ? null : (minLat + maxLat) / 2;
+    const centerLng =
+      minLng == null || maxLng == null ? null : (minLng + maxLng) / 2;
+    const radiusKm =
+      minLat == null || maxLat == null
+        ? null
+        : Math.abs(maxLat - minLat) / 2 / 0.009;
+    const isCurrentlyActive = Boolean(
+      zone.isActive &&
+      zone.activeFrom <= new Date() &&
+      zone.activeUntil >= new Date(),
+    );
 
     return {
       ...zone,

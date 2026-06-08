@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Put, Body, Param, UseGuards, Request, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Body,
+  Param,
+  UseGuards,
+  Request,
+  Query,
+} from '@nestjs/common';
 import { FraudService } from './fraud.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RequirePermission } from '../auth/decorators/permissions.decorator';
@@ -41,7 +51,11 @@ export class FraudController {
 
   @Post('cases/:id/notes')
   @RequirePermission('fraud.edit')
-  addCaseNote(@Request() req, @Param('id') id: string, @Body('content') content: string) {
+  addCaseNote(
+    @Request() req,
+    @Param('id') id: string,
+    @Body('content') content: string,
+  ) {
     return this.fraudService.addCaseNote(id, req.user.userId, content);
   }
 
@@ -53,8 +67,16 @@ export class FraudController {
 
   @Post('blacklist')
   @RequirePermission('fraud.edit')
-  addBlacklist(@Request() req, @Body() body: { type: string, value: string, reason: string }) {
-    return this.fraudService.addBlacklist(req.user.userId, body.type, body.value, body.reason);
+  addBlacklist(
+    @Request() req,
+    @Body() body: { type: string; value: string; reason: string },
+  ) {
+    return this.fraudService.addBlacklist(
+      req.user.userId,
+      body.type,
+      body.value,
+      body.reason,
+    );
   }
 
   @Get('accounts')

@@ -11,7 +11,7 @@ export class MarketingService {
 
   async getPromotions() {
     return this.prisma.promotion.findMany({
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
     });
   }
 
@@ -31,14 +31,14 @@ export class MarketingService {
         startsAt: new Date(data.startsAt),
         endsAt: new Date(data.endsAt),
         isActive: data.isActive ?? true,
-      }
+      },
     });
   }
 
   async togglePromotionStatus(id: string, isActive: boolean) {
     return this.prisma.promotion.update({
       where: { id },
-      data: { isActive }
+      data: { isActive },
     });
   }
 
@@ -48,7 +48,7 @@ export class MarketingService {
       include: {
         user: { select: { name: true, phone: true } },
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
     });
   }
 
@@ -60,12 +60,18 @@ export class MarketingService {
     return this.prisma.communicationBroadcast.findMany({
       where: { targetAudience: { in: ['RIDERS', 'ALL_USERS', 'MERCHANTS'] } },
       orderBy: { createdAt: 'desc' },
-      include: { sentBy: { select: { name: true } } }
+      include: { sentBy: { select: { name: true } } },
     });
   }
 
   // Uses the existing Broadcast model from Operations
-  async createCampaign(data: { title: string; message: string; targetAudience: string; channels: string[]; adminId: string }) {
+  async createCampaign(data: {
+    title: string;
+    message: string;
+    targetAudience: string;
+    channels: string[];
+    adminId: string;
+  }) {
     return this.prisma.communicationBroadcast.create({
       data: {
         title: data.title,
@@ -73,7 +79,7 @@ export class MarketingService {
         targetAudience: data.targetAudience,
         channels: data.channels,
         sentById: data.adminId,
-      }
+      },
     });
   }
 }

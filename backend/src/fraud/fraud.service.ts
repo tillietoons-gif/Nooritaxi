@@ -7,9 +7,15 @@ export class FraudService {
 
   // 1. Dashboard Analytics
   async getDashboardAnalytics() {
-    const totalAlerts = await this.prisma.fraudAlert.count({ where: { isResolved: false } });
-    const openCases = await this.prisma.fraudCase.count({ where: { status: { in: ['OPEN', 'INVESTIGATING'] } } });
-    const criticalScores = await this.prisma.fraudScore.count({ where: { riskLevel: 'CRITICAL' } });
+    const totalAlerts = await this.prisma.fraudAlert.count({
+      where: { isResolved: false },
+    });
+    const openCases = await this.prisma.fraudCase.count({
+      where: { status: { in: ['OPEN', 'INVESTIGATING'] } },
+    });
+    const criticalScores = await this.prisma.fraudScore.count({
+      where: { riskLevel: 'CRITICAL' },
+    });
 
     // Mock trend analytics for the dashboard
     return {
@@ -21,7 +27,7 @@ export class FraudService {
         duplicateAccounts: 12,
         referralAbuse: 89,
         financialFraud: 24,
-      }
+      },
     };
   }
 
@@ -32,15 +38,21 @@ export class FraudService {
       orderBy: { createdAt: 'desc' },
       include: {
         user: { select: { id: true, name: true, phone: true } },
-        driver: { select: { id: true, ratingAverage: true, user: { select: { name: true, phone: true } } } },
-      }
+        driver: {
+          select: {
+            id: true,
+            ratingAverage: true,
+            user: { select: { name: true, phone: true } },
+          },
+        },
+      },
     });
   }
 
   async resolveAlert(id: string) {
     return this.prisma.fraudAlert.update({
       where: { id },
-      data: { isResolved: true }
+      data: { isResolved: true },
     });
   }
 
@@ -52,7 +64,7 @@ export class FraudService {
         assignedTo: { select: { name: true } },
         targetUser: { select: { name: true, phone: true } },
         targetDriver: { select: { user: { select: { name: true } } } },
-      }
+      },
     });
   }
 
@@ -63,11 +75,11 @@ export class FraudService {
         alerts: true,
         notes: {
           include: { author: { select: { name: true } } },
-          orderBy: { createdAt: 'asc' }
+          orderBy: { createdAt: 'asc' },
         },
         targetUser: true,
         targetDriver: { include: { user: true } },
-      }
+      },
     });
 
     if (!fraudCase) throw new NotFoundException('Case not found');
@@ -79,8 +91,8 @@ export class FraudService {
       data: {
         caseId,
         authorId,
-        content
-      }
+        content,
+      },
     });
   }
 
@@ -88,18 +100,23 @@ export class FraudService {
   async getBlacklist() {
     return this.prisma.blacklist.findMany({
       orderBy: { createdAt: 'desc' },
-      include: { admin: { select: { name: true } } }
+      include: { admin: { select: { name: true } } },
     });
   }
 
-  async addBlacklist(adminId: string, type: string, value: string, reason: string) {
+  async addBlacklist(
+    adminId: string,
+    type: string,
+    value: string,
+    reason: string,
+  ) {
     return this.prisma.blacklist.create({
       data: {
         type,
         value,
         reason,
-        addedBy: adminId
-      }
+        addedBy: adminId,
+      },
     });
   }
 
@@ -111,7 +128,7 @@ export class FraudService {
       include: {
         user: { select: { name: true, phone: true } },
         driver: { select: { user: { select: { name: true, phone: true } } } },
-      }
+      },
     });
   }
 
@@ -119,7 +136,7 @@ export class FraudService {
     return this.prisma.deviceFingerprint.findMany({
       orderBy: { lastSeenAt: 'desc' },
       take: 100,
-      include: { user: { select: { name: true, phone: true } } }
+      include: { user: { select: { name: true, phone: true } } },
     });
   }
 }

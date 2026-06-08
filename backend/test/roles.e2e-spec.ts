@@ -28,9 +28,7 @@ describe('RolesController (e2e)', () => {
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
       controllers: [RolesController],
-      providers: [
-        { provide: RolesService, useValue: rolesService },
-      ],
+      providers: [{ provide: RolesService, useValue: rolesService }],
     })
       .overrideGuard(JwtAuthGuard)
       .useValue(allowGuard)

@@ -8,9 +8,10 @@ export class AIService {
 
   constructor(
     private prisma: PrismaService,
-    private configService: ConfigService
+    private configService: ConfigService,
   ) {
-    this.googleMapsApiKey = this.configService.get<string>('GOOGLE_MAPS_API_KEY') || '';
+    this.googleMapsApiKey =
+      this.configService.get<string>('GOOGLE_MAPS_API_KEY') || '';
   }
 
   /**
@@ -25,7 +26,9 @@ export class AIService {
         messages: [{ role: "system", content: "Predict taxi demand multiplier..." }]
       });
     */
-    console.log(`[AI MOCK] Forecasting demand for ${lat}, ${lng} in city ${cityId}`);
+    console.log(
+      `[AI MOCK] Forecasting demand for ${lat}, ${lng} in city ${cityId}`,
+    );
     return { surgeMultiplier: 1.2, predictedRequestsNextHour: 145 };
   }
 
@@ -35,12 +38,14 @@ export class AIService {
    */
   async optimizeDispatch(tripId: string, candidateDriverIds: string[]) {
     if (!this.googleMapsApiKey) {
-       console.log(`[AI MOCK] Running smart dispatch matrix on trip ${tripId}`);
-       return candidateDriverIds[0] || null;
+      console.log(`[AI MOCK] Running smart dispatch matrix on trip ${tripId}`);
+      return candidateDriverIds[0] || null;
     }
-    
+
     // Connect to Maps API Matrix and ML routing heuristic
-    console.log(`[AI MAPS INTEGRATION] Connected to Google Maps. Calculating best ETA for ${candidateDriverIds.length} drivers.`);
+    console.log(
+      `[AI MAPS INTEGRATION] Connected to Google Maps. Calculating best ETA for ${candidateDriverIds.length} drivers.`,
+    );
     return candidateDriverIds[0] || null;
   }
 
@@ -51,7 +56,11 @@ export class AIService {
   async analyzeFraudRisk(userId: string, tripData: any) {
     // TODO: Execute LLM anomaly detection
     console.log(`[AI MOCK] Analyzing fraud anomaly risk for User ${userId}`);
-    return { riskScore: 15, isSuspicious: false, reason: "Normal patterns detected" };
+    return {
+      riskScore: 15,
+      isSuspicious: false,
+      reason: 'Normal patterns detected',
+    };
   }
 
   /**
@@ -61,6 +70,6 @@ export class AIService {
   async generateSupportReply(ticketId: string, userMessage: string) {
     // TODO: Run LangChain/OpenAI vector DB memory search
     console.log(`[AI MOCK] Generating support reply for ticket ${ticketId}`);
-    return "Hi, we are currently reviewing your request and will refund your wallet shortly.";
+    return 'Hi, we are currently reviewing your request and will refund your wallet shortly.';
   }
 }

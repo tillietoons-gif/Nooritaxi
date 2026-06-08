@@ -1,11 +1,19 @@
-import { WebSocketGateway, WebSocketServer, OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect } from '@nestjs/websockets';
+import {
+  WebSocketGateway,
+  WebSocketServer,
+  OnGatewayInit,
+  OnGatewayConnection,
+  OnGatewayDisconnect,
+} from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 
 @WebSocketGateway({
   cors: { origin: '*' },
-  namespace: '/airport'
+  namespace: '/airport',
 })
-export class AirportGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
+export class AirportGateway
+  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
+{
   @WebSocketServer() server: Server;
 
   afterInit(server: Server) {

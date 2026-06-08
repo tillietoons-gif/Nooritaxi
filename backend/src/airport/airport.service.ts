@@ -11,7 +11,7 @@ export class AirportService {
 
   async getAirports() {
     return this.prisma.airport.findMany({
-      include: { zones: true }
+      include: { zones: true },
     });
   }
 
@@ -20,8 +20,8 @@ export class AirportService {
       where: { id },
       include: {
         zones: { include: { queues: { where: { status: 'WAITING' } } } },
-        flights: { take: 10, orderBy: { arrivalTime: 'asc' } }
-      }
+        flights: { take: 10, orderBy: { arrivalTime: 'asc' } },
+      },
     });
     if (!airport) throw new NotFoundException('Airport not found');
     return airport;
@@ -39,25 +39,31 @@ export class AirportService {
     return this.prisma.airportQueue.findMany({
       where: { zone: { airportId }, status: 'WAITING' },
       include: {
-        driver: { select: { user: { select: { name: true, phone: true } }, currentLat: true, currentLng: true } },
+        driver: {
+          select: {
+            user: { select: { name: true, phone: true } },
+            currentLat: true,
+            currentLng: true,
+          },
+        },
         vehicle: { select: { plateNumber: true, make: true, model: true } },
-        zone: { select: { name: true, type: true } }
+        zone: { select: { name: true, type: true } },
       },
-      orderBy: { entryTime: 'asc' }
+      orderBy: { entryTime: 'asc' },
     });
   }
 
   async assignDriver(queueId: string) {
     return this.prisma.airportQueue.update({
       where: { id: queueId },
-      data: { status: 'ASSIGNED' }
+      data: { status: 'ASSIGNED' },
     });
   }
 
   async removeDriverFromQueue(queueId: string) {
     return this.prisma.airportQueue.update({
       where: { id: queueId },
-      data: { status: 'LEFT' }
+      data: { status: 'LEFT' },
     });
   }
 
@@ -68,7 +74,7 @@ export class AirportService {
   async getFlights(airportId: string) {
     return this.prisma.flight.findMany({
       where: { airportId, status: { in: ['SCHEDULED', 'ON_TIME', 'DELAYED'] } },
-      orderBy: { arrivalTime: 'asc' }
+      orderBy: { arrivalTime: 'asc' },
     });
   }
 
@@ -77,26 +83,31 @@ export class AirportService {
   // ==========================
 
   async getAnalytics(airportId: string) {
-    const totalQueue = await this.prisma.airportQueue.count({ where: { zone: { airportId }, status: 'WAITING' } });
+    const totalQueue = await this.prisma.airportQueue.count({
+      where: { zone: { airportId }, status: 'WAITING' },
+    });
     const assignedToday = await this.prisma.airportQueue.count({
-      where: { 
-        zone: { airportId }, 
+      where: {
+        zone: { airportId },
         status: 'ASSIGNED',
-        entryTime: { gte: new Date(new Date().setHours(0, 0, 0, 0)) }
-      }
+        entryTime: { gte: new Date(new Date().setHours(0, 0, 0, 0)) },
+      },
     });
     const upcomingFlights = await this.prisma.flight.count({
       where: {
         airportId,
-        arrivalTime: { gte: new Date(), lte: new Date(Date.now() + 2 * 60 * 60 * 1000) } // next 2 hours
-      }
+        arrivalTime: {
+          gte: new Date(),
+          lte: new Date(Date.now() + 2 * 60 * 60 * 1000),
+        }, // next 2 hours
+      },
     });
 
     return {
       driversInQueue: totalQueue,
       assignedToday,
       upcomingFlightsNext2Hours: upcomingFlights,
-      averageWaitTimeMins: 14 // Mocked average wait time
+      averageWaitTimeMins: 14, // Mocked average wait time
     };
   }
 }

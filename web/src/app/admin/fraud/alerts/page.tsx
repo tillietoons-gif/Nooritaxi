@@ -1,77 +1,281 @@
 "use client"
 
+import { useCallback, useEffect, useMemo, useState } from "react"
+import Link from "next/link"
 import { AuthGate } from "@/components/auth-gate"
-import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { AlertTriangle, CheckCircle, ShieldAlert } from "lucide-react"
-import { AdminPageHeader } from "@/components/admin/admin-page-header"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { HeadingLg, BodyMd } from "@/components/ui/typography"
+import { authedFetch } from "@/lib/auth"
+import { AlertCircle, AlertTriangle, CheckCircle, LoaderCircle, RefreshCw, Search, ShieldAlert } from "lucide-react"
+
+type AlertStatus = "OPEN" | "RESOLVED"
+
+type FraudAlert = {
+  id: string
+  type: string
+  severity: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL"
+  message: string
+  metadata?: unknown
+  isResolved: boolean
+  caseId?: string | null
+  userId?: string | null
+  driverId?: string | null
+  createdAt: string
+  user?: { id: string; name?: string | null; phone?: string | null } | null
+  driver?: { id: string; ratingAverage?: number | null; user?: { name?: string | null; phone?: string | null } | null } | null
+}
+
+async function getErrorMessage(response: Response) {
+  try {
+    const payload = (await response.json()) as { message?: string | string[] }
+    if (Array.isArray(payload.message)) return payload.message.join(", ")
+    if (payload.message) return payload.message
+  } catch {
+    // Ignore invalid JSON responses.
+  }
+
+  return `Request failed with ${response.status}`
+}
+
+function alertTarget(alert: FraudAlert) {
+  return (
+    alert.user?.name ||
+    alert.user?.phone ||
+    alert.driver?.user?.name ||
+    alert.driver?.user?.phone ||
+    alert.driverId ||
+    alert.userId ||
+    "Unknown target"
+  )
+}
+
+function formatDate(value: string) {
+  return new Date(value).toLocaleString()
+}
+
+function severityVariant(severity: FraudAlert["severity"]) {
+  if (severity === "CRITICAL" || severity === "HIGH") return "destructive" as const
+  if (severity === "MEDIUM") return "secondary" as const
+  return "outline" as const
+}
 
 export default function FraudAlertsPage() {
-  const alerts = [
-    { id: "ALT-901", type: "GPS_SPOOFING", entity: "Driver #842", severity: "CRITICAL", time: "2m ago", status: "OPEN" },
-    { id: "ALT-902", type: "DUPLICATE_ACCOUNTS", entity: "User +93700123456", severity: "HIGH", time: "15m ago", status: "OPEN" },
-    { id: "ALT-903", type: "REFERRAL_FRAUD", entity: "Device ID X9F22", severity: "MEDIUM", time: "1h ago", status: "RESOLVED" },
-  ]
+  const [alerts, setAlerts] = useState<FraudAlert[]>([])
+  const [statusFilter, setStatusFilter] = useState<AlertStatus>("OPEN")
+  const [query, setQuery] = useState("")
+  const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+  const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  const loadData = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true)
+    setRefreshing(true)
+    setError(null)
+    try {
+      const response = await authedFetch(`/admin/fraud/alerts?status=${statusFilter}`)
+      if (!response.ok) throw new Error(await getErrorMessage(response))
+
+      const payload = (await response.json()) as FraudAlert[]
+      setAlerts(Array.isArray(payload) ? payload : [])
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load fraud alerts")
+      setAlerts([])
+    } finally {
+      setLoading(false)
+      setRefreshing(false)
+    }
+  }, [statusFilter])
+
+  useEffect(() => {
+    void loadData()
+  }, [loadData])
+
+  const filteredAlerts = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase()
+    if (!normalizedQuery) return alerts
+
+    return alerts.filter((alert) =>
+      [
+        alert.id,
+        alert.type,
+        alert.severity,
+        alert.message,
+        alertTarget(alert),
+        alert.caseId ?? "",
+      ].some((value) => value.toLowerCase().includes(normalizedQuery)),
+    )
+  }, [alerts, query])
+
+  const criticalCount = useMemo(
+    () => alerts.filter((alert) => alert.severity === "CRITICAL").length,
+    [alerts],
+  )
+
+  async function resolveAlert(alertId: string) {
+    setActionLoading(`resolve:${alertId}`)
+    setError(null)
+    try {
+      const response = await authedFetch(`/admin/fraud/alerts/${alertId}/resolve`, {
+        method: "PUT",
+      })
+      if (!response.ok) throw new Error(await getErrorMessage(response))
+
+      await loadData(true)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to resolve alert")
+    } finally {
+      setActionLoading(null)
+    }
+  }
 
   return (
     <AuthGate roles={["ADMIN"]}>
-      <main className="min-h-screen px-4 py-8 md:px-8">
-        <div className="mx-auto max-w-7xl space-y-6">
-          <AdminPageHeader
-            title="Real-Time Fraud Alerts"
-            subtitle="Automated flags generated by the Risk Scoring Engine."
-          />
-
-          <Card className="glass-premium border-destructive/20 shadow-2xl overflow-hidden">
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left">
-                  <thead className="border-b border-primary/10 bg-background/50 text-[10px] uppercase font-black tracking-widest text-muted-foreground">
-                    <tr>
-                      <th className="px-6 py-4">Alert ID</th>
-                      <th className="px-6 py-4">Type</th>
-                      <th className="px-6 py-4">Target Entity</th>
-                      <th className="px-6 py-4">Severity</th>
-                      <th className="px-6 py-4">Time</th>
-                      <th className="px-6 py-4 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {alerts.map(a => (
-                      <tr key={a.id} className="border-b border-primary/5 hover:bg-primary/5 transition-colors">
-                        <td className="px-6 py-4 font-mono text-[10px] text-muted-foreground">{a.id}</td>
-                        <td className="px-6 py-4 font-black uppercase tracking-tight text-xs">{a.type}</td>
-                        <td className="px-6 py-4 font-medium">{a.entity}</td>
-                        <td className="px-6 py-4">
-                          <Badge variant={a.severity === 'CRITICAL' ? 'destructive' : a.severity === 'HIGH' ? 'default' : 'secondary'} className="text-[10px] font-black uppercase">
-                            {a.severity}
-                          </Badge>
-                        </td>
-                        <td className="px-6 py-4 text-[10px] font-bold text-muted-foreground uppercase">{a.time}</td>
-                        <td className="px-6 py-4 text-right">
-                          {a.status === 'OPEN' ? (
-                            <div className="flex justify-end gap-2">
-                              <Button size="sm" variant="outline" className="font-bold border-primary/20 text-primary hover:bg-primary/10">
-                                <ShieldAlert className="h-4 w-4 mr-1" /> Open Case
-                              </Button>
-                              <Button size="sm" variant="ghost" className="font-bold text-muted-foreground hover:text-primary">
-                                <CheckCircle className="h-4 w-4 mr-1" /> Resolve
-                              </Button>
-                            </div>
-                          ) : (
-                            <Badge variant="outline" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">RESOLVED</Badge>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+      <div className="flex min-h-screen flex-col bg-background/50">
+        <main className="flex-1 px-4 py-8 md:px-8">
+          <div className="mx-auto max-w-7xl space-y-6">
+            <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+              <div>
+                <HeadingLg className="mb-2 flex items-center gap-2">
+                  <AlertTriangle className="h-8 w-8 text-red-500" />
+                  Real-Time Fraud Alerts
+                </HeadingLg>
+                <BodyMd className="text-muted-foreground">
+                  Review and resolve automated flags generated by the risk scoring engine.
+                </BodyMd>
               </div>
-            </CardContent>
-          </Card>
-        </div>
-      </main>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Button variant="outline" onClick={() => void loadData(true)} disabled={refreshing}>
+                  <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+                  Refresh
+                </Button>
+                <Button asChild variant="outline">
+                  <Link href="/admin/fraud">Fraud Dashboard</Link>
+                </Button>
+              </div>
+            </div>
+
+            {error ? (
+              <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm font-medium text-destructive">
+                {error}
+              </div>
+            ) : null}
+
+            <div className="grid gap-4 md:grid-cols-3">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                    <ShieldAlert className="h-4 w-4" />
+                    Visible Alerts
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-semibold">{loading ? "..." : alerts.length.toLocaleString()}</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-destructive">Critical</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-semibold text-destructive">{loading ? "..." : criticalCount.toLocaleString()}</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Mode</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-semibold">{statusFilter}</div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card className="glass-premium border-red-500/20">
+              <CardHeader className="space-y-4">
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <CardTitle>Alert Feed</CardTitle>
+                  <div className="relative md:w-80">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search alerts..." className="pl-9" />
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {(["OPEN", "RESOLVED"] as AlertStatus[]).map((status) => (
+                    <Button key={status} size="sm" variant={statusFilter === status ? "default" : "outline"} onClick={() => setStatusFilter(status)}>
+                      {status}
+                    </Button>
+                  ))}
+                </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                {loading ? (
+                  <div className="flex min-h-[220px] items-center justify-center gap-3 text-sm font-semibold text-muted-foreground">
+                    <LoaderCircle className="h-5 w-5 animate-spin" /> Loading fraud alerts...
+                  </div>
+                ) : filteredAlerts.length === 0 ? (
+                  <div className="flex min-h-[220px] flex-col items-center justify-center p-8 text-center">
+                    <AlertCircle className="mb-3 h-8 w-8 text-muted-foreground" />
+                    <h2 className="text-lg font-bold">No fraud alerts found</h2>
+                    <p className="mt-2 max-w-md text-sm text-muted-foreground">
+                      The {statusFilter.toLowerCase()} alert feed is clear for the current filters.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full min-w-[920px] text-left text-sm">
+                      <thead className="border-b bg-muted/50">
+                        <tr>
+                          <th className="px-6 py-4">Alert ID</th>
+                          <th className="px-6 py-4">Type</th>
+                          <th className="px-6 py-4">Target Entity</th>
+                          <th className="px-6 py-4">Severity</th>
+                          <th className="px-6 py-4">Message</th>
+                          <th className="px-6 py-4">Created</th>
+                          <th className="px-6 py-4 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredAlerts.map((alert) => (
+                          <tr key={alert.id} className="border-b align-top transition hover:bg-muted/20">
+                            <td className="px-6 py-4 font-mono text-xs">{alert.id.slice(0, 12)}</td>
+                            <td className="px-6 py-4 font-bold">{alert.type}</td>
+                            <td className="px-6 py-4">{alertTarget(alert)}</td>
+                            <td className="px-6 py-4">
+                              <Badge variant={severityVariant(alert.severity)} className="text-[10px]">
+                                {alert.severity}
+                              </Badge>
+                            </td>
+                            <td className="max-w-sm px-6 py-4 text-sm text-muted-foreground">{alert.message}</td>
+                            <td className="px-6 py-4 text-xs text-muted-foreground">{formatDate(alert.createdAt)}</td>
+                            <td className="px-6 py-4 text-right">
+                              {alert.isResolved ? (
+                                <Badge variant="outline" className="text-muted-foreground">RESOLVED</Badge>
+                              ) : (
+                                <Button size="sm" variant="outline" className="h-8" onClick={() => void resolveAlert(alert.id)} disabled={actionLoading === `resolve:${alert.id}`}>
+                                  {actionLoading === `resolve:${alert.id}` ? (
+                                    <LoaderCircle className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <CheckCircle className="h-4 w-4" />
+                                  )}
+                                  Resolve
+                                </Button>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </main>
+      </div>
     </AuthGate>
   )
 }

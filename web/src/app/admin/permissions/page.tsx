@@ -1,6 +1,7 @@
 "use client"
 
-import React, { useState, useEffect, useCallback, useMemo } from "react"
+import React from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import {
   ShieldCheck,
   Search,

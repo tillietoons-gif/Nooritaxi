@@ -7,7 +7,15 @@ import {
 import { Reflector } from '@nestjs/core';
 import { PrismaService } from '../../prisma.service';
 import { PERMISSIONS_KEY } from '../decorators/permissions.decorator';
-import { UserRole } from '@prisma/client';
+
+type AuthenticatedRequest = {
+  user?: {
+    id?: string;
+    userId?: string;
+    role?: string;
+  };
+  adminRoles?: unknown;
+};
 
 @Injectable()
 export class PermissionsGuard implements CanActivate {
@@ -26,17 +34,22 @@ export class PermissionsGuard implements CanActivate {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
     const user = request.user;
 
     if (!user) {
       throw new ForbiddenException('User not authenticated');
     }
 
+    const adminId = user.id ?? user.userId;
+    if (!adminId) {
+      throw new ForbiddenException('User not authenticated');
+    }
+
     // Super Admin check (optional if you want Super Admin to bypass)
     // Or we check if user has a role with isSystem=true maybe
     const adminRoles = await this.prisma.adminRole.findMany({
-      where: { adminId: user.userId }, // Assuming jwt payload has userId
+      where: { adminId },
       include: {
         role: {
           include: {

@@ -35,9 +35,21 @@ const defaultPermissions = [
   
   { module: 'support', action: 'view', name: 'support.view', description: 'View support tickets and SOS alerts' },
   { module: 'support', action: 'reply', name: 'support.reply', description: 'Reply to and resolve support tickets' },
+
+  { module: 'cms', action: 'view', name: 'cms.view', description: 'View CMS pages and help content' },
+  { module: 'cms', action: 'edit', name: 'cms.edit', description: 'Create and update CMS pages and help content' },
+
+  { module: 'operations', action: 'view', name: 'operations.view', description: 'View operations dashboard, incidents, live map, and SOS alerts' },
+  { module: 'operations', action: 'edit', name: 'operations.edit', description: 'Manage incidents, manual dispatch, broadcasts, and operations actions' },
+
+  { module: 'fraud', action: 'view', name: 'fraud.view', description: 'View fraud dashboard, alerts, cases, accounts, devices, and blacklist' },
+  { module: 'fraud', action: 'edit', name: 'fraud.edit', description: 'Resolve fraud alerts and manage investigation notes and blacklist entries' },
   
   { module: 'marketing', action: 'view', name: 'marketing.view', description: 'View promotions and loyalty' },
   { module: 'marketing', action: 'manage', name: 'marketing.manage', description: 'Manage promotions and loyalty tiers' },
+
+  { module: 'subscriptions', action: 'view', name: 'subscriptions.view', description: 'View subscription plans and active memberships' },
+  { module: 'subscriptions', action: 'edit', name: 'subscriptions.edit', description: 'Create and assign subscription plans' },
   
   { module: 'roles', action: 'view', name: 'roles.view', description: 'View RBAC roles' },
   { module: 'roles', action: 'create', name: 'roles.create', description: 'Create custom roles' },
@@ -62,7 +74,7 @@ const defaultRoles = [
     description: 'Manage trips, drivers, live tracking, SOS, and dispatch.',
     isSystem: true,
     permissions: [
-      'dashboard.view', 'drivers.view', 'drivers.edit', 'trips.view', 'trips.cancel', 'trips.assign', 'support.view', 'reports.view'
+      'dashboard.view', 'drivers.view', 'drivers.edit', 'trips.view', 'trips.cancel', 'trips.assign', 'support.view', 'operations.view', 'operations.edit', 'reports.view'
     ]
   },
   {
@@ -78,7 +90,7 @@ const defaultRoles = [
     description: 'Manage wallets, transactions, settlements, and payouts.',
     isSystem: true,
     permissions: [
-      'dashboard.view', 'wallets.view', 'wallets.adjust', 'finance.view', 'finance.export', 'reports.view'
+      'dashboard.view', 'wallets.view', 'wallets.adjust', 'finance.view', 'finance.export', 'reports.view', 'subscriptions.view'
     ]
   },
   {
@@ -110,7 +122,15 @@ const defaultRoles = [
     description: 'Manage coupons, promotions, loyalty, and push notifications.',
     isSystem: true,
     permissions: [
-      'dashboard.view', 'marketing.view', 'marketing.manage', 'users.view', 'reports.view'
+      'dashboard.view', 'marketing.view', 'marketing.manage', 'cms.view', 'cms.edit', 'subscriptions.view', 'subscriptions.edit', 'users.view', 'reports.view'
+    ]
+  },
+  {
+    name: 'Fraud Admin',
+    description: 'Investigate fraud alerts, high-risk accounts, blacklist entries, and fraud cases.',
+    isSystem: true,
+    permissions: [
+      'dashboard.view', 'fraud.view', 'fraud.edit', 'users.view', 'drivers.view', 'support.view', 'reports.view'
     ]
   }
 ];

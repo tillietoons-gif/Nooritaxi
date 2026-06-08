@@ -33,17 +33,16 @@ const ADAPTIVE_FEATURES = [
   { title: "Localized Context", desc: "Adaptive language and regional settings.", icon: Globe },
 ];
 
-const GenAIGlobe = () => {
-  const particles = useMemo(() => {
-    return Array.from({ length: 6 }).map((_, i) => ({
-      id: i,
-      top: `${30 + Math.random() * 40}%`,
-      left: `${30 + Math.random() * 40}%`,
-      duration: 2 + Math.random() * 2,
-      delay: Math.random() * 2,
-    }));
-  }, []);
+const GLOBE_PARTICLES = [
+  { id: 0, top: "47.1596%", left: "66.0476%", duration: 2.4, delay: 0.1 },
+  { id: 1, top: "41.4915%", left: "35.3056%", duration: 3.1, delay: 0.5 },
+  { id: 2, top: "58.4938%", left: "41.8512%", duration: 2.8, delay: 1.2 },
+  { id: 3, top: "49.5903%", left: "59.1843%", duration: 3.6, delay: 0.8 },
+  { id: 4, top: "48.8264%", left: "52.2675%", duration: 2.2, delay: 1.6 },
+  { id: 5, top: "30.5712%", left: "41.6461%", duration: 3.4, delay: 0.3 },
+];
 
+const GenAIGlobe = () => {
   return (
     <div className="h-full w-full bg-primary/5 rounded-2xl flex items-center justify-center overflow-hidden relative">
       <div className="absolute inset-0 opacity-20"><PatternOverlay /></div>
@@ -57,16 +56,16 @@ const GenAIGlobe = () => {
         <div className="absolute inset-0 border-2 border-gold/10 rounded-full" style={{ transform: 'rotateZ(45deg) rotateX(45deg)' }} />
       </motion.div>
       <Globe className="absolute h-12 w-12 text-primary/50" />
-      {particles.map((p) => (
+      {GLOBE_PARTICLES.map((p) => (
         <motion.div
-          key={particle.id}
+          key={p.id}
           className="absolute w-2 h-2 bg-gold/60 rounded-full blur-[1px]"
           animate={{ 
             y: [-30, 30, -30],
             x: [-30, 30, -30],
             opacity: [0.2, 1, 0.2] 
           }}
-          transition={{ duration: particle.duration, repeat: Infinity, delay: particle.delay, ease: "easeInOut" }}
+          transition={{ duration: p.duration, repeat: Infinity, delay: p.delay, ease: "easeInOut" }}
           style={{ 
             top: p.top,
             left: p.left

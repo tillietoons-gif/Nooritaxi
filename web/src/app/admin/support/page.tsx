@@ -1,51 +1,25 @@
 "use client"
 
-import { useState, useEffect, useCallback, useMemo } from "react"
-import {
-  LifeBuoy,
-  Search,
-  RefreshCw,
-  Clock,
-  AlertTriangle,
-  CheckCircle,
-  MessageSquare,
-} from "lucide-react"
-
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react"
 import { AuthGate } from "@/components/auth-gate"
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { Header } from "@/components/layout/header"
 import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { AdminPageHeader } from "@/components/admin/admin-page-header"
-import { authedFetch } from "@/lib/auth"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { authedFetch } from "@/lib/auth"
+import { AlertTriangle, CheckCircle, Clock, LifeBuoy, MessageSquare, RefreshCw, Search } from "lucide-react"
 
 type TicketStatus = "OPEN" | "PENDING" | "RESOLVED" | "CLOSED"
 type TicketPriority = "LOW" | "NORMAL" | "HIGH" | "URGENT"
-
-type SupportTicket = {
-  id: string
-  subject: string
-  description: string
-  category: string
-  priority: TicketPriority
-  status: TicketStatus
-  createdAt: string
-  requester?: { name?: string | null; phone?: string | null; role?: string } | null
-  messages: {
-    id: string
-    body: string
-    createdAt: string
-    sender?: { name?: string | null; role?: string } | null
-  }[]
-}
 
 type SupportMetrics = {
   totalOpen: number
@@ -54,99 +28,146 @@ type SupportMetrics = {
   averageResolutionTimeHours: number
 }
 
-export default function AdminSupportPage() {
+type SupportTicket = {
+  id: string
+  requesterId: string
+  assigneeId?: string | null
+  category: string
+  subject: string
+  description: string
+  status: TicketStatus
+  priority: TicketPriority
+  createdAt: string
+  updatedAt: string
+  resolvedAt?: string | null
+  requester?: { name?: string | null; phone?: string | null; role?: string | null }
+  assignee?: { name?: string | null } | null
+}
+
+type TicketDetails = SupportTicket & {
+  requester?: { id: string; name?: string | null; phone?: string | null; email?: string | null; role?: string | null; status?: string | null }
+  assignee?: { id: string; name?: string | null } | null
+  messages: Array<{
+    id: string
+    body: string
+    createdAt: string
+    sender?: { name?: string | null; role?: string | null }
+  }>
+}
+
+const statusOptions: Array<"ALL" | TicketStatus> = ["ALL", "OPEN", "PENDING", "RESOLVED", "CLOSED"]
+const priorityOptions: Array<"ALL" | TicketPriority> = ["ALL", "URGENT", "HIGH", "NORMAL", "LOW"]
+
+function requesterName(ticket: Pick<SupportTicket, "requester">) {
+  return ticket.requester?.name || ticket.requester?.phone || "Unknown user"
+}
+
+function priorityVariant(priority: TicketPriority) {
+  return priority === "URGENT" || priority === "HIGH" ? "destructive" : "secondary"
+}
+
+function statusVariant(status: TicketStatus) {
+  if (status === "OPEN") return "default"
+  if (status === "RESOLVED" || status === "CLOSED") return "secondary"
+  return "outline"
+}
+
+export default function SupportTicketsPage() {
+  const [metrics, setMetrics] = useState<SupportMetrics | null>(null)
+  const [tickets, setTickets] = useState<SupportTicket[]>([])
+  const [selectedTicket, setSelectedTicket] = useState<TicketDetails | null>(null)
+  const [statusFilter, setStatusFilter] = useState<"ALL" | TicketStatus>("ALL")
+  const [priorityFilter, setPriorityFilter] = useState<"ALL" | TicketPriority>("ALL")
+  const [search, setSearch] = useState("")
+  const [reply, setReply] = useState("")
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
-  const [tickets, setTickets] = useState<SupportTicket[]>([])
-  const [metrics, setMetrics] = useState<SupportMetrics | null>(null)
-  const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null)
-  const [search, setSearch] = useState("")
-  const [statusFilter, setStatusFilter] = useState<TicketStatus | "ALL">("ALL")
-  const [priorityFilter, setPriorityFilter] = useState<TicketPriority | "ALL">("ALL")
-  const [reply, setReply] = useState("")
-  const [error, setError] = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState("")
+  const [error, setError] = useState("")
 
-  const load = useCallback(async (isSilent = false) => {
-    if (!isSilent) setLoading(true)
-    else setRefreshing(true)
-    setError(null)
+  const filteredTickets = useMemo(() => {
+    const query = search.trim().toLowerCase()
+    if (!query) return tickets
+    return tickets.filter((ticket) =>
+      [ticket.id, ticket.subject, ticket.description, ticket.category, requesterName(ticket), ticket.priority, ticket.status]
+        .some((value) => String(value ?? "").toLowerCase().includes(query)),
+    )
+  }, [search, tickets])
 
+  const load = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true)
+    setRefreshing(true)
+    setError("")
     try {
-      const [tkRes, mtRes] = await Promise.all([
-        authedFetch("/admin/support/tickets?limit=100"),
-        authedFetch("/admin/support/metrics")
-      ])
+      const params = new URLSearchParams()
+      if (statusFilter !== "ALL") params.set("status", statusFilter)
+      if (priorityFilter !== "ALL") params.set("priority", priorityFilter)
 
-      if (tkRes.ok) setTickets(await tkRes.json())
-      if (mtRes.ok) setMetrics(await mtRes.json())
+      const [metricsRes, ticketsRes] = await Promise.all([
+        authedFetch("/admin/support/metrics"),
+        authedFetch(`/admin/support/tickets?${params.toString()}`),
+      ])
+      if (!metricsRes.ok) throw new Error(`Failed to load support metrics (${metricsRes.status})`)
+      if (!ticketsRes.ok) throw new Error(`Failed to load support tickets (${ticketsRes.status})`)
+      setMetrics(await metricsRes.json())
+      setTickets(await ticketsRes.json())
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load support data")
+      setError(err instanceof Error ? err.message : "Failed to load support center")
     } finally {
       setLoading(false)
       setRefreshing(false)
     }
-  }, [])
+  }, [priorityFilter, statusFilter])
 
   useEffect(() => {
     void load()
   }, [load])
 
-  const filteredTickets = useMemo(() => {
-    return tickets.filter(t => {
-      const matchesSearch =
-        t.subject.toLowerCase().includes(search.toLowerCase()) ||
-        t.requester?.name?.toLowerCase().includes(search.toLowerCase()) ||
-        t.requester?.phone?.toLowerCase().includes(search.toLowerCase())
-
-      const matchesStatus = statusFilter === "ALL" || t.status === statusFilter
-      const matchesPriority = priorityFilter === "ALL" || t.priority === priorityFilter
-
-      return matchesSearch && matchesStatus && matchesPriority
-    })
-  }, [tickets, search, statusFilter, priorityFilter])
-
-  const openTicket = async (id: string) => {
+  async function openTicket(id: string) {
     setActionLoading(`open:${id}`)
+    setError("")
     try {
-      const res = await authedFetch(`/admin/support/tickets/${id}`)
-      if (res.ok) setSelectedTicket(await res.json())
+      const response = await authedFetch(`/admin/support/tickets/${id}`)
+      if (!response.ok) throw new Error(`Failed to load ticket (${response.status})`)
+      setSelectedTicket(await response.json())
+      setReply("")
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load ticket details")
+      setError(err instanceof Error ? err.message : "Failed to load ticket")
     } finally {
       setActionLoading("")
     }
   }
 
-  const updateStatus = async (status: TicketStatus) => {
+  async function updateStatus(status: TicketStatus) {
     if (!selectedTicket) return
-    setActionLoading("status")
+    setActionLoading(`status:${status}`)
+    setError("")
     try {
-      const res = await authedFetch(`/admin/support/tickets/${selectedTicket.id}/status`, {
-        method: "PATCH",
-        body: JSON.stringify({ status })
+      const response = await authedFetch(`/admin/support/tickets/${selectedTicket.id}/status`, {
+        method: "PUT",
+        body: JSON.stringify({ status }),
       })
-      if (res.ok) {
-        setSelectedTicket(prev => prev ? { ...prev, status } : null)
-        await load(true)
-      }
+      if (!response.ok) throw new Error(`Failed to update ticket (${response.status})`)
+      await openTicket(selectedTicket.id)
+      await load(true)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update status")
+      setError(err instanceof Error ? err.message : "Failed to update ticket")
     } finally {
       setActionLoading("")
     }
   }
 
-  const sendReply = async (e: React.FormEvent) => {
-    e.preventDefault()
+  async function sendReply(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
     if (!selectedTicket || !reply.trim()) return
     setActionLoading("reply")
+    setError("")
     try {
       const response = await authedFetch(`/admin/support/tickets/${selectedTicket.id}/messages`, {
         method: "POST",
         body: JSON.stringify({ message: reply.trim() }),
       })
-      if (!response.ok) throw new Error("Failed to send reply")
+      if (!response.ok) throw new Error(`Failed to send reply (${response.status})`)
       setReply("")
       await openTicket(selectedTicket.id)
     } catch (err) {
@@ -156,170 +177,184 @@ export default function AdminSupportPage() {
     }
   }
 
-  const priorityVariant = (p: TicketPriority) => {
-    if (p === "URGENT") return "destructive"
-    if (p === "HIGH") return "destructive"
-    return "secondary"
-  }
-
-  const statusVariant = (s: TicketStatus) => {
-    if (s === "RESOLVED" || s === "CLOSED") return "default"
-    return "secondary"
-  }
-
   return (
     <AuthGate roles={["ADMIN", "SUPPORT"]}>
-      <main className="min-h-screen px-4 py-8 md:px-8">
-        <div className="mx-auto max-w-7xl space-y-6">
-          <AdminPageHeader
-            title="Customer Support"
-            subtitle="Manage tickets, disputes, and support threads."
-            actions={
+      <div className="flex min-h-screen flex-col bg-muted/20">
+        <Header />
+        <main className="flex-1 px-4 py-6 md:px-8">
+          <div className="mx-auto max-w-7xl space-y-6">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div>
+                <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight">
+                  <LifeBuoy className="h-6 w-6 text-primary" />
+                  Customer Support
+                </h1>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Manage tickets, disputes, and support threads.
+                </p>
+              </div>
               <Button variant="outline" onClick={() => void load(true)} disabled={refreshing}>
-                <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+                <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
                 Refresh
               </Button>
-            }
-          />
+            </div>
 
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <Card className="border-primary/10">
+            {error ? (
+              <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+                {error}
+              </div>
+            ) : null}
+
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-muted-foreground">
-                  <LifeBuoy className="h-4 w-4" /> Open Tickets
+                <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                  <LifeBuoy className="h-4 w-4" />
+                  Open Tickets
                 </CardTitle>
               </CardHeader>
-              <CardContent><div className="text-3xl font-black">{loading ? "..." : metrics?.totalOpen ?? 0}</div></CardContent>
+              <CardContent><div className="text-3xl font-semibold">{loading ? "..." : metrics?.totalOpen ?? 0}</div></CardContent>
             </Card>
-            <Card className="border-destructive/20 bg-destructive/5">
+            <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-destructive">
-                  <AlertTriangle className="h-4 w-4" /> Urgent
+                <CardTitle className="flex items-center gap-2 text-sm font-medium text-destructive">
+                  <AlertTriangle className="h-4 w-4" />
+                  Urgent
                 </CardTitle>
               </CardHeader>
-              <CardContent><div className="text-3xl font-black text-destructive">{loading ? "..." : metrics?.totalUrgent ?? 0}</div></CardContent>
+              <CardContent><div className="text-3xl font-semibold text-destructive">{loading ? "..." : metrics?.totalUrgent ?? 0}</div></CardContent>
             </Card>
-            <Card className="border-primary/10">
+            <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-muted-foreground">
-                  <CheckCircle className="h-4 w-4" /> Resolved Today
+                <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                  <CheckCircle className="h-4 w-4" />
+                  Resolved Today
                 </CardTitle>
               </CardHeader>
-              <CardContent><div className="text-3xl font-black">{loading ? "..." : metrics?.resolvedToday ?? 0}</div></CardContent>
+              <CardContent><div className="text-3xl font-semibold">{loading ? "..." : metrics?.resolvedToday ?? 0}</div></CardContent>
             </Card>
-            <Card className="border-primary/10">
+            <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-muted-foreground">
-                  <Clock className="h-4 w-4" /> Avg Resolution
+                <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                  <Clock className="h-4 w-4" />
+                  Avg Resolution
                 </CardTitle>
               </CardHeader>
-              <CardContent><div className="text-3xl font-black">{loading ? "..." : `${metrics?.averageResolutionTimeHours ?? 0}h`}</div></CardContent>
+              <CardContent><div className="text-3xl font-semibold">{loading ? "..." : `${metrics?.averageResolutionTimeHours ?? 0}h`}</div></CardContent>
             </Card>
           </div>
 
-          <Card className="border-primary/10 shadow-xl overflow-hidden">
-            <CardHeader className="bg-primary/5 space-y-4">
+          <Card>
+            <CardHeader className="space-y-4">
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                <CardTitle className="text-lg font-black uppercase tracking-tight">Support Tickets</CardTitle>
+                <CardTitle>Tickets</CardTitle>
                 <div className="relative md:w-80">
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search tickets..." className="pl-9 bg-background/50" />
+                  <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search tickets..." className="pl-9" />
                 </div>
               </div>
               <div className="flex flex-wrap gap-2">
-                {(["ALL", "OPEN", "PENDING", "RESOLVED", "CLOSED"] as const).map((s) => (
-                  <Button key={s} size="sm" variant={statusFilter === s ? "default" : "outline"} onClick={() => setStatusFilter(s)} className="text-[10px] font-bold uppercase tracking-widest">
-                    {s}
+                {statusOptions.map((status) => (
+                  <Button key={status} size="sm" variant={statusFilter === status ? "default" : "outline"} onClick={() => setStatusFilter(status)}>
+                    {status}
+                  </Button>
+                ))}
+                <span className="mx-1 h-8 border-l" />
+                {priorityOptions.map((priority) => (
+                  <Button key={priority} size="sm" variant={priorityFilter === priority ? "default" : "outline"} onClick={() => setPriorityFilter(priority)}>
+                    {priority}
                   </Button>
                 ))}
               </div>
             </CardHeader>
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
+            <CardContent>
+              <div className="overflow-x-auto rounded-lg border">
                 <table className="w-full text-left text-sm">
-                  <thead className="border-b border-primary/10 bg-background/50 text-xs uppercase text-muted-foreground">
+                  <thead className="border-b bg-muted/40 text-xs uppercase text-muted-foreground">
                     <tr>
-                      <th className="px-6 py-4 font-black">Ticket</th>
-                      <th className="px-6 py-4 font-black">Requester</th>
-                      <th className="px-6 py-4 font-black">Category</th>
-                      <th className="px-6 py-4 font-black">Priority</th>
-                      <th className="px-6 py-4 font-black">Status</th>
-                      <th className="px-6 py-4 text-right font-black">Action</th>
+                      <th className="px-4 py-3">Ticket</th>
+                      <th className="px-4 py-3">Requester</th>
+                      <th className="px-4 py-3">Category</th>
+                      <th className="px-4 py-3">Priority</th>
+                      <th className="px-4 py-3">Status</th>
+                      <th className="px-4 py-3 text-right">Action</th>
                     </tr>
                   </thead>
                   <tbody>
                     {loading ? (
-                      <tr><td colSpan={6} className="px-6 py-12 text-center text-muted-foreground animate-pulse font-medium">Scanning support database...</td></tr>
+                      <tr><td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">Loading tickets...</td></tr>
                     ) : filteredTickets.length ? (
-                      filteredTickets.map((t) => (
-                        <tr key={t.id} className="border-b border-primary/5 hover:bg-primary/5 transition-colors">
-                          <td className="max-w-xs px-6 py-4">
-                            <p className="truncate font-bold">{t.subject}</p>
-                            <p className="font-mono text-[10px] text-muted-foreground">{t.id.slice(-12)} · {new Date(t.createdAt).toLocaleString()}</p>
+                      filteredTickets.map((ticket) => (
+                        <tr key={ticket.id} className="border-b hover:bg-muted/30">
+                          <td className="max-w-xs px-4 py-3">
+                            <p className="truncate font-semibold">{ticket.subject}</p>
+                            <p className="font-mono text-xs text-muted-foreground">{ticket.id.slice(0, 12)} · {new Date(ticket.createdAt).toLocaleString()}</p>
                           </td>
-                          <td className="px-6 py-4 font-medium text-xs">{t.requester?.name ?? t.requester?.phone ?? "Unknown"}</td>
-                          <td className="px-6 py-4 text-xs">{t.category}</td>
-                          <td className="px-6 py-4"><Badge variant={priorityVariant(t.priority)} className="text-[10px]">{t.priority}</Badge></td>
-                          <td className="px-6 py-4"><Badge variant={statusVariant(t.status)} className="text-[10px]">{t.status}</Badge></td>
-                          <td className="px-6 py-4 text-right">
-                            <Button size="sm" variant="outline" onClick={() => openTicket(t.id)} className="border-primary/20 hover:bg-primary/10 text-primary">View</Button>
+                          <td className="px-4 py-3">{requesterName(ticket)}</td>
+                          <td className="px-4 py-3">{ticket.category}</td>
+                          <td className="px-4 py-3"><Badge variant={priorityVariant(ticket.priority)}>{ticket.priority}</Badge></td>
+                          <td className="px-4 py-3"><Badge variant={statusVariant(ticket.status)}>{ticket.status}</Badge></td>
+                          <td className="px-4 py-3 text-right">
+                            <Button size="sm" variant="outline" onClick={() => openTicket(ticket.id)} disabled={actionLoading === `open:${ticket.id}`}>
+                              View Thread
+                            </Button>
                           </td>
                         </tr>
                       ))
                     ) : (
-                      <tr><td colSpan={6} className="px-6 py-12 text-center text-muted-foreground">No support tickets found matching criteria.</td></tr>
+                      <tr><td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">No tickets found.</td></tr>
                     )}
                   </tbody>
                 </table>
               </div>
             </CardContent>
-          </Card>
-        </div>
-      </main>
+            </Card>
+          </div>
+        </main>
+      </div>
 
       <Dialog open={Boolean(selectedTicket)} onOpenChange={(open) => !open && setSelectedTicket(null)}>
         <DialogContent className="max-h-[88vh] overflow-hidden sm:max-w-3xl">
           {selectedTicket ? (
             <>
               <DialogHeader>
-                <DialogTitle className="text-xl font-black">{selectedTicket.subject}</DialogTitle>
+                <DialogTitle>{selectedTicket.subject}</DialogTitle>
                 <DialogDescription>
-                  {selectedTicket.requester?.name || selectedTicket.requester?.phone} · {selectedTicket.category} · {new Date(selectedTicket.createdAt).toLocaleString()}
+                  {requesterName(selectedTicket)} · {selectedTicket.category} · {new Date(selectedTicket.createdAt).toLocaleString()}
                 </DialogDescription>
               </DialogHeader>
 
-              <div className="flex flex-wrap gap-2 py-2">
+              <div className="flex flex-wrap gap-2">
                 {(["OPEN", "PENDING", "RESOLVED", "CLOSED"] as TicketStatus[]).map((status) => (
-                  <Button key={status} size="sm" variant={selectedTicket.status === status ? "default" : "outline"} onClick={() => updateStatus(status)} disabled={Boolean(actionLoading)} className="text-[10px] font-black uppercase">
+                  <Button key={status} size="sm" variant={selectedTicket.status === status ? "default" : "outline"} onClick={() => updateStatus(status)} disabled={Boolean(actionLoading)}>
                     {status}
                   </Button>
                 ))}
               </div>
 
-              <div className="max-h-[42vh] space-y-4 overflow-y-auto rounded-xl border border-primary/10 bg-primary/5 p-4">
-                <div className="rounded-lg bg-background p-3 text-sm border border-primary/5 shadow-sm">
-                  <p className="font-bold text-xs uppercase text-primary tracking-widest mb-1">Description</p>
-                  <p className="text-muted-foreground leading-relaxed">{selectedTicket.description}</p>
+              <div className="max-h-[42vh] space-y-3 overflow-y-auto rounded-md border p-3">
+                <div className="rounded-md bg-muted/40 p-3 text-sm">
+                  <p className="font-medium">Description</p>
+                  <p className="mt-1 text-muted-foreground">{selectedTicket.description}</p>
                 </div>
-                {selectedTicket.messages.map((m) => (
-                  <div key={m.id} className="rounded-lg border border-primary/5 bg-background p-3 text-sm shadow-sm">
-                    <div className="flex items-center justify-between gap-3 mb-2">
-                      <p className="font-bold text-xs uppercase tracking-widest">{m.sender?.name || m.sender?.role || "System"}</p>
-                      <p className="text-[10px] text-muted-foreground">{new Date(m.createdAt).toLocaleString()}</p>
+                {selectedTicket.messages.length ? selectedTicket.messages.map((message) => (
+                  <div key={message.id} className="rounded-md border p-3 text-sm">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="font-medium">{message.sender?.name || message.sender?.role || "Support"}</p>
+                      <p className="text-xs text-muted-foreground">{new Date(message.createdAt).toLocaleString()}</p>
                     </div>
-                    <p className="text-muted-foreground leading-relaxed">{m.body}</p>
+                    <p className="mt-2 text-muted-foreground">{message.body}</p>
                   </div>
-                ))}
+                )) : <p className="text-sm text-muted-foreground">No messages yet.</p>}
               </div>
 
-              <form onSubmit={sendReply} className="space-y-4 pt-2">
-                <div className="space-y-2">
-                  <Label htmlFor="reply" className="text-xs font-black uppercase tracking-widest text-muted-foreground">Internal / External Reply</Label>
-                  <Input id="reply" value={reply} onChange={(e) => setReply(e.target.value)} placeholder="Type your response..." className="bg-muted/50" />
-                </div>
-                <div className="flex justify-end gap-2">
-                  <Button disabled={!reply.trim() || Boolean(actionLoading)} className="font-bold">
-                    <MessageSquare className="mr-2 h-4 w-4" /> Send Reply
+              <form onSubmit={sendReply} className="space-y-2">
+                <Label htmlFor="reply">Reply</Label>
+                <Input id="reply" value={reply} onChange={(event) => setReply(event.target.value)} placeholder="Write a support reply..." />
+                <div className="flex justify-end">
+                  <Button disabled={!reply.trim() || actionLoading === "reply"}>
+                    <MessageSquare className="h-4 w-4" />
+                    Send Reply
                   </Button>
                 </div>
               </form>

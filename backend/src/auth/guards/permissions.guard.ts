@@ -1,34 +1,55 @@
-import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { PrismaService } from '../../prisma.service';
 import { PERMISSIONS_KEY } from '../decorators/permissions.decorator';
-import { UserRole } from '@prisma/client';
+
+type AuthenticatedRequest = {
+  user?: {
+    id?: string;
+    userId?: string;
+    role?: string;
+  };
+  adminRoles?: unknown;
+};
 
 @Injectable()
 export class PermissionsGuard implements CanActivate {
-  constructor(private reflector: Reflector, private prisma: PrismaService) {}
+  constructor(
+    private reflector: Reflector,
+    private prisma: PrismaService,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const requiredPermissions = this.reflector.getAllAndOverride<string[]>(PERMISSIONS_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
+    const requiredPermissions = this.reflector.getAllAndOverride<string[]>(
+      PERMISSIONS_KEY,
+      [context.getHandler(), context.getClass()],
+    );
 
     if (!requiredPermissions || requiredPermissions.length === 0) {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
     const user = request.user;
 
     if (!user) {
       throw new ForbiddenException('User not authenticated');
     }
 
+    const adminId = user.id ?? user.userId;
+    if (!adminId) {
+      throw new ForbiddenException('User not authenticated');
+    }
+
     // Super Admin check (optional if you want Super Admin to bypass)
     // Or we check if user has a role with isSystem=true maybe
     const adminRoles = await this.prisma.adminRole.findMany({
-      where: { adminId: user.userId }, // Assuming jwt payload has userId
+      where: { adminId },
       include: {
         role: {
           include: {
@@ -47,7 +68,7 @@ export class PermissionsGuard implements CanActivate {
     }
 
     const userPermissions = new Set<string>();
-    
+
     // Check if any role is a Super Admin
     let isSuperAdmin = false;
     for (const ar of adminRoles) {
@@ -63,7 +84,9 @@ export class PermissionsGuard implements CanActivate {
       return true;
     }
 
-    const hasPermission = requiredPermissions.every((perm) => userPermissions.has(perm));
+    const hasPermission = requiredPermissions.every((perm) =>
+      userPermissions.has(perm),
+    );
     if (!hasPermission) {
       throw new ForbiddenException('Insufficient permissions');
     }

@@ -1,9 +1,10 @@
-## 2025-05-29 - [Micro-UX: Password Toggle & Search Clear]
-**Learning:** Users often struggle with password entry errors on mobile and web when masking is mandatory. A simple visibility toggle significantly reduces friction. Additionally, icon-only buttons in navigation (like notification bells or search clear buttons) require explicit aria-labels to be accessible.
-**Action:** Always include a password visibility toggle in auth forms and ensure every icon-button has an `aria-label`.
+# UX & Accessibility Learnings
 
-## 2026-06-03 - [Accessibility: Global Focus Management & Skip Link]
-
-**Learning:** Global layout components like headers and footers often lack clear focus indicators for keyboard users, and deep page structures benefit significantly from a "Skip to Main Content" link to reduce repetitive navigation. Consistency in focus styles across brand elements (logo) and functional elements (nav links) improves perceived quality.
-
-**Action:** Implement "Skip to Content" links in `layout.tsx` targeting a consistent `id="main-content"` on every page's primary container. Always use `focus-visible` to provide high-contrast focus rings (`ring-primary`) on all interactive elements.
+## High-Tech + Cultural Uniqueness (Mobile)
+- **Visual Identity:** Combined modern 'high-tech' aesthetics (glassmorphism, deep emerald shadows, sharp typography) with traditional Afghan geometric patterns.
+- **Micro-patterns:** Introduced `PatternOverlay` using SVG paths to create subtle, repeating localized motifs in headers and primary cards without increasing asset size.
+- **Color Strategy:** Used Emerald Green (#006947) as the primary 'Tech' base and Gold (#D4AF37) as the 'Cultural' accent, creating a unique premium feel.
+- **Accessibility:**
+  - Maintained high contrast for text (white on emerald, foreground on off-white).
+  - Used large touch targets (14-16px height for primary buttons) to accommodate one-handed mobile use.
+  - Consistent RTL-ready layout structures.

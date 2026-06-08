@@ -5,19 +5,34 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { Instances, Instance, Segments, Segment, Sphere } from "@react-three/drei";
 
+const NETWORK_NODES = [
+  { id: 0, position: [-4.2, -1.8, 2.4] },
+  { id: 1, position: [-3.6, 2.1, -1.2] },
+  { id: 2, position: [-2.9, -3.4, 0.8] },
+  { id: 3, position: [-2.1, 0.2, 3.6] },
+  { id: 4, position: [-1.4, 3.8, -3.1] },
+  { id: 5, position: [-0.7, -2.7, -2.5] },
+  { id: 6, position: [-0.1, 1.6, 1.9] },
+  { id: 7, position: [0.6, -4.1, 3.2] },
+  { id: 8, position: [1.2, 0.8, -3.8] },
+  { id: 9, position: [1.8, 3.1, 0.4] },
+  { id: 10, position: [2.3, -1.3, -1.7] },
+  { id: 11, position: [2.9, 4.2, 2.7] },
+  { id: 12, position: [3.4, -3.2, -0.5] },
+  { id: 13, position: [3.9, 1.1, 3.9] },
+  { id: 14, position: [4.4, -0.4, -3.3] },
+  { id: 15, position: [-4.6, 4.4, 0.9] },
+  { id: 16, position: [-3.2, -0.8, -4.1] },
+  { id: 17, position: [0.3, 4.6, 4.2] },
+  { id: 18, position: [4.7, -4.3, 1.2] },
+  { id: 19, position: [1.5, -0.1, 4.7] },
+] as const satisfies ReadonlyArray<{ id: number; position: [number, number, number] }>;
+
 export const LogisticsNetwork = () => {
   const groupRef = useRef<THREE.Group>(null);
 
-  // Generate random points for nodes
   const nodes = useMemo(() => {
-    return Array.from({ length: 20 }, () => ({
-      position: [
-        (Math.random() - 0.5) * 10,
-        (Math.random() - 0.5) * 10,
-        (Math.random() - 0.5) * 10,
-      ] as [number, number, number],
-      id: Math.random(),
-    }));
+    return NETWORK_NODES;
   }, []);
 
   // Generate lines between some nodes
@@ -77,7 +92,7 @@ export const LogisticsNetwork = () => {
 
 const MovingPulse = ({ connections }: { connections: { start: THREE.Vector3, end: THREE.Vector3 }[] }) => {
   const meshRef = useRef<THREE.Mesh>(null);
-  const connIdx = useMemo(() => Math.floor(Math.random() * connections.length), [connections]);
+  const connIdx = useMemo(() => Math.min(4, connections.length - 1), [connections]);
   const conn = connections[connIdx];
 
   useFrame((state) => {

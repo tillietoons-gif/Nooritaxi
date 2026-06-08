@@ -86,6 +86,8 @@ export default function LoginPage() {
                 <Phone className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40" />
                 <Input
                   id="phone"
+                  type="tel"
+                  autoComplete="tel"
                   className="h-14 pl-12 rounded-2xl glass border-none focus-visible:ring-primary/30 font-bold"
                   value={phone}
                   onChange={(event) => setPhone(event.target.value)}
@@ -106,6 +108,7 @@ export default function LoginPage() {
                 <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40" />
                 <Input
                   id="password"
+                  autoComplete="current-password"
                   className="h-14 pl-12 pr-12 rounded-2xl glass border-none focus-visible:ring-primary/30 font-bold"
                   type={showPassword ? "text" : "password"}
                   value={password}

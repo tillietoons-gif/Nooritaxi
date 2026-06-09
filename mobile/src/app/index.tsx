@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Redirect } from 'expo-router';
-import { getStoredUser } from '../lib/api';
+import { getSignedInRoute, getStoredUser } from '../lib/api';
 import { SplashScreen } from '../components/SplashScreen';
 
 export default function IndexRoute() {
@@ -15,7 +15,7 @@ export default function IndexRoute() {
       try {
         const user = await getStoredUser();
         if (mounted) {
-          setTarget(user ? '/(tabs)/home' : '/(auth)/login');
+          setTarget(getSignedInRoute(user));
           setDataLoaded(true);
         }
       } catch (error) {

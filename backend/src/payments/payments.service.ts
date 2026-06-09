@@ -68,6 +68,8 @@ export class PaymentsService {
         amount,
         type: 'DEPOSIT',
         status: 'PENDING',
+        provider,
+        providerRef: clientSecret,
         idempotencyKey,
         description: `${provider} payment intent`,
         tripId,
@@ -110,9 +112,10 @@ export class PaymentsService {
     const wallet = await this.prisma.wallet.findUniqueOrThrow({
       where: { id: transaction.walletId },
     });
+    const resolvedProviderRef = providerRef ?? transaction.providerRef ?? undefined;
 
     this.logger.log(
-      `Verifying payment intent ${intentId} (ref: ${providerRef ?? 'n/a'})`,
+      `Verifying payment intent ${intentId} (ref: ${resolvedProviderRef ?? 'n/a'})`,
     );
 
     // Credit wallet
@@ -124,8 +127,8 @@ export class PaymentsService {
       `verified:${intentId}`,
       {
         transactionType: 'DEPOSIT',
-        description: providerRef
-          ? `Payment verified (ref: ${providerRef})`
+        description: resolvedProviderRef
+          ? `Payment verified (ref: ${resolvedProviderRef})`
           : 'Payment verified',
         tripId: transaction.tripId ?? undefined,
         orderId: transaction.orderId ?? undefined,
@@ -136,7 +139,7 @@ export class PaymentsService {
     // Mark original PENDING transaction completed
     await this.prisma.transaction.update({
       where: { id: intentId },
-      data: { status: 'COMPLETED' },
+      data: { status: 'COMPLETED', providerRef: resolvedProviderRef },
     });
 
     await this.prisma.auditLog.create({
@@ -145,7 +148,7 @@ export class PaymentsService {
         entityType: 'Transaction',
         entityId: intentId,
         actorId,
-        after: { providerRef, status: 'COMPLETED' },
+        after: { providerRef: resolvedProviderRef, status: 'COMPLETED' },
       },
     });
 

@@ -1,9 +1,9 @@
 import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, TextInput } from 'react-native';
+import { View, Text, ScrollView, SafeAreaView } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
-import { Wallet, Plus, ArrowUpRight, ArrowDownRight, CreditCard } from 'lucide-react-native';
+import { Wallet, ArrowUpRight, ArrowDownRight } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import { getStoredUser, getTransactions, getWalletBalance, topUpWallet, WalletTransaction } from '../../lib/api';
+import { getStoredUser, getTransactions, getWalletBalance, WalletTransaction } from '../../lib/api';
 import { PatternOverlay } from '../../components/PatternOverlay';
 
 export default function WalletScreen() {
@@ -12,9 +12,6 @@ export default function WalletScreen() {
   const [transactions, setTransactions] = React.useState<WalletTransaction[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [message, setMessage] = React.useState('');
-  const [userId, setUserId] = React.useState('');
-  const [topUpAmount, setTopUpAmount] = React.useState('');
-  const [inputError, setInputError] = React.useState('');
 
   const loadWallet = React.useCallback(async () => {
     setLoading(true);
@@ -25,7 +22,6 @@ export default function WalletScreen() {
         router.replace('/(auth)/login');
         return;
       }
-      setUserId(user.id);
       const [wallet, txs] = await Promise.all([
         getWalletBalance(user.id),
         getTransactions(user.id),
@@ -45,32 +41,12 @@ export default function WalletScreen() {
     }, [loadWallet]),
   );
 
-  async function topUp() {
-    setInputError('');
-    setMessage('');
-    if (!userId) return;
-    const amount = Number(topUpAmount);
-    if (!topUpAmount || isNaN(amount) || amount <= 0) {
-      setInputError(t('wallet.invalid_amount'));
-      return;
-    }
-    try {
-      await topUpWallet(userId, amount);
-      await loadWallet();
-      setMessage(t('wallet.added', { amount }));
-      setTopUpAmount('');
-    } catch (err) {
-      setMessage((err as Error).message);
-    }
-  }
-
   return (
     <SafeAreaView className="flex-1 bg-background">
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <View className="px-6 py-6">
           <Text className="text-2xl font-bold text-foreground mb-6">{t('wallet.title')}</Text>
 
-          {/* High-Tech Wallet Card */}
           <View className="bg-primary p-8 rounded-3xl shadow-high-tech mb-8 overflow-hidden relative">
             <PatternOverlay color="#ffffff" opacity={0.1} />
 
@@ -78,27 +54,9 @@ export default function WalletScreen() {
               <Text className="text-white/70 text-xs font-bold uppercase tracking-widest mb-1">{t('wallet.available_balance')}</Text>
               <Text className="text-white text-4xl font-bold">{loading ? '...' : `${balance} AFN`}</Text>
 
-              <View className="flex-row gap-3 mt-8 items-center">
-                <View className="bg-white/10 backdrop-blur-lg rounded-2xl flex-1 border border-white/20 h-14 justify-center px-4">
-                  <TextInput
-                    value={topUpAmount}
-                    onChangeText={setTopUpAmount}
-                    placeholder={t('wallet.amount_placeholder')}
-                    keyboardType="numeric"
-                    className="text-white text-base font-bold"
-                    placeholderTextColor="rgba(255,255,255,0.5)"
-                    maxLength={8}
-                  />
-                </View>
-                <TouchableOpacity
-                  onPress={topUp}
-                  className="bg-accent h-14 px-6 rounded-2xl flex-row items-center justify-center shadow-sm"
-                >
-                  <Plus size={20} color="#002113" />
-                  <Text className="text-primary-dark font-bold ml-2">{t('wallet.top_up')}</Text>
-                </TouchableOpacity>
+              <View className="mt-6 rounded-2xl border border-white/15 bg-white/10 p-4">
+                <Text className="text-white text-sm leading-5 font-medium">{t('wallet.cash_only_notice')}</Text>
               </View>
-              {inputError ? <Text className="text-destructive font-bold mt-2 text-xs">{inputError}</Text> : null}
             </View>
           </View>
 
@@ -108,12 +66,7 @@ export default function WalletScreen() {
             </View>
           ) : null}
 
-          <View className="flex-row items-center justify-between mb-4">
-            <Text className="text-lg font-bold text-foreground">{t('wallet.recent_transactions')}</Text>
-            <TouchableOpacity>
-              <Text className="text-primary font-bold text-xs">View All</Text>
-            </TouchableOpacity>
-          </View>
+          <Text className="text-lg font-bold text-foreground mb-4">{t('wallet.recent_transactions')}</Text>
 
           <View className="space-y-4">
             {loading ? (

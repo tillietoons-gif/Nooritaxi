@@ -5,6 +5,8 @@ export type AuthUser = {
   role: "RIDER" | "DRIVER" | "MERCHANT" | "SUPPORT" | "ADMIN"
 }
 
+export const WEB_MOBILE_ONLY_REASON = "mobile-only"
+
 export const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001/api"
 
 export function getToken() {
@@ -17,12 +19,33 @@ export function saveSession(token: string, user: AuthUser) {
   window.localStorage.setItem("noori_user", JSON.stringify(user))
 }
 
+export function canAccessWebPortal(role?: AuthUser["role"] | null) {
+  return role !== "DRIVER"
+}
+
+export function getWebLoginUrl(next?: string | null, reason?: string) {
+  const params = new URLSearchParams()
+  if (next && next.startsWith("/") && !next.startsWith("//")) {
+    params.set("next", next)
+  }
+  if (reason) {
+    params.set("reason", reason)
+  }
+  const query = params.toString()
+  return query ? `/login?${query}` : "/login"
+}
+
 export function getStoredUser(): AuthUser | null {
   if (typeof window === "undefined") return null
   const raw = window.localStorage.getItem("noori_user")
   if (!raw) return null
   try {
-    return JSON.parse(raw) as AuthUser
+    const user = JSON.parse(raw) as AuthUser
+    if (!canAccessWebPortal(user.role)) {
+      clearSession()
+      return null
+    }
+    return user
   } catch {
     return null
   }
@@ -34,6 +57,9 @@ export function clearSession() {
 }
 
 export function getDefaultRouteForRole(role?: AuthUser["role"] | null) {
+  if (!canAccessWebPortal(role)) {
+    return getWebLoginUrl(null, WEB_MOBILE_ONLY_REASON)
+  }
   return role === "ADMIN" || role === "SUPPORT" ? "/admin" : "/dashboard"
 }
 
@@ -56,6 +82,10 @@ export async function fetchMe() {
     return null
   }
   const data = await response.json()
+  if (data.user && !canAccessWebPortal(data.user.role)) {
+    clearSession()
+    return null
+  }
   if (data.user) window.localStorage.setItem("noori_user", JSON.stringify(data.user))
   return data.user as AuthUser
 }

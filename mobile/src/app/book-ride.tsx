@@ -6,8 +6,9 @@ import { Car, MapPin, Navigation, ShieldCheck, ChevronLeft } from 'lucide-react-
 import { useTranslation } from 'react-i18next';
 import { bookRide, getRideEstimate, getStoredUser, RideEstimate } from '../lib/api';
 import { PatternOverlay } from '../components/PatternOverlay';
+import { withSessionGuard } from '../lib/SessionGuard';
 
-export default function BookRideScreen() {
+function BookRideScreen() {
   const { t } = useTranslation();
   const [pickupLocation, setPickupLocation] = React.useState('');
   const [dropoffLocation, setDropoffLocation] = React.useState('');
@@ -71,8 +72,8 @@ export default function BookRideScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        <View className="px-6 py-6">
+        <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+          <View className="px-6 py-6">
           <View className="flex-row items-center mb-8 gap-4">
              <TouchableOpacity onPress={() => router.back()} className="p-3 bg-card rounded-2xl border border-muted/20 shadow-sm">
                 <ChevronLeft size={20} color="#006947" />
@@ -164,8 +165,10 @@ export default function BookRideScreen() {
               {loading ? t('book_ride.confirming', 'Confirming...') : t('book_ride.confirm_ride', 'Confirm Ride')}
             </Text>
           </TouchableOpacity>
-        </View>
-      </ScrollView>
+          </View>
+        </ScrollView>
     </SafeAreaView>
   );
 }
+
+export default withSessionGuard(BookRideScreen);

@@ -11,11 +11,12 @@
     "min_suffix": "-40 دقیقه"
   },
   "wallet": {
-    "title": "بټوه",
-    "available_balance": "شتمنه",
+    "title": "بیلانس",
+    "available_balance": "اوسنی بیلانس",
+    "cash_only_notice": "اوس مهال یوازې نغدي تادیات فعال دي. هر بیلانس چې دلته ښکاري د بېرته ورکولو یا راتلونکو کریډیټونو څخه راځي.",
     "top_up": "چارج",
-    "recent_transactions": "وروستۍ معاملې",
-    "no_activity": "لاهم هیڅ فعالیت نشته",
+    "recent_transactions": "کریډیټونه او بېرته ورکونې",
+    "no_activity": "لاهم هېڅ کریډیټ یا بېرته ورکونه نشته",
     "amount_placeholder": "مقدار (AFN)",
     "added": "{{amount}} AFN اضافه شو",
     "invalid_amount": "سمه مقدار دننه کړئ (AFN > 0)"
@@ -88,14 +89,14 @@
   },
   "checkout": {
     "total_amount": "ټول مقدار",
-    "payment_method": "د تادیې طریقه",
-    "noori_wallet": "د نوري بټوه",
-    "pay_from_balance": "د موجودۍ څخه سمدستي تادیه",
-    "hesabpay": "حساب پی",
-    "digital_wallet": "ډیجیټل بټوه / بانکي لیږد",
+    "payment_method": "تادیه",
+    "noori_wallet": "نغدي",
+    "pay_from_balance": "خپل ملګري ته نغدې پیسې ورکړئ",
+    "hesabpay": "نغدي",
+    "digital_wallet": "اوس مهال یوازې نغدي تادیه",
     "cash": "نغدې پیسې",
-    "pay_physical_cash": "نغدي پیسې ورکړئ",
-    "secure_payment": "خوندي او کوډ شوی تادیه",
-    "pay": "تادیه {{amount}} {{currency}}"
+    "pay_physical_cash": "د خدمت تر بشپړېدو وروسته نغدې پیسې ورکړئ",
+    "secure_payment": "اوس مهال یوازې نغدي تادیه شونې ده",
+    "pay": "د نغدي تادیې تایید"
   }
 }

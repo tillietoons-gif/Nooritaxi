@@ -1,13 +1,13 @@
 import React from 'react';
 import Svg, { Path, G } from 'react-native-svg';
-import Animated, { useAnimatedProps } from 'react-native-reanimated';
+import Animated, { type SharedValue, useAnimatedProps } from 'react-native-reanimated';
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 
 interface NooriLogoProps {
   size?: number;
   color?: string;
-  progress?: Animated.SharedValue<number>;
+  progress?: SharedValue<number>;
 }
 
 export const NooriLogo: React.FC<NooriLogoProps> = ({

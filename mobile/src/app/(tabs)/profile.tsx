@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, SafeAreaView, ScrollView, Alert, Share } 
 import { router, useFocusEffect } from 'expo-router';
 import { User, Shield, Bell, HelpCircle, LogOut, ChevronRight, Globe, Gift } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import { AuthUser, clearSession, getNotifications, getStoredUser } from '../../lib/api';
+import { AuthUser, clearSession, getNotifications, getStoredUser, isDriverUser } from '../../lib/api';
 import { PatternOverlay } from '../../components/PatternOverlay';
 
 export default function ProfileScreen() {
@@ -27,13 +27,15 @@ export default function ProfileScreen() {
     }, []),
   );
 
+  const isDriver = isDriverUser(user);
+
   const menuItems = [
-    { id: 'safety', icon: <Shield size={22} color="#006947" />, title: 'Safety Center', subtitle: 'Emergency contacts & safety codes' },
+    { id: 'safety', icon: <Shield size={22} color="#006947" />, title: isDriver ? 'Safety & support' : 'Safety Center', subtitle: isDriver ? 'Emergency contacts and trip safety' : 'Emergency contacts & safety codes' },
     { id: 'notifications', icon: <Bell size={22} color="#006947" />, title: 'Notifications', subtitle: `${notificationCount} new updates` },
     { id: 'language', icon: <Globe size={22} color="#006947" />, title: 'Language', subtitle: 'English, Dari, Pashto' },
-    { id: 'referral', icon: <Gift size={22} color="#D4AF37" />, title: 'Refer & Earn', subtitle: 'Invite friends, earn AFN 50' },
+    ...(!isDriver ? [{ id: 'referral', icon: <Gift size={22} color="#D4AF37" />, title: 'Refer & Earn', subtitle: 'Invite friends, earn AFN 50' }] : []),
     { id: 'help', icon: <HelpCircle size={22} color="#006947" />, title: 'Help & Support', subtitle: '24/7 Premium support' },
-    ...(user?.role === 'DRIVER' ? [{ id: 'kyc', icon: <User size={22} color="#006947" />, title: 'Verification', subtitle: 'Update your documents' }] : []),
+    ...(isDriver ? [{ id: 'kyc', icon: <User size={22} color="#006947" />, title: 'Verification', subtitle: 'Update your driver documents' }] : []),
   ];
 
   async function handleMenuPress(id: string) {
@@ -88,7 +90,7 @@ export default function ProfileScreen() {
                 <User size={40} color="white" />
               </View>
               <View className="flex-1">
-                <Text className="text-white text-2xl font-black">{user?.name ?? 'Noori user'}</Text>
+                <Text className="text-white text-2xl font-black">{user?.name ?? (isDriver ? 'Noori driver' : 'Noori user')}</Text>
                 <Text className="text-white/70 text-sm font-bold mt-1">{user?.phone ?? 'Not signed in'}</Text>
                 <View className="bg-accent/20 self-start px-2 py-0.5 rounded-lg mt-2 border border-accent/20">
                    <Text className="text-accent text-[10px] font-black uppercase">{user?.role ?? 'RIDER'}</Text>

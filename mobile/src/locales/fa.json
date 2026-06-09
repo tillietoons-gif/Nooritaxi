@@ -11,11 +11,12 @@
     "min_suffix": "-40 دقیقه"
   },
   "wallet": {
-    "title": "کیف پول",
-    "available_balance": "موجودی",
+    "title": "موجودی",
+    "available_balance": "موجودی فعلی",
+    "cash_only_notice": "فعلاً پرداخت‌ها فقط نقدی است. هر مبلغی که اینجا می‌بینید از بازپرداخت‌ها یا اعتبارهای آینده می‌آید.",
     "top_up": "شارژ",
-    "recent_transactions": "تراکنش‌های اخیر",
-    "no_activity": "هنوز فعالیتی ندارید",
+    "recent_transactions": "اعتبارها و بازپرداخت‌ها",
+    "no_activity": "هنوز اعتبار یا بازپرداختی ندارید",
     "amount_placeholder": "مقدار (AFN)",
     "added": "{{amount}} AFN افزوده شد",
     "invalid_amount": "مقدار معتبر وارد کنید (AFN > 0)"
@@ -88,14 +89,14 @@
   },
   "checkout": {
     "total_amount": "مبلغ کل",
-    "payment_method": "روش پرداخت",
-    "noori_wallet": "کیف پول نوری",
-    "pay_from_balance": "پرداخت فوری از موجودی",
-    "hesabpay": "حساب پی",
-    "digital_wallet": "کیف پول دیجیتال / انتقال بانکی",
+    "payment_method": "پرداخت",
+    "noori_wallet": "نقدی",
+    "pay_from_balance": "کرایه را نقدی بپردازید",
+    "hesabpay": "نقدی",
+    "digital_wallet": "فعلاً فقط پرداخت نقدی",
     "cash": "پول نقد",
-    "pay_physical_cash": "پرداخت نقدی",
-    "secure_payment": "پرداخت امن و رمزنگاری شده",
-    "pay": "پرداخت {{amount}} {{currency}}"
+    "pay_physical_cash": "پس از تکمیل سرویس نقدی پرداخت کنید",
+    "secure_payment": "فعلاً فقط پرداخت نقدی فعال است",
+    "pay": "تأیید پرداخت نقدی"
   }
 }

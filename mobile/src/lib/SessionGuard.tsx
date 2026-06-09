@@ -13,11 +13,19 @@ export default function SessionGuard({ children }: { children: React.ReactNode }
   useEffect(() => {
     let mounted = true;
     (async () => {
-      const user = await getStoredUser();
-      if (!user && mounted) {
-        router.replace('/(auth)/login');
-      } else if (mounted) {
-        setChecking(false);
+      try {
+        const user = await getStoredUser();
+        if (!user && mounted) {
+          router.replace('/(auth)/login');
+          return;
+        }
+        if (mounted) {
+          setChecking(false);
+        }
+      } catch {
+        if (mounted) {
+          router.replace('/(auth)/login');
+        }
       }
     })();
     return () => {
@@ -33,4 +41,18 @@ export default function SessionGuard({ children }: { children: React.ReactNode }
     );
   }
   return <>{children}</>;
+}
+
+export function withSessionGuard<P extends object>(Component: React.ComponentType<P>) {
+  function GuardedComponent(props: P) {
+    return (
+      <SessionGuard>
+        <Component {...props} />
+      </SessionGuard>
+    );
+  }
+
+  GuardedComponent.displayName = `withSessionGuard(${Component.displayName || Component.name || 'Component'})`;
+
+  return GuardedComponent;
 }

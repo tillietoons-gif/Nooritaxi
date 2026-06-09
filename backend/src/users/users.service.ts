@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
-import { User, DocumentType, DocumentStatus } from '@prisma/client';
+import { User, DocumentType, DocumentStatus, UserRole } from '@prisma/client';
 
 @Injectable()
 export class UsersService {
@@ -11,7 +11,19 @@ export class UsersService {
   }
 
   async create(data: any): Promise<User> {
-    return this.prisma.user.create({ data });
+    const { role = UserRole.RIDER, ...userData } = data;
+
+    return this.prisma.user.create({
+      data: {
+        ...userData,
+        role,
+        ...(role === UserRole.DRIVER
+          ? { driverProfile: { create: {} } }
+          : role === UserRole.RIDER
+            ? { riderProfile: { create: {} } }
+            : {}),
+      },
+    });
   }
 
   async findById(id: string): Promise<User | null> {

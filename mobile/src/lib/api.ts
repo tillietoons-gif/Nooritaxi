@@ -44,19 +44,93 @@ export type AuthUser = {
   role: 'RIDER' | 'DRIVER' | 'MERCHANT' | 'SUPPORT' | 'ADMIN';
 };
 
+export type AuthRole = AuthUser['role'];
+
+export type TripStatus =
+  | 'REQUESTED'
+  | 'ACCEPTED'
+  | 'DRIVER_ARRIVED'
+  | 'IN_PROGRESS'
+  | 'COMPLETED'
+  | 'CANCELLED';
+
+export type DeliveryStatus =
+  | 'REQUESTED'
+  | 'ASSIGNED'
+  | 'PICKED_UP'
+  | 'IN_TRANSIT'
+  | 'DELIVERED'
+  | 'FAILED'
+  | 'CANCELLED';
+
 export type AuthResponse = {
   access_token: string;
   user: AuthUser;
 };
 
+export function isDriverUser(user?: Pick<AuthUser, 'role'> | null) {
+  return user?.role === 'DRIVER';
+}
+
+export function getSignedInRoute(user?: Pick<AuthUser, 'role'> | null) {
+  return user ? '/(tabs)/home' : '/(auth)/login';
+}
+
+export function getNextDriverTripStatus(status?: TripStatus | null): TripStatus | null {
+  if (status === 'REQUESTED') return 'ACCEPTED';
+  if (status === 'ACCEPTED') return 'DRIVER_ARRIVED';
+  if (status === 'DRIVER_ARRIVED') return 'IN_PROGRESS';
+  if (status === 'IN_PROGRESS') return 'COMPLETED';
+  return null;
+}
+
+export function getDriverTripActionLabel(status?: TripStatus | null) {
+  if (status === 'REQUESTED') return 'Accept trip';
+  if (status === 'ACCEPTED') return 'Mark arrived';
+  if (status === 'DRIVER_ARRIVED') return 'Start trip';
+  if (status === 'IN_PROGRESS') return 'Complete trip';
+  return null;
+}
+
+export function getNextDriverDeliveryStatus(
+  status?: DeliveryStatus | null,
+): DeliveryStatus | null {
+  if (status === 'ASSIGNED') return 'PICKED_UP';
+  if (status === 'PICKED_UP') return 'IN_TRANSIT';
+  if (status === 'IN_TRANSIT') return 'DELIVERED';
+  return null;
+}
+
+export function getDriverDeliveryActionLabel(status?: DeliveryStatus | null) {
+  if (status === 'ASSIGNED') return 'Picked up';
+  if (status === 'PICKED_UP') return 'Start delivery';
+  if (status === 'IN_TRANSIT') return 'Mark delivered';
+  return null;
+}
+
 export type Trip = {
   id: string;
   pickupLocation: string;
   dropoffLocation: string;
-  status: string;
+  status: TripStatus;
   fare?: number | string | null;
   safetyCode?: string | null;
   requestedAt?: string;
+  createdAt?: string;
+};
+
+export type Delivery = {
+  id: string;
+  pickupAddress: string;
+  dropoffAddress: string;
+  pickupName?: string | null;
+  dropoffName?: string | null;
+  packageType?: string | null;
+  packageWeightKg?: number | null;
+  status: DeliveryStatus;
+  fee?: number | string | null;
+  requestedAt?: string;
+  deliveredAt?: string | null;
   createdAt?: string;
 };
 
@@ -182,10 +256,15 @@ export async function login(phone: string, password: string) {
   return data;
 }
 
-export async function register(name: string, phone: string, password: string) {
+export async function register(
+  name: string,
+  phone: string,
+  password: string,
+  role: AuthRole = 'RIDER',
+) {
   const response = await apiFetch('/auth/register', {
     method: 'POST',
-    body: JSON.stringify({ name, phone, password, role: 'RIDER' }),
+    body: JSON.stringify({ name, phone, password, role }),
   });
   const data = await readJson<AuthResponse>(response, 'Registration failed');
   await saveSession(data.access_token, data.user);
@@ -195,6 +274,23 @@ export async function register(name: string, phone: string, password: string) {
 export async function getTrips(userId: string) {
   const response = await apiFetch(`/trips?userId=${encodeURIComponent(userId)}&limit=25`);
   return readJson<Trip[]>(response, 'Unable to load trips');
+}
+
+export async function getDeliveries(userId: string) {
+  const response = await apiFetch(`/logistics/deliveries?userId=${encodeURIComponent(userId)}&limit=25`);
+  return readJson<Delivery[]>(response, 'Unable to load deliveries');
+}
+
+export async function updateTripStatus(
+  tripId: string,
+  status: TripStatus,
+  actorId?: string,
+) {
+  const response = await apiFetch(`/trips/${encodeURIComponent(tripId)}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status, actorId }),
+  });
+  return readJson<Trip>(response, 'Unable to update trip status');
 }
 
 export async function getWalletBalance(userId: string) {
@@ -281,17 +377,29 @@ export async function placeFoodOrder(payload: {
 }
 
 export async function createDelivery(payload: {
-  customerId: string;
+  senderId: string;
   pickupAddress: string;
   dropoffAddress: string;
   packageType: string;
-  weight: number;
+  packageWeightKg: number;
 }) {
-  const response = await apiFetch('/delivery', {
+  const response = await apiFetch('/logistics/deliveries', {
     method: 'POST',
     body: JSON.stringify(payload),
   });
   return readJson<any>(response, 'Unable to request delivery');
+}
+
+export async function updateDeliveryStatus(
+  deliveryId: string,
+  status: DeliveryStatus,
+  actorId?: string,
+) {
+  const response = await apiFetch(`/logistics/deliveries/${encodeURIComponent(deliveryId)}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status, actorId }),
+  });
+  return readJson<Delivery>(response, 'Unable to update delivery status');
 }
 
 export async function uploadKycDocument(driverId: string, type: string, url: string) {
@@ -340,7 +448,14 @@ export async function createPaymentIntent(payload: {
     method: 'POST',
     body: JSON.stringify(payload),
   });
-  return readJson<{ intentId: string }>(response, 'Unable to initialize payment');
+  return readJson<{
+    intentId: string;
+    clientSecret: string;
+    provider: string;
+    amount: number;
+    currency: string;
+    status: string;
+  }>(response, 'Unable to initialize payment');
 }
 
 export async function verifyPayment(intentId: string, providerRef: string) {

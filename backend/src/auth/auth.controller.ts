@@ -3,10 +3,12 @@ import {
   Body,
   Controller,
   Get,
+  Headers,
   Post,
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
+import { UserRole } from '@prisma/client';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { CurrentUser } from './current-user.decorator';
@@ -27,9 +29,17 @@ export class AuthController {
 
   @Post('login')
   @Throttle({ default: { ttl: 60_000, limit: 5 } })
-  async login(@Body() body: LoginDto) {
+  async login(
+    @Body() body: LoginDto,
+    @Headers('x-client-platform') clientPlatform?: string,
+  ) {
     const user = await this.authService.validateUser(body.phone, body.password);
     if (!user) throw new UnauthorizedException('Invalid credentials');
+    if (clientPlatform === 'web' && user.role === UserRole.DRIVER) {
+      throw new UnauthorizedException(
+        'Drivers must sign in through the mobile app',
+      );
+    }
     return this.authService.login(user);
   }
 

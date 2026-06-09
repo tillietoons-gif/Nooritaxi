@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { usePathname } from "next/navigation"
-import { fetchMe, getStoredUser, type AuthUser } from "@/lib/auth"
+import { canAccessWebPortal, clearSession, fetchMe, getStoredUser, getWebLoginUrl, WEB_MOBILE_ONLY_REASON, type AuthUser } from "@/lib/auth"
 
 export function AuthGate({ children, roles }: { children: React.ReactNode; roles?: AuthUser["role"][] }) {
   const pathname = usePathname()
@@ -16,7 +16,13 @@ export function AuthGate({ children, roles }: { children: React.ReactNode; roles
       if (cancelled) return
 
       if (!user) {
-        window.location.href = `/login?next=${encodeURIComponent(pathname)}`
+        window.location.href = getWebLoginUrl(pathname)
+        return
+      }
+
+      if (!canAccessWebPortal(user.role)) {
+        clearSession()
+        window.location.href = getWebLoginUrl(null, WEB_MOBILE_ONLY_REASON)
         return
       }
 

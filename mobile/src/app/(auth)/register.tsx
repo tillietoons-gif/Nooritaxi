@@ -2,13 +2,14 @@ import React from 'react';
 import { View, Text, TextInput, TouchableOpacity, SafeAreaView, ScrollView } from 'react-native';
 import { ShieldCheck, User, Phone, Lock, Eye, EyeOff, ChevronLeft } from 'lucide-react-native';
 import { Link, router } from 'expo-router';
-import { register } from '../../lib/api';
+import { AuthRole, getSignedInRoute, register } from '../../lib/api';
 import { PatternOverlay } from '../../components/PatternOverlay';
 
 export default function RegisterScreen() {
   const [name, setName] = React.useState('');
   const [phone, setPhone] = React.useState('');
   const [password, setPassword] = React.useState('');
+  const [role, setRole] = React.useState<AuthRole>('RIDER');
   const [message, setMessage] = React.useState('');
   const [loading, setLoading] = React.useState(false);
   const [showPassword, setShowPassword] = React.useState(false);
@@ -17,8 +18,8 @@ export default function RegisterScreen() {
     setMessage('');
     setLoading(true);
     try {
-      await register(name, phone, password);
-      router.replace('/(tabs)/home');
+      const session = await register(name, phone, password, role);
+      router.replace(getSignedInRoute(session.user));
     } catch (error) {
       setMessage((error as Error).message);
     } finally {
@@ -37,10 +38,37 @@ export default function RegisterScreen() {
               <ShieldCheck size={48} color="#006947" />
             </View>
             <Text className="text-3xl font-black text-primary uppercase tracking-tighter">Get Started</Text>
-            <Text className="text-muted-foreground text-center mt-2 px-6 font-medium">Join thousands of people moving smarter.</Text>
+            <Text className="text-muted-foreground text-center mt-2 px-6 font-medium">
+              {role === 'DRIVER'
+                ? 'Create a driver account to manage assigned trips and complete verification from the shared app.'
+                : 'Join thousands of people moving smarter.'}
+            </Text>
           </View>
 
           <View className="space-y-6">
+            <View>
+              <Text className="text-xs font-black text-muted-foreground uppercase mb-3 ml-1 tracking-widest">Account Type</Text>
+              <View className="flex-row rounded-3xl bg-card border border-muted/20 p-1">
+                {([
+                  { id: 'RIDER', label: 'Rider' },
+                  { id: 'DRIVER', label: 'Driver' },
+                ] as const).map((option) => {
+                  const active = role === option.id;
+                  return (
+                    <TouchableOpacity
+                      key={option.id}
+                      onPress={() => setRole(option.id)}
+                      className={`flex-1 rounded-[20px] py-3 items-center justify-center ${active ? 'bg-primary' : 'bg-transparent'}`}
+                    >
+                      <Text className={`font-black uppercase tracking-widest text-xs ${active ? 'text-white' : 'text-muted-foreground'}`}>
+                        {option.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+
             <View>
               <Text className="text-xs font-black text-muted-foreground uppercase mb-2 ml-1 tracking-widest">Full Name</Text>
               <View className="flex-row items-center bg-card h-16 px-5 rounded-2xl border border-muted/20 shadow-sm">
@@ -97,7 +125,7 @@ export default function RegisterScreen() {
               className={`h-16 rounded-3xl items-center justify-center shadow-lg mt-4 ${loading ? 'bg-muted' : 'bg-primary shadow-primary/30'}`}
             >
               <Text className="text-white text-lg font-black uppercase tracking-widest">
-                {loading ? 'Creating...' : 'Sign Up'}
+                {loading ? 'Creating...' : role === 'DRIVER' ? 'Create Driver Account' : 'Sign Up'}
               </Text>
             </TouchableOpacity>
           </View>

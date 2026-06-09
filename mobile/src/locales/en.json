@@ -2,9 +2,10 @@
   "home": {
     "greeting_morning": "Good morning",
     "greeting_evening": "Good evening",
-    "wallet_label": "Total Balance",
-    "add_money": "Add Money",
-    "details": "Details",
+    "wallet_label": "Cash payments only",
+    "cash_note": "Pay your driver, courier, or merchant partner in cash when the service is complete.",
+    "add_money": "Book Ride",
+    "details": "Your Trips",
     "search_placeholder": "Where would you like to go?",
     "services_title": "Our Services",
     "taxi_label": "NooriTaxi",
@@ -30,11 +31,12 @@
     "min_suffix": "-40 min"
   },
   "wallet": {
-    "title": "Wallet",
-    "available_balance": "Available Balance",
+    "title": "Balance",
+    "available_balance": "Current Balance",
+    "cash_only_notice": "Cash payments are active right now. Any balance shown here comes from refunds or future credits.",
     "top_up": "Top Up",
-    "recent_transactions": "Recent Transactions",
-    "no_activity": "No wallet activity yet",
+    "recent_transactions": "Credits & Refunds",
+    "no_activity": "No credits or refunds yet",
     "amount_placeholder": "Amount (AFN)",
     "added": "Added AFN {{amount}}",
     "invalid_amount": "Enter a valid amount (AFN > 0)"
@@ -107,14 +109,14 @@
   },
   "checkout": {
     "total_amount": "Total Amount",
-    "payment_method": "Payment Method",
-    "noori_wallet": "Noori Wallet",
-    "pay_from_balance": "Pay instantly from balance",
-    "hesabpay": "HesabPay",
-    "digital_wallet": "Digital wallet / Bank transfer",
+    "payment_method": "Payment",
+    "noori_wallet": "Cash",
+    "pay_from_balance": "Pay your partner in cash",
+    "hesabpay": "Cash",
+    "digital_wallet": "Cash payment only",
     "cash": "Cash",
-    "pay_physical_cash": "Pay physical cash",
-    "secure_payment": "Secure, encrypted payment processing",
-    "pay": "Pay {{amount}} {{currency}}"
+    "pay_physical_cash": "Pay your partner in cash at completion",
+    "secure_payment": "Cash is currently the only payment option",
+    "pay": "Confirm Cash Payment"
   }
 }

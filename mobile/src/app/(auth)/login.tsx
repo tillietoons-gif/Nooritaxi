@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, SafeAreaView, ScrollView } from 'react-native';
 import { ShieldCheck, Phone, Lock, Eye, EyeOff, ChevronLeft } from 'lucide-react-native';
 import { Link, router } from 'expo-router';
-import { login } from '../../lib/api';
+import { getSignedInRoute, login } from '../../lib/api';
 import { PatternOverlay } from '../../components/PatternOverlay';
 
 export default function LoginScreen() {
@@ -16,8 +16,8 @@ export default function LoginScreen() {
     setMessage('');
     setLoading(true);
     try {
-      await login(phone, password);
-      router.replace('/(tabs)/home');
+      const session = await login(phone, password);
+      router.replace(getSignedInRoute(session.user));
     } catch (error) {
       setMessage((error as Error).message);
     } finally {

@@ -4,13 +4,22 @@ import { PrismaService } from '../prisma.service';
 import { PushService } from '../push/push.service';
 import { WalletService } from '../wallet/wallet.service';
 import { DispatchService } from '../dispatch/dispatch.service';
+import { TripStatus } from '@prisma/client';
 
 describe('TripsService', () => {
   let service: TripsService;
-  let prisma: { surgeZone: { findMany: jest.Mock } };
+  let prisma: {
+    surgeZone: { findMany: jest.Mock };
+    $transaction: jest.Mock;
+    auditLog: { create: jest.Mock };
+  };
 
   beforeEach(async () => {
-    prisma = { surgeZone: { findMany: jest.fn() } };
+    prisma = {
+      surgeZone: { findMany: jest.fn() },
+      $transaction: jest.fn(),
+      auditLog: { create: jest.fn() },
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -52,5 +61,54 @@ describe('TripsService', () => {
     await expect(service.getSurgeMultiplier(34.53, 69.17)).resolves.toBe(1.4);
     // @ts-ignore
     await expect(service.getSurgeMultiplier(35, 70)).resolves.toBe(1);
+  });
+
+  it('applies acceptedAt when a driver accepts a trip', async () => {
+    const tx = {
+      trip: {
+        findUnique: jest.fn().mockResolvedValue({
+          id: 'trip-1',
+          status: TripStatus.REQUESTED,
+        }),
+        update: jest.fn().mockImplementation(async ({ data }: any) => ({
+          id: 'trip-1',
+          status: data.status,
+          acceptedAt: data.acceptedAt,
+        })),
+      },
+      driver: {
+        updateMany: jest.fn(),
+      },
+    };
+
+    prisma.$transaction.mockImplementation(async (callback: any) => callback(tx));
+
+    const trip = await service.updateRide('trip-1', {
+      status: TripStatus.ACCEPTED,
+      actorId: 'driver-1',
+    });
+
+    expect(tx.trip.update).toHaveBeenCalledWith({
+      where: { id: 'trip-1' },
+      data: expect.objectContaining({
+        status: TripStatus.ACCEPTED,
+        acceptedAt: expect.any(Date),
+      }),
+    });
+    expect(trip).toEqual(
+      expect.objectContaining({
+        id: 'trip-1',
+        status: TripStatus.ACCEPTED,
+        acceptedAt: expect.any(Date),
+      }),
+    );
+    expect(prisma.auditLog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        action: 'RIDE_UPDATED',
+        entityType: 'Trip',
+        entityId: 'trip-1',
+        actorId: 'driver-1',
+      }),
+    });
   });
 });

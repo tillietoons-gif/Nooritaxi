@@ -3,6 +3,10 @@ import { PrismaService } from '../prisma.service';
 import { Order, PaymentMethod } from '@prisma/client';
 import { WalletService } from '../wallet/wallet.service';
 import { DispatchService } from '../dispatch/dispatch.service';
+import {
+  assertOrderStatusTransition,
+  orderStatusTimestampData,
+} from './order-status-machine';
 
 @Injectable()
 export class FoodService {
@@ -149,6 +153,14 @@ export class FoodService {
         where: { id },
         include: { restaurant: true },
       });
+
+      if (before && status) {
+        assertOrderStatusTransition(before.status, status);
+        if (before.status !== status) {
+          Object.assign(orderData, orderStatusTimestampData(status));
+        }
+      }
+
       const order = await tx.order.update({
         where: { id },
         data: orderData,

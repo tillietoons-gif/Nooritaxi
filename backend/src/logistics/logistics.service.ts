@@ -3,8 +3,13 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { DeliveryStatus } from '@prisma/client';
 import { PrismaService } from '../prisma.service';
 import { DispatchService } from '../dispatch/dispatch.service';
+import {
+  assertDeliveryStatusTransition,
+  deliveryStatusTimestampData,
+} from './delivery-status-machine';
 
 @Injectable()
 export class LogisticsService {
@@ -73,6 +78,16 @@ export class LogisticsService {
 
     const before = await this.prisma.delivery.findUnique({ where: { id } });
     if (!before) throw new NotFoundException('Delivery not found');
+
+    if (before && status) {
+      assertDeliveryStatusTransition(before.status as DeliveryStatus, status);
+      if (before.status !== status) {
+        Object.assign(
+          deliveryData,
+          deliveryStatusTimestampData(status as DeliveryStatus),
+        );
+      }
+    }
 
     const delivery = await this.prisma.delivery.update({
       where: { id },

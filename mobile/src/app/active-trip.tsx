@@ -3,7 +3,19 @@ import { Alert, Platform, Pressable, SafeAreaView, Text, View } from 'react-nati
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { io, Socket } from 'socket.io-client';
 import { MapPin, ShieldAlert } from 'lucide-react-native';
-import { getAuthToken, raiseSos, SOCKET_URL } from '../lib/api';
+import {
+  AuthUser,
+  getAuthToken,
+  getDriverTripActionLabel,
+  getNextDriverTripStatus,
+  getStoredUser,
+  getTrips,
+  raiseSos,
+  SOCKET_URL,
+  Trip,
+  updateTripStatus,
+} from '../lib/api';
+import { withSessionGuard } from '../lib/SessionGuard';
 
 type DriverLocation = {
   lat: number;
@@ -11,7 +23,7 @@ type DriverLocation = {
   timestamp?: string;
 };
 
-export default function ActiveTripScreen() {
+function ActiveTripScreen() {
   const router = useRouter();
   const { tripId } = useLocalSearchParams<{ tripId: string }>();
   const nativeMaps = React.useMemo(
@@ -20,9 +32,12 @@ export default function ActiveTripScreen() {
   );
   const MapView = nativeMaps?.default;
   const Marker = nativeMaps?.Marker;
+  const [user, setUser] = React.useState<AuthUser | null>(null);
+  const [trip, setTrip] = React.useState<Trip | null>(null);
   const [connected, setConnected] = React.useState(false);
   const [location, setLocation] = React.useState<DriverLocation | null>(null);
   const [sosSubmitting, setSosSubmitting] = React.useState(false);
+  const [statusSubmitting, setStatusSubmitting] = React.useState(false);
   const [activeAlertId, setActiveAlertId] = React.useState<string | null>(null);
 
   React.useEffect(() => {
@@ -53,12 +68,61 @@ export default function ActiveTripScreen() {
     };
   }, [tripId]);
 
+  React.useEffect(() => {
+    let mounted = true;
+
+    async function loadTripState() {
+      const storedUser = await getStoredUser();
+      if (!storedUser || !tripId || !mounted) return;
+
+      const trips = await getTrips(storedUser.id).catch(() => []);
+
+      if (mounted) {
+        setUser(storedUser);
+        setTrip(trips.find((item) => item.id === tripId) ?? null);
+      }
+    }
+
+    void loadTripState();
+    return () => {
+      mounted = false;
+    };
+  }, [tripId]);
+
   const region = {
     latitude: location?.lat ?? 34.5553,
     longitude: location?.lng ?? 69.2075,
     latitudeDelta: 0.05,
     longitudeDelta: 0.05,
   };
+
+  const isDriver = user?.role === 'DRIVER';
+  const nextDriverStatus = isDriver ? getNextDriverTripStatus(trip?.status) : null;
+  const driverActionLabel = isDriver ? getDriverTripActionLabel(trip?.status) : null;
+
+  const handleDriverStatus = React.useCallback(async () => {
+    if (!tripId || !nextDriverStatus || !user) return;
+
+    try {
+      setStatusSubmitting(true);
+      const updatedTrip = await updateTripStatus(tripId, nextDriverStatus, user.id);
+      setTrip(updatedTrip);
+
+      if (updatedTrip.status === 'COMPLETED') {
+        Alert.alert(
+          'Trip completed',
+          'The ride is marked complete and cash collection can now be reconciled.',
+        );
+      }
+    } catch (err) {
+      Alert.alert(
+        'Unable to update trip',
+        err instanceof Error ? err.message : 'Please try again',
+      );
+    } finally {
+      setStatusSubmitting(false);
+    }
+  }, [tripId, nextDriverStatus, user]);
 
   const handleSos = React.useCallback(() => {
     if (!tripId || sosSubmitting) return;
@@ -101,68 +165,88 @@ export default function ActiveTripScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <View className="px-4 py-5 border-b border-muted/20 flex-row items-center justify-between">
-        <View className="flex-1 pr-3">
-          <Text className="text-2xl font-bold text-primary">Active Trip</Text>
-          <Text className="text-muted-foreground text-sm">
-            {connected ? 'Tracking connected' : 'Connecting to tracking…'}
-          </Text>
-        </View>
-        <Pressable
-          accessibilityLabel="Trigger SOS"
-          onPress={handleSos}
-          disabled={sosSubmitting}
-          className={`flex-row items-center gap-2 rounded-full px-4 py-2 ${
-            activeAlertId ? 'bg-destructive/40' : 'bg-destructive'
-          } ${sosSubmitting ? 'opacity-60' : ''}`}
-        >
-          <ShieldAlert size={18} color="#fff" />
-          <Text className="text-white font-bold">
-            {activeAlertId ? 'SOS sent' : sosSubmitting ? 'Sending…' : 'SOS'}
-          </Text>
-        </Pressable>
-      </View>
-
-      {MapView ? (
-        <MapView style={{ flex: 1 }} region={region}>
-          {location && Marker ? (
-            <Marker
-              coordinate={{ latitude: location.lat, longitude: location.lng }}
-              title="Driver"
-            />
-          ) : null}
-        </MapView>
-      ) : (
-        <View className="flex-1 items-center justify-center bg-muted/20 px-6">
-          <MapPin size={32} color="#006947" />
-          <Text className="mt-4 text-lg font-semibold text-primary">Map unavailable on web preview</Text>
-          <Text className="mt-2 text-center text-sm text-muted-foreground">
-            Use the mobile app to see the live trip map. Driver coordinates will still update below.
-          </Text>
-        </View>
-      )}
-
-      <View className="absolute left-4 right-4 bottom-6 bg-card rounded-2xl p-5 border border-muted/10">
-        <View className="flex-row items-center gap-3">
-          <MapPin size={24} color="#006947" />
-          <View className="flex-1">
-            <Text className="font-bold">
-              {location ? 'Driver location live' : 'Waiting for driver coordinates'}
-            </Text>
-            <Text className="text-xs text-muted-foreground">
-              {location
-                ? `${location.lat.toFixed(5)}, ${location.lng.toFixed(5)}`
-                : `Trip ${tripId}`}
+        <View className="px-4 py-5 border-b border-muted/20 flex-row items-center justify-between">
+          <View className="flex-1 pr-3">
+            <Text className="text-2xl font-bold text-primary">{isDriver ? 'Active Assignment' : 'Active Trip'}</Text>
+            <Text className="text-muted-foreground text-sm">
+              {trip
+                ? `${trip.pickupLocation} -> ${trip.dropoffLocation}`
+                : connected ? 'Tracking connected' : 'Connecting to tracking…'}
             </Text>
           </View>
           <Pressable
-            onPress={() => router.push('/trusted-contacts')}
-            className="rounded-md border border-muted/30 px-3 py-2"
+            accessibilityLabel="Trigger SOS"
+            onPress={handleSos}
+            disabled={sosSubmitting}
+            className={`flex-row items-center gap-2 rounded-full px-4 py-2 ${
+              activeAlertId ? 'bg-destructive/40' : 'bg-destructive'
+            } ${sosSubmitting ? 'opacity-60' : ''}`}
           >
-            <Text className="text-xs">Manage contacts</Text>
+            <ShieldAlert size={18} color="#fff" />
+            <Text className="text-white font-bold">
+              {activeAlertId ? 'SOS sent' : sosSubmitting ? 'Sending…' : 'SOS'}
+            </Text>
           </Pressable>
         </View>
-      </View>
+
+        {MapView ? (
+          <MapView style={{ flex: 1 }} region={region}>
+            {location && Marker ? (
+              <Marker
+                coordinate={{ latitude: location.lat, longitude: location.lng }}
+                title="Driver"
+              />
+            ) : null}
+          </MapView>
+        ) : (
+          <View className="flex-1 items-center justify-center bg-muted/20 px-6">
+            <MapPin size={32} color="#006947" />
+            <Text className="mt-4 text-lg font-semibold text-primary">Map unavailable on web preview</Text>
+            <Text className="mt-2 text-center text-sm text-muted-foreground">
+              Use the mobile app to see the live trip map. Driver coordinates will still update below.
+            </Text>
+          </View>
+        )}
+
+        <View className="absolute left-4 right-4 bottom-6 bg-card rounded-2xl p-5 border border-muted/10">
+          <View className="flex-row items-center gap-3">
+            <MapPin size={24} color="#006947" />
+            <View className="flex-1">
+              <Text className="font-bold">
+                {isDriver
+                  ? trip?.status ?? 'Waiting for assignment details'
+                  : location ? 'Driver location live' : 'Waiting for driver coordinates'}
+              </Text>
+              <Text className="text-xs text-muted-foreground">
+                {isDriver && trip
+                  ? `${trip.pickupLocation} -> ${trip.dropoffLocation}`
+                  : location
+                  ? `${location.lat.toFixed(5)}, ${location.lng.toFixed(5)}`
+                  : `Trip ${tripId}`}
+              </Text>
+            </View>
+            {isDriver && driverActionLabel ? (
+              <Pressable
+                onPress={handleDriverStatus}
+                disabled={statusSubmitting}
+                className={`rounded-md px-3 py-2 ${statusSubmitting ? 'bg-muted' : 'bg-primary'}`}
+              >
+                <Text className="text-xs font-bold text-white">
+                  {statusSubmitting ? 'Updating...' : driverActionLabel}
+                </Text>
+              </Pressable>
+            ) : (
+              <Pressable
+                onPress={() => router.push('/trusted-contacts')}
+                className="rounded-md border border-muted/30 px-3 py-2"
+              >
+                <Text className="text-xs">Manage contacts</Text>
+              </Pressable>
+            )}
+          </View>
+        </View>
     </SafeAreaView>
   );
 }
+
+export default withSessionGuard(ActiveTripScreen);

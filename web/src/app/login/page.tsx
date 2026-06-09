@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { useState } from "react"
+import { useSearchParams } from "next/navigation"
 import { motion } from "framer-motion"
 import { Lock, Phone, Eye, EyeOff, ShieldCheck, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -9,14 +10,17 @@ import { GlassSurface } from "@/components/ui/glass-surface"
 import { Input } from "@/components/ui/input"
 import { BodyMd, HeadingMd, LabelMd } from "@/components/ui/typography"
 import { NooriLogo } from "@/components/ui/noori-logo"
-import { apiUrl, getPostAuthRedirect, saveSession } from "@/lib/auth"
+import { apiUrl, canAccessWebPortal, clearSession, getPostAuthRedirect, saveSession, WEB_MOBILE_ONLY_REASON } from "@/lib/auth"
 
 export default function LoginPage() {
+  const searchParams = useSearchParams()
   const [phone, setPhone] = useState("")
   const [password, setPassword] = useState("")
   const [message, setMessage] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const accessReason = searchParams.get("reason")
+  const resolvedMessage = message || (accessReason === WEB_MOBILE_ONLY_REASON ? "Drivers must sign in through the mobile app." : "")
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -26,13 +30,22 @@ export default function LoginPage() {
     try {
       const response = await fetch(`${apiUrl}/auth/login`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "X-Client-Platform": "web",
+        },
         body: JSON.stringify({ phone, password }),
       })
       const data = await response.json()
 
       if (!response.ok) {
         setMessage(data.message ?? "Authentication failed. Please verify your credentials.")
+        return
+      }
+
+      if (!canAccessWebPortal(data.user?.role)) {
+        clearSession()
+        setMessage("Drivers must sign in through the mobile app.")
         return
       }
 
@@ -91,8 +104,8 @@ export default function LoginPage() {
                   onChange={(event) => setPhone(event.target.value)}
                   placeholder="+93 7XX XXX XXX"
                   required
-                  aria-invalid={!!message}
-                  aria-describedby={message ? "login-error" : undefined}
+                  aria-invalid={!!resolvedMessage}
+                  aria-describedby={resolvedMessage ? "login-error" : undefined}
                 />
               </div>
             </div>
@@ -112,8 +125,8 @@ export default function LoginPage() {
                   onChange={(event) => setPassword(event.target.value)}
                   placeholder="••••••••"
                   required
-                  aria-invalid={!!message}
-                  aria-describedby={message ? "login-error" : undefined}
+                  aria-invalid={!!resolvedMessage}
+                  aria-describedby={resolvedMessage ? "login-error" : undefined}
                 />
                 <button
                   type="button"
@@ -126,7 +139,7 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {message ? (
+            {resolvedMessage ? (
               <motion.div
                 id="login-error"
                 role="alert"
@@ -134,7 +147,7 @@ export default function LoginPage() {
                 animate={{ opacity: 1, x: 0 }}
                 className="bg-destructive/5 text-destructive p-4 rounded-xl border border-destructive/20 text-xs font-bold"
               >
-                {message}
+                {resolvedMessage}
               </motion.div>
             ) : null}
 

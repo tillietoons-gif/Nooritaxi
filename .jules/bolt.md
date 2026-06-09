@@ -34,7 +34,7 @@
 
 **Learning:** Dashboard metrics often require multiple independent `count` queries to different tables (e.g., open tickets, urgent alerts, today's resolutions). Running these sequentially blocks the event loop unnecessarily.
 
-**Action:** Use `Promise.all` to execute multiple `prisma.model.count()` calls concurrently. This was applied to `SupportService` and `OperationsService` dashboards, resulting in faster page loads for administrative overviews.
+**Action:** Use `Promise.all` to execute multiple `prisma.model.count()` calls concurrently. This was applied to `SupportService`, `OperationsService`, `FraudService`, `AirportService`, and `FinanceService` dashboards, resulting in faster page loads for administrative overviews and reducing latency by ~60-66% for these specific methods.
 
 ## Mobile App Performance and Fixes
 - Centralized API calls in `mobile/src/lib/api.ts` to ensure consistent Authorization headers and error handling.

@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useState } from "react"
+import { Suspense, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { motion } from "framer-motion"
 import { Lock, Phone, Eye, EyeOff, ShieldCheck, ArrowLeft } from "lucide-react"
@@ -12,7 +12,7 @@ import { BodyMd, HeadingMd, LabelMd } from "@/components/ui/typography"
 import { NooriLogo } from "@/components/ui/noori-logo"
 import { apiUrl, canAccessWebPortal, clearSession, getPostAuthRedirect, saveSession, WEB_MOBILE_ONLY_REASON } from "@/lib/auth"
 
-export default function LoginPage() {
+function LoginPageContent() {
   const searchParams = useSearchParams()
   const [phone, setPhone] = useState("")
   const [password, setPassword] = useState("")
@@ -177,5 +177,13 @@ export default function LoginPage() {
         </div>
       </motion.div>
     </main>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<main id="main-content" className="min-h-screen bg-background" />}>
+      <LoginPageContent />
+    </Suspense>
   )
 }

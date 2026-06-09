@@ -147,15 +147,20 @@ export class FinanceService {
 
   // 6. Financial Analytics & High-Level Reports
   async getFinanceAnalytics() {
-    // Highly simplified analytics aggregations for UI
-    const pendingSettlements = await this.prisma.settlement.aggregate({
-      where: { status: { in: ['PENDING', 'PARTIAL', 'OVERDUE'] } },
-      _sum: { netBalance: true },
-    });
-
-    const totalCollected = await this.prisma.cashCollection.aggregate({
-      _sum: { amount: true },
-    });
+    // Optimization: Concurrent aggregation and count queries for finance analytics
+    const [pendingSettlements, totalCollected, activeRefunds] =
+      await Promise.all([
+        this.prisma.settlement.aggregate({
+          where: { status: { in: ['PENDING', 'PARTIAL', 'OVERDUE'] } },
+          _sum: { netBalance: true },
+        }),
+        this.prisma.cashCollection.aggregate({
+          _sum: { amount: true },
+        }),
+        this.prisma.refundRequest.count({
+          where: { status: 'PENDING' },
+        }),
+      ]);
 
     return {
       outstandingReceivables: Math.abs(
@@ -163,9 +168,7 @@ export class FinanceService {
       ), // Cash drivers owe platform
       totalCashCollected: Number(totalCollected._sum.amount || 0),
       totalPlatformRevenue: 154000.5, // Mocked for dashboard
-      activeRefunds: await this.prisma.refundRequest.count({
-        where: { status: 'PENDING' },
-      }),
+      activeRefunds,
     };
   }
 }

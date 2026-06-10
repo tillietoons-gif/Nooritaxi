@@ -1,20 +1,24 @@
 import React from 'react';
-import { ActivityIndicator, Alert, SafeAreaView, ScrollView, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, SafeAreaView, ScrollView, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { router, useFocusEffect } from 'expo-router';
-import { Plus, Store, UtensilsCrossed } from 'lucide-react-native';
+import { Camera, CheckCircle2, Clock3, Plus, Store, UtensilsCrossed, XCircle } from 'lucide-react-native';
 import {
   addRestaurantMenuItem,
   createPromotion,
   createSupportTicket,
   createRestaurant,
   deleteRestaurantMenuItem,
+  getMySupportTickets,
   getRestaurantMenu,
   getRestaurants,
   getStoredUser,
   isMerchantUser,
   MenuItem,
   Restaurant,
+  SupportTicket,
   updateRestaurantMenuItem,
+  uploadMediaFile,
 } from '../../lib/api';
 import { PatternOverlay } from '../../components/PatternOverlay';
 
@@ -24,8 +28,10 @@ export default function MerchantScreen() {
   const [loading, setLoading] = React.useState(true);
   const [savingRestaurant, setSavingRestaurant] = React.useState(false);
   const [savingItem, setSavingItem] = React.useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = React.useState(false);
   const [editingItemId, setEditingItemId] = React.useState<string | null>(null);
   const [message, setMessage] = React.useState('');
+  const [onboardingTickets, setOnboardingTickets] = React.useState<SupportTicket[]>([]);
 
   const [restaurantName, setRestaurantName] = React.useState('');
   const [address, setAddress] = React.useState('');
@@ -64,10 +70,14 @@ export default function MerchantScreen() {
         return;
       }
 
-      const restaurants = await getRestaurants();
+      const [restaurants, tickets] = await Promise.all([
+        getRestaurants(),
+        getMySupportTickets().catch(() => []),
+      ]);
       const owned = restaurants.find((item) => item.ownerId === user.id) ?? null;
       setRestaurant(owned);
       setMenu(owned ? await getRestaurantMenu(owned.id) : []);
+      setOnboardingTickets(tickets.filter((ticket) => ticket.category === 'MERCHANT_ONBOARDING'));
     } catch (err) {
       setMessage((err as Error).message);
     } finally {
@@ -157,6 +167,7 @@ export default function MerchantScreen() {
         },
       });
       Alert.alert('Submitted', 'Your merchant verification request was sent for admin review.');
+      setOnboardingTickets(await getMySupportTickets().then((tickets) => tickets.filter((ticket) => ticket.category === 'MERCHANT_ONBOARDING')).catch(() => onboardingTickets));
       setLicenseUrl('');
       setOwnerIdUrl('');
       setPayoutPhone('');
@@ -219,6 +230,25 @@ export default function MerchantScreen() {
     setItemImageUrl(item.imageUrl ?? '');
     setItemDescription(item.description ?? '');
     setItemAvailable(item.isAvailable !== false);
+  }
+
+  async function pickItemPhoto() {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      quality: 0.82,
+      allowsEditing: true,
+      aspect: [4, 3],
+    });
+    if (result.canceled || !result.assets[0]?.uri) return;
+
+    try {
+      setUploadingPhoto(true);
+      setItemImageUrl(await uploadMediaFile(result.assets[0].uri));
+    } catch (err) {
+      Alert.alert('Unable to upload photo', (err as Error).message);
+    } finally {
+      setUploadingPhoto(false);
+    }
   }
 
   async function handleSaveItem() {
@@ -351,6 +381,8 @@ export default function MerchantScreen() {
             </View>
           ) : (
             <>
+              <OnboardingStatusCard tickets={onboardingTickets} restaurantStatus={restaurant.status} />
+
               <View className="bg-card rounded-3xl border border-muted/10 p-5 shadow-sm mb-8">
                 <Text className="text-lg font-bold text-foreground mb-2">Verification</Text>
                 <Text className="text-xs text-muted-foreground mb-4">
@@ -402,7 +434,27 @@ export default function MerchantScreen() {
                 <MerchantInput label="Price (AFN)" value={itemPrice} onChangeText={setItemPrice} placeholder="350" keyboardType="numeric" />
                 <MerchantInput label="Category" value={itemCategory} onChangeText={setItemCategory} placeholder="Main, Drinks, Sides" />
                 <MerchantInput label="Prep minutes" value={itemPrep} onChangeText={setItemPrep} placeholder="20" keyboardType="numeric" />
-                <MerchantInput label="Photo URL" value={itemImageUrl} onChangeText={setItemImageUrl} placeholder="https://..." />
+                <View className="mb-4">
+                  <Text className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-2">Photo</Text>
+                  <View className="flex-row gap-3 items-center">
+                    <TouchableOpacity
+                      onPress={pickItemPhoto}
+                      disabled={uploadingPhoto}
+                      className="h-24 w-24 rounded-2xl border border-muted/20 bg-muted/10 items-center justify-center overflow-hidden"
+                    >
+                      {itemImageUrl ? (
+                        <Image source={{ uri: itemImageUrl }} className="h-full w-full" resizeMode="cover" />
+                      ) : (
+                        <Camera size={24} color="#006947" />
+                      )}
+                    </TouchableOpacity>
+                    <View className="flex-1">
+                      <Text className="text-sm font-bold text-foreground">{uploadingPhoto ? 'Uploading photo...' : itemImageUrl ? 'Photo ready' : 'Upload item photo'}</Text>
+                      <Text className="text-xs text-muted-foreground mt-1">Use clear food photos so customers can decide faster.</Text>
+                      <MerchantInput label="Or paste photo URL" value={itemImageUrl} onChangeText={setItemImageUrl} placeholder="https://..." />
+                    </View>
+                  </View>
+                </View>
                 <MerchantInput label="Description" value={itemDescription} onChangeText={setItemDescription} placeholder="Short dish description" />
                 <View className="mb-4 flex-row items-center justify-between rounded-2xl border border-muted/20 bg-muted/10 px-4 py-3">
                   <View>
@@ -500,6 +552,51 @@ function MerchantInput({
           className="text-base font-bold text-foreground"
         />
       </View>
+    </View>
+  );
+}
+
+function OnboardingStatusCard({
+  tickets,
+  restaurantStatus,
+}: {
+  tickets: SupportTicket[];
+  restaurantStatus?: string;
+}) {
+  const latest = tickets[0];
+  const status = restaurantStatus === 'ACTIVE'
+    ? 'APPROVED'
+    : latest?.status === 'RESOLVED'
+      ? 'APPROVED'
+      : latest?.status === 'CLOSED'
+        ? 'REJECTED'
+        : latest
+          ? 'PENDING'
+          : 'MISSING';
+  const styles = {
+    APPROVED: { icon: <CheckCircle2 size={20} color="#006947" />, title: 'Approved', detail: 'Your restaurant is ready for customers.' },
+    PENDING: { icon: <Clock3 size={20} color="#D4AF37" />, title: 'Pending review', detail: 'Admin is reviewing your business documents.' },
+    REJECTED: { icon: <XCircle size={20} color="#ba1a1a" />, title: 'Needs attention', detail: 'Upload corrected business documents and submit again.' },
+    MISSING: { icon: <Clock3 size={20} color="#6d7a71" />, title: 'Documents missing', detail: 'Submit license, owner ID, and payout contact to complete onboarding.' },
+  }[status];
+
+  return (
+    <View className="bg-secondary/35 rounded-3xl border border-accent/10 p-5 mb-8">
+      <View className="flex-row items-center gap-3">
+        <View className="h-10 w-10 rounded-2xl bg-card items-center justify-center">
+          {styles.icon}
+        </View>
+        <View className="flex-1">
+          <Text className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Onboarding status</Text>
+          <Text className="text-lg font-black text-foreground mt-1">{styles.title}</Text>
+          <Text className="text-xs text-muted-foreground mt-1">{styles.detail}</Text>
+        </View>
+      </View>
+      {latest ? (
+        <Text className="text-[10px] text-muted-foreground mt-4">
+          Latest request: {latest.subject} · {new Date(latest.updatedAt).toLocaleDateString()}
+        </Text>
+      ) : null}
     </View>
   );
 }

@@ -129,6 +129,10 @@ export type Delivery = {
   id: string;
   pickupAddress: string;
   dropoffAddress: string;
+  pickupLat?: number | null;
+  pickupLng?: number | null;
+  dropoffLat?: number | null;
+  dropoffLng?: number | null;
   pickupName?: string | null;
   dropoffName?: string | null;
   packageType?: string | null;
@@ -190,6 +194,8 @@ export type Restaurant = {
   ratingAverage: number;
   status?: string;
   address?: string;
+  lat?: number | null;
+  lng?: number | null;
   phone?: string | null;
   deliveryRadius?: number;
   imageUrl?: string;
@@ -240,6 +246,7 @@ export type FoodOrder = {
     menuItem?: MenuItem;
   }[];
   restaurant?: Restaurant;
+  delivery?: Delivery | null;
 };
 
 export type DriverProfile = {
@@ -287,6 +294,28 @@ export type SavedPlace = {
   address: string;
   lat?: number;
   lng?: number;
+};
+
+export type PlaceSuggestion = {
+  id: string;
+  name: string;
+  address: string;
+  city?: string | null;
+  lat: number;
+  lng: number;
+  category?: string | null;
+};
+
+export type SupportTicket = {
+  id: string;
+  category: string;
+  subject: string;
+  description: string;
+  status: 'OPEN' | 'PENDING' | 'RESOLVED' | 'CLOSED';
+  priority: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
+  metadata?: Record<string, unknown> | null;
+  updatedAt: string;
+  createdAt: string;
 };
 
 export function setAuthToken(token: string | null) {
@@ -631,6 +660,11 @@ export async function redeemPromotion(input: {
   return readJson<{ discount: number }>(response, 'Unable to redeem promotion');
 }
 
+export async function searchPlaces(query: string) {
+  const response = await apiFetch(`/places?q=${encodeURIComponent(query)}&limit=8`);
+  return readJson<PlaceSuggestion[]>(response, 'Unable to search places');
+}
+
 export async function createReview(payload: {
   authorId: string;
   targetType: 'DRIVER' | 'RIDER' | 'RESTAURANT';
@@ -664,6 +698,11 @@ export async function createSupportTicket(payload: {
   return readJson<any>(response, 'Unable to submit request');
 }
 
+export async function getMySupportTickets() {
+  const response = await apiFetch('/support/tickets/me');
+  return readJson<SupportTicket[]>(response, 'Unable to load support tickets');
+}
+
 export async function getSavedPlaces() {
   const raw = await getStoredValue(SAVED_PLACES_KEY);
   if (!raw) return [] as SavedPlace[];
@@ -690,6 +729,27 @@ export async function addSavedPlace(input: Omit<SavedPlace, 'id'>) {
 export async function removeSavedPlace(placeId: string) {
   const places = await getSavedPlaces();
   await saveSavedPlaces(places.filter((place) => place.id !== placeId));
+}
+
+export async function uploadMediaFile(fileUri: string) {
+  const formData = new FormData();
+  const filename = fileUri.split('/').pop() || `media-${Date.now()}.jpg`;
+  const match = /\.(\w+)$/.exec(filename);
+  const ext = match?.[1]?.toLowerCase();
+  const mimeType = ext === 'webp' ? 'image/webp' : `image/${ext || 'jpeg'}`;
+
+  formData.append('file', {
+    uri: fileUri,
+    name: filename,
+    type: mimeType,
+  } as any);
+
+  const response = await apiFetch('/kyc/media', {
+    method: 'POST',
+    body: formData,
+  });
+  const data = await readJson<{ url: string }>(response, 'Unable to upload photo');
+  return data.url.startsWith('http') ? data.url : `${API_URL}${data.url}`;
 }
 
 export async function createDelivery(payload: {

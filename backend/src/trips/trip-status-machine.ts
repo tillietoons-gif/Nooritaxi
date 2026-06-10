@@ -3,7 +3,7 @@ import { TripStatus } from '@prisma/client';
 
 export const TripStatusMachine: Record<TripStatus, TripStatus[]> = {
   [TripStatus.REQUESTED]: [TripStatus.ACCEPTED],
-  [TripStatus.ACCEPTED]: [TripStatus.DRIVER_ARRIVED],
+  [TripStatus.ACCEPTED]: [TripStatus.DRIVER_ARRIVED, TripStatus.CANCELLED],
   [TripStatus.DRIVER_ARRIVED]: [TripStatus.IN_PROGRESS],
   [TripStatus.IN_PROGRESS]: [TripStatus.COMPLETED, TripStatus.CANCELLED],
   [TripStatus.COMPLETED]: [],

@@ -13,6 +13,7 @@ function BookRideScreen() {
   const [pickupLocation, setPickupLocation] = React.useState('');
   const [dropoffLocation, setDropoffLocation] = React.useState('');
   const [pickupCoords, setPickupCoords] = React.useState<{ lat: number; lng: number } | null>(null);
+  const [dropoffCoords, setDropoffCoords] = React.useState<{ lat: number; lng: number } | null>(null);
   const [estimate, setEstimate] = React.useState<RideEstimate | null>(null);
   const [savedPlaces, setSavedPlaces] = React.useState<SavedPlace[]>([]);
   const [safetyCode, setSafetyCode] = React.useState('');
@@ -72,6 +73,8 @@ function BookRideScreen() {
         dropoffLocation,
         pickupLat: pickupCoords?.lat,
         pickupLng: pickupCoords?.lng,
+        dropoffLat: dropoffCoords?.lat,
+        dropoffLng: dropoffCoords?.lng,
         distance: estimate?.distance ?? 5,
         paymentMethod: 'CASH',
       });
@@ -121,7 +124,10 @@ function BookRideScreen() {
                   <Navigation size={20} color="#D4AF37" />
                   <TextInput
                     value={dropoffLocation}
-                    onChangeText={setDropoffLocation}
+                    onChangeText={(value) => {
+                      setDropoffLocation(value);
+                      setDropoffCoords(null);
+                    }}
                     placeholder={t('book_ride.destination_placeholder', 'Destination')}
                     className="flex-1 ml-3 text-base font-bold text-foreground"
                   />
@@ -137,7 +143,10 @@ function BookRideScreen() {
                 {savedPlaces.map((place) => (
                   <TouchableOpacity
                     key={place.id}
-                    onPress={() => setDropoffLocation(place.address)}
+                    onPress={() => {
+                      setDropoffLocation(place.address);
+                      setDropoffCoords(place.lat && place.lng ? { lat: place.lat, lng: place.lng } : null);
+                    }}
                     className="bg-primary/5 border border-primary/10 rounded-2xl px-4 py-3"
                   >
                     <Text className="text-primary font-bold">{place.label}</Text>

@@ -114,6 +114,12 @@ export class SuperAppController {
     return this.superApp.createSupportTicket(body);
   }
 
+  @Get('support/tickets/me')
+  @UseGuards(JwtAuthGuard)
+  listMySupportTickets(@CurrentUser('id') userId: string) {
+    return this.superApp.listSupportTicketsForRequester(userId);
+  }
+
   @Get('support/tickets')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.SUPPORT)

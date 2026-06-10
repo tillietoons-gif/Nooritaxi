@@ -38,6 +38,12 @@ function LoyaltyScreen() {
     }
   }
 
+  const rewards = [
+    { points: 100, title: 'AFN 50 ride credit', detail: 'Best for short city rides and daily commuting.' },
+    { points: 250, title: 'Free delivery reward', detail: 'Use toward restaurant delivery fees.' },
+    { points: 500, title: 'AFN 350 food discount', detail: 'Save more on larger family orders.' },
+  ];
+
   return (
     <SafeAreaView className="flex-1 bg-background">
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
@@ -59,18 +65,23 @@ function LoyaltyScreen() {
 
               <View className="bg-card rounded-3xl border border-muted/10 p-5 mb-6">
                 <Text className="font-bold text-foreground mb-4">Redeem rewards</Text>
-                {[100, 250, 500].map((points) => (
+                {rewards.map((reward) => (
                   <TouchableOpacity
-                    key={points}
-                    onPress={() => redeem(points)}
-                    disabled={redeeming || (account?.points ?? 0) < points}
-                    className={`flex-row items-center justify-between rounded-2xl p-4 mb-3 ${(account?.points ?? 0) < points ? 'bg-muted/20' : 'bg-primary/5 border border-primary/10'}`}
+                    key={reward.points}
+                    onPress={() => redeem(reward.points)}
+                    disabled={redeeming || (account?.points ?? 0) < reward.points}
+                    className={`rounded-2xl p-4 mb-3 ${(account?.points ?? 0) < reward.points ? 'bg-muted/20' : 'bg-primary/5 border border-primary/10'}`}
                   >
-                    <View className="flex-row items-center gap-3">
-                      <Gift size={20} color="#006947" />
-                      <Text className="font-bold text-foreground">{points} point reward</Text>
+                    <View className="flex-row items-center justify-between gap-3">
+                      <View className="flex-row items-center gap-3 flex-1">
+                        <Gift size={20} color="#006947" />
+                        <View className="flex-1">
+                          <Text className="font-bold text-foreground">{reward.title}</Text>
+                          <Text className="text-xs text-muted-foreground mt-1">{reward.detail}</Text>
+                        </View>
+                      </View>
+                      <Text className="font-black text-primary">{reward.points} pts</Text>
                     </View>
-                    <Text className="font-black text-primary">Redeem</Text>
                   </TouchableOpacity>
                 ))}
               </View>

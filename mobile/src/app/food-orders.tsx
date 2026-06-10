@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, SafeAreaView, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Platform, SafeAreaView, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { CheckCircle2, ChefHat, Clock, PackageCheck, ReceiptText, RefreshCw, Truck } from 'lucide-react-native';
 import { FoodOrder, FoodOrderStatus, getFoodOrders, getStoredUser } from '../lib/api';
@@ -28,6 +28,12 @@ function stepIcon(status: FoodOrderStatus, active: boolean) {
 }
 
 function FoodOrdersScreen() {
+  const nativeMaps = React.useMemo(
+    () => (Platform.OS === 'web' ? null : require('react-native-maps')),
+    [],
+  );
+  const MapView = nativeMaps?.default;
+  const Marker = nativeMaps?.Marker;
   const [orders, setOrders] = React.useState<FoodOrder[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState('');
@@ -110,17 +116,53 @@ function FoodOrdersScreen() {
                     {TRACKING_STEPS.map((step, index) => {
                       const active = order.status === 'DELIVERED' || (currentIndex >= 0 && index <= currentIndex);
                       return (
-                        <View key={step} className="items-center flex-1">
-                          <View className={`h-8 w-8 rounded-full items-center justify-center ${active ? 'bg-primary/10' : 'bg-muted/20'}`}>
-                            {stepIcon(step, active)}
+                        <View key={step} className="items-center flex-1 flex-row">
+                          <View className="items-center flex-1">
+                            <View className={`h-8 w-8 rounded-full items-center justify-center ${active ? 'bg-primary/10' : 'bg-muted/20'}`}>
+                              {stepIcon(step, active)}
+                            </View>
+                            <Text className={`text-[9px] font-bold text-center mt-1 ${active ? 'text-primary' : 'text-muted-foreground'}`} numberOfLines={1}>
+                              {STEP_LABEL[step]}
+                            </Text>
                           </View>
-                          <Text className={`text-[9px] font-bold text-center mt-1 ${active ? 'text-primary' : 'text-muted-foreground'}`} numberOfLines={1}>
-                            {STEP_LABEL[step]}
-                          </Text>
+                          {index < TRACKING_STEPS.length - 1 ? (
+                            <View className={`h-[2px] w-4 ${active ? 'bg-primary/40' : 'bg-muted/20'}`} />
+                          ) : null}
                         </View>
                       );
                     })}
                   </View>
+
+                  {MapView && (order.restaurant?.lat || order.delivery?.pickupLat) && (order.delivery?.dropoffLat || order.deliveryAddress) ? (
+                    <View className="h-40 rounded-3xl overflow-hidden border border-muted/10 mb-4">
+                      <MapView
+                        style={{ flex: 1 }}
+                        initialRegion={{
+                          latitude: Number(order.delivery?.pickupLat ?? order.restaurant?.lat ?? 34.5553),
+                          longitude: Number(order.delivery?.pickupLng ?? order.restaurant?.lng ?? 69.2075),
+                          latitudeDelta: 0.08,
+                          longitudeDelta: 0.08,
+                        }}
+                      >
+                        {Marker && order.restaurant?.lat && order.restaurant?.lng ? (
+                          <Marker
+                            coordinate={{ latitude: Number(order.restaurant.lat), longitude: Number(order.restaurant.lng) }}
+                            title={order.restaurant.name}
+                          />
+                        ) : null}
+                        {Marker && order.delivery?.dropoffLat && order.delivery?.dropoffLng ? (
+                          <Marker
+                            coordinate={{ latitude: Number(order.delivery.dropoffLat), longitude: Number(order.delivery.dropoffLng) }}
+                            title="Delivery address"
+                          />
+                        ) : null}
+                      </MapView>
+                    </View>
+                  ) : (
+                    <View className="rounded-3xl bg-muted/10 border border-muted/10 p-4 mb-4">
+                      <Text className="text-xs font-bold text-muted-foreground">Delivery map appears when restaurant and dropoff coordinates are available.</Text>
+                    </View>
+                  )}
 
                   {order.items?.map((item) => (
                     <View key={item.id} className="flex-row justify-between py-2 border-t border-muted/10">

@@ -132,6 +132,9 @@ export default function MerchantOrdersScreen() {
             <Text className="text-xs text-muted-foreground mt-2">
               Delivered cash order value. Admin settlements can reconcile payouts and platform commissions.
             </Text>
+            <TouchableOpacity onPress={() => router.push('/cash-ledger')} className="mt-4 rounded-2xl bg-card border border-muted/10 py-3 items-center">
+              <Text className="text-primary font-black uppercase tracking-widest text-xs">Open ledger</Text>
+            </TouchableOpacity>
           </View>
 
           {loading ? (

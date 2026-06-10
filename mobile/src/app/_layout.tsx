@@ -25,6 +25,7 @@ export default function RootLayout() {
         <Stack.Screen name="promotions" options={{ headerShown: true, title: 'Promotions' }} />
         <Stack.Screen name="saved-places" options={{ headerShown: true, title: 'Saved Places' }} />
         <Stack.Screen name="review" options={{ headerShown: true, title: 'Review' }} />
+        <Stack.Screen name="cash-ledger" options={{ headerShown: true, title: 'Cash Ledger' }} />
         <Stack.Screen name="trusted-contacts" options={{ headerShown: true, title: 'Safety Center' }} />
         <Stack.Screen name="language-selection" options={{ headerShown: true, title: 'Language' }} />
         <Stack.Screen name="help-support" options={{ headerShown: true, title: 'Help & Support' }} />

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, SafeAreaView, ScrollView, Alert, Share } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
-import { User, Shield, Bell, HelpCircle, LogOut, ChevronRight, Globe, Gift, Store, ReceiptText, MapPin, Trophy } from 'lucide-react-native';
+import { User, Shield, Bell, HelpCircle, LogOut, ChevronRight, Globe, Gift, Store, ReceiptText, MapPin, Trophy, Banknote } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { AuthUser, clearSession, getNotifications, getStoredUser, isDriverUser, isMerchantUser } from '../../lib/api';
 import { PatternOverlay } from '../../components/PatternOverlay';
@@ -48,6 +48,9 @@ export default function ProfileScreen() {
           { id: 'referral', icon: <Gift size={22} color="#D4AF37" />, title: 'Refer & Earn', subtitle: 'Invite friends, earn AFN 50' },
         ]
       : []),
+    ...(isDriver || isMerchant
+      ? [{ id: 'cash_ledger', icon: <Banknote size={22} color="#006947" />, title: 'Cash Ledger', subtitle: 'Collected cash and settlement history' }]
+      : []),
     { id: 'help', icon: <HelpCircle size={22} color="#006947" />, title: 'Help & Support', subtitle: '24/7 Premium support' },
     ...(isDriver ? [{ id: 'kyc', icon: <User size={22} color="#006947" />, title: 'Verification', subtitle: 'Update your driver documents' }] : []),
   ];
@@ -77,6 +80,9 @@ export default function ProfileScreen() {
         break;
       case 'saved_places':
         router.push('/saved-places');
+        break;
+      case 'cash_ledger':
+        router.push('/cash-ledger');
         break;
       case 'referral': {
         const code = `REF-${user?.phone?.slice(-4) ?? '1234'}`;

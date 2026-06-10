@@ -1,7 +1,9 @@
 import { io, Socket } from 'socket.io-client';
 import * as SecureStore from 'expo-secure-store';
 
-const SOCKET_URL = process.env.EXPO_PUBLIC_SOCKET_URL || 'http://localhost:3000/tracking';
+const SOCKET_URL =
+  process.env.EXPO_PUBLIC_SOCKET_URL ||
+  'https://noori-backend-750921372930.asia-south1.run.app';
 
 class SocketService {
   private static instance: SocketService;

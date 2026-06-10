@@ -1,9 +1,9 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 import { Tabs } from 'expo-router';
-import { BriefcaseBusiness, Home, Car, UtensilsCrossed, User } from 'lucide-react-native';
+import { BriefcaseBusiness, Home, Car, UtensilsCrossed, User, Store, ReceiptText } from 'lucide-react-native';
 import SessionGuard from '../../lib/SessionGuard';
-import { type AuthUser, getStoredUser, isDriverUser } from '../../lib/api';
+import { type AuthUser, getStoredUser, isDriverUser, isMerchantUser } from '../../lib/api';
 
 export default function TabsLayout() {
   const [user, setUser] = React.useState<AuthUser | null | undefined>(undefined);
@@ -29,6 +29,7 @@ export default function TabsLayout() {
   }, []);
 
   const isDriver = isDriverUser(user);
+  const isMerchant = isMerchantUser(user);
 
   return (
     <SessionGuard>
@@ -57,7 +58,7 @@ export default function TabsLayout() {
           <Tabs.Screen
             name="home"
             options={{
-              title: isDriver ? 'Driver' : 'Home',
+              title: isDriver ? 'Driver' : isMerchant ? 'Merchant' : 'Home',
               tabBarIcon: ({ color, size }) => <Home size={size} color={color} />,
             }}
           />
@@ -74,7 +75,7 @@ export default function TabsLayout() {
           />
           <Tabs.Screen
             name="trips"
-            options={isDriver
+            options={isDriver || isMerchant
               ? {
                   href: null,
                 }
@@ -91,13 +92,35 @@ export default function TabsLayout() {
           />
           <Tabs.Screen
             name="food"
-            options={isDriver
+            options={isDriver || isMerchant
               ? {
                   href: null,
                 }
               : {
                   title: 'Food',
                   tabBarIcon: ({ color, size }) => <UtensilsCrossed size={size} color={color} />,
+                }}
+          />
+          <Tabs.Screen
+            name="merchant"
+            options={isMerchant
+              ? {
+                  title: 'Business',
+                  tabBarIcon: ({ color, size }) => <Store size={size} color={color} />,
+                }
+              : {
+                  href: null,
+                }}
+          />
+          <Tabs.Screen
+            name="orders"
+            options={isMerchant
+              ? {
+                  title: 'Orders',
+                  tabBarIcon: ({ color, size }) => <ReceiptText size={size} color={color} />,
+                }
+              : {
+                  href: null,
                 }}
           />
           <Tabs.Screen

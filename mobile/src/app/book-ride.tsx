@@ -12,6 +12,7 @@ function BookRideScreen() {
   const { t } = useTranslation();
   const [pickupLocation, setPickupLocation] = React.useState('');
   const [dropoffLocation, setDropoffLocation] = React.useState('');
+  const [pickupCoords, setPickupCoords] = React.useState<{ lat: number; lng: number } | null>(null);
   const [estimate, setEstimate] = React.useState<RideEstimate | null>(null);
   const [safetyCode, setSafetyCode] = React.useState('');
   const [message, setMessage] = React.useState('');
@@ -22,7 +23,11 @@ function BookRideScreen() {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') return;
       try {
-        let location = await Location.getCurrentPositionAsync({});
+        const location = await Location.getCurrentPositionAsync({});
+        setPickupCoords({
+          lat: location.coords.latitude,
+          lng: location.coords.longitude,
+        });
         setPickupLocation('Current Location');
       } catch (e) {
         console.log('Location error:', e);
@@ -37,11 +42,13 @@ function BookRideScreen() {
     }
 
     const timer = setTimeout(() => {
-      getRideEstimate(5).then(setEstimate).catch(() => setEstimate(null));
+      getRideEstimate(5, pickupCoords?.lat, pickupCoords?.lng)
+        .then(setEstimate)
+        .catch(() => setEstimate(null));
     }, 250);
 
     return () => clearTimeout(timer);
-  }, [pickupLocation, dropoffLocation]);
+  }, [dropoffLocation, pickupCoords?.lat, pickupCoords?.lng, pickupLocation]);
 
   async function confirm() {
     setMessage('');
@@ -58,6 +65,9 @@ function BookRideScreen() {
         customerId: user.id,
         pickupLocation,
         dropoffLocation,
+        pickupLat: pickupCoords?.lat,
+        pickupLng: pickupCoords?.lng,
+        distance: estimate?.distance ?? 5,
         paymentMethod: 'CASH',
       });
 

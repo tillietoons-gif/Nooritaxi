@@ -41,7 +41,9 @@ export default function RegisterScreen() {
             <Text className="text-muted-foreground text-center mt-2 px-6 font-medium">
               {role === 'DRIVER'
                 ? 'Create a driver account to manage assigned trips and complete verification from the shared app.'
-                : 'Join thousands of people moving smarter.'}
+                : role === 'MERCHANT'
+                  ? 'Create a merchant account to manage your restaurant, menu, and incoming orders.'
+                  : 'Join thousands of people moving smarter.'}
             </Text>
           </View>
 
@@ -52,6 +54,7 @@ export default function RegisterScreen() {
                 {([
                   { id: 'RIDER', label: 'Rider' },
                   { id: 'DRIVER', label: 'Driver' },
+                  { id: 'MERCHANT', label: 'Merchant' },
                 ] as const).map((option) => {
                   const active = role === option.id;
                   return (
@@ -125,7 +128,7 @@ export default function RegisterScreen() {
               className={`h-16 rounded-3xl items-center justify-center shadow-lg mt-4 ${loading ? 'bg-muted' : 'bg-primary shadow-primary/30'}`}
             >
               <Text className="text-white text-lg font-black uppercase tracking-widest">
-                {loading ? 'Creating...' : role === 'DRIVER' ? 'Create Driver Account' : 'Sign Up'}
+                {loading ? 'Creating...' : role === 'DRIVER' ? 'Create Driver Account' : role === 'MERCHANT' ? 'Create Merchant Account' : 'Sign Up'}
               </Text>
             </TouchableOpacity>
           </View>

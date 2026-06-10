@@ -1,9 +1,9 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, SafeAreaView, ScrollView, Alert, Share } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
-import { User, Shield, Bell, HelpCircle, LogOut, ChevronRight, Globe, Gift } from 'lucide-react-native';
+import { User, Shield, Bell, HelpCircle, LogOut, ChevronRight, Globe, Gift, Store, ReceiptText } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import { AuthUser, clearSession, getNotifications, getStoredUser, isDriverUser } from '../../lib/api';
+import { AuthUser, clearSession, getNotifications, getStoredUser, isDriverUser, isMerchantUser } from '../../lib/api';
 import { PatternOverlay } from '../../components/PatternOverlay';
 
 export default function ProfileScreen() {
@@ -28,12 +28,19 @@ export default function ProfileScreen() {
   );
 
   const isDriver = isDriverUser(user);
+  const isMerchant = isMerchantUser(user);
 
   const menuItems = [
     { id: 'safety', icon: <Shield size={22} color="#006947" />, title: isDriver ? 'Safety & support' : 'Safety Center', subtitle: isDriver ? 'Emergency contacts and trip safety' : 'Emergency contacts & safety codes' },
     { id: 'notifications', icon: <Bell size={22} color="#006947" />, title: 'Notifications', subtitle: `${notificationCount} new updates` },
     { id: 'language', icon: <Globe size={22} color="#006947" />, title: 'Language', subtitle: 'English, Dari, Pashto' },
-    ...(!isDriver ? [{ id: 'referral', icon: <Gift size={22} color="#D4AF37" />, title: 'Refer & Earn', subtitle: 'Invite friends, earn AFN 50' }] : []),
+    ...(isMerchant
+      ? [
+          { id: 'merchant', icon: <Store size={22} color="#006947" />, title: 'Restaurant', subtitle: 'Manage your profile and menu' },
+          { id: 'orders', icon: <ReceiptText size={22} color="#006947" />, title: 'Orders', subtitle: 'Review incoming customer orders' },
+        ]
+      : []),
+    ...(!isDriver && !isMerchant ? [{ id: 'referral', icon: <Gift size={22} color="#D4AF37" />, title: 'Refer & Earn', subtitle: 'Invite friends, earn AFN 50' }] : []),
     { id: 'help', icon: <HelpCircle size={22} color="#006947" />, title: 'Help & Support', subtitle: '24/7 Premium support' },
     ...(isDriver ? [{ id: 'kyc', icon: <User size={22} color="#006947" />, title: 'Verification', subtitle: 'Update your driver documents' }] : []),
   ];
@@ -48,6 +55,12 @@ export default function ProfileScreen() {
         break;
       case 'notifications':
         router.push('/notifications');
+        break;
+      case 'merchant':
+        router.push('/(tabs)/merchant');
+        break;
+      case 'orders':
+        router.push('/(tabs)/orders');
         break;
       case 'referral': {
         const code = `REF-${user?.phone?.slice(-4) ?? '1234'}`;

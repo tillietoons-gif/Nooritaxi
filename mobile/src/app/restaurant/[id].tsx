@@ -3,24 +3,30 @@ import { View, Text, TouchableOpacity, SafeAreaView, ScrollView, Image, Alert, A
 import { useLocalSearchParams, router } from 'expo-router';
 import { Clock, MapPin, Plus, Minus, ShoppingBag, ArrowLeft } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import { getRestaurants, placeFoodOrder, Restaurant, getStoredUser } from '../../lib/api';
+import { getRestaurantMenu, getRestaurants, placeFoodOrder, Restaurant, getStoredUser, MenuItem } from '../../lib/api';
 import { withSessionGuard } from '../../lib/SessionGuard';
 
 function RestaurantScreen() {
   const { id } = useLocalSearchParams();
   const { t } = useTranslation();
   const [restaurant, setRestaurant] = React.useState<Restaurant | null>(null);
+  const [menu, setMenu] = React.useState<MenuItem[]>([]);
   const [cart, setCart] = React.useState<Map<string, number>>(new Map());
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
     async function load() {
       try {
-        const data = await getRestaurants();
-        const found = data.find((r: Restaurant) => r.id === id);
+        const restaurantId = String(id);
+        const [data, menuItems] = await Promise.all([
+          getRestaurants(),
+          getRestaurantMenu(restaurantId),
+        ]);
+        const found = data.find((r: Restaurant) => r.id === restaurantId);
         if (found) {
           setRestaurant(found);
         }
+        setMenu(menuItems);
       } catch (err) {
         console.error(err);
       } finally {
@@ -42,10 +48,9 @@ function RestaurantScreen() {
   };
 
   const getCartTotal = () => {
-    if (!restaurant?.menu) return 0;
     let total = 0;
     for (const [itemId, qty] of cart.entries()) {
-      const item = restaurant.menu.find((i: any) => i.id === itemId);
+      const item = menu.find((i) => i.id === itemId);
       total += item ? Number(item.price) * qty : 0;
     }
     return total;
@@ -65,13 +70,13 @@ function RestaurantScreen() {
       }));
 
       const order = await placeFoodOrder({
-        customerId: user.id,
+        riderId: user.id,
         restaurantId: id as string,
         items,
         deliveryAddress: 'Current Location',
       });
       
-      router.push(`/checkout?amount=${order.totalAmount}&orderId=${order.id}&type=FOOD`);
+      router.push(`/checkout?amount=${order.total ?? getCartTotal()}&orderId=${order.id}&type=FOOD`);
     } catch (err) {
       Alert.alert('Error', (err as Error).message);
     }
@@ -132,10 +137,10 @@ function RestaurantScreen() {
             </View>
 
             <Text className="text-xl font-bold mb-4">{t('restaurant.menu', 'Menu')}</Text>
-            {restaurant.menu?.length === 0 ? (
+            {menu.length === 0 ? (
               <Text className="text-muted-foreground italic">No items available at the moment.</Text>
             ) : (
-              restaurant.menu?.map((item: any) => (
+              menu.map((item) => (
                 <View key={item.id} className="flex-row py-4 border-b border-muted/10">
                   <View className="flex-1 pr-4">
                     <Text className="font-bold text-base mb-1 text-foreground">{item.name}</Text>

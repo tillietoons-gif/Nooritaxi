@@ -2,6 +2,7 @@ import React from 'react';
 import { Alert, Platform, Pressable, SafeAreaView, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { io, Socket } from 'socket.io-client';
+import * as Location from 'expo-location';
 import { MapPin, ShieldAlert } from 'lucide-react-native';
 import {
   AuthUser,
@@ -39,6 +40,7 @@ function ActiveTripScreen() {
   const [sosSubmitting, setSosSubmitting] = React.useState(false);
   const [statusSubmitting, setStatusSubmitting] = React.useState(false);
   const [activeAlertId, setActiveAlertId] = React.useState<string | null>(null);
+  const socketRef = React.useRef<Socket | null>(null);
 
   React.useEffect(() => {
     let mounted = true;
@@ -52,6 +54,7 @@ function ActiveTripScreen() {
         auth: { token },
         transports: ['websocket', 'polling'],
       });
+      socketRef.current = nextSocket;
 
       nextSocket.on('connect', () => {
         setConnected(true);
@@ -65,6 +68,9 @@ function ActiveTripScreen() {
     return () => {
       mounted = false;
       nextSocket?.disconnect();
+      if (socketRef.current === nextSocket) {
+        socketRef.current = null;
+      }
     };
   }, [tripId]);
 
@@ -99,6 +105,46 @@ function ActiveTripScreen() {
   const isDriver = user?.role === 'DRIVER';
   const nextDriverStatus = isDriver ? getNextDriverTripStatus(trip?.status) : null;
   const driverActionLabel = isDriver ? getDriverTripActionLabel(trip?.status) : null;
+
+  React.useEffect(() => {
+    if (!isDriver || !tripId || !connected) return;
+
+    let mounted = true;
+    let subscription: Location.LocationSubscription | null = null;
+
+    async function publishDriverLocation() {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted' || !mounted) return;
+
+      subscription = await Location.watchPositionAsync(
+        {
+          accuracy: Location.Accuracy.High,
+          distanceInterval: 25,
+          timeInterval: 10000,
+        },
+        (position) => {
+          const nextLocation = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+            timestamp: new Date(position.timestamp).toISOString(),
+          };
+          setLocation(nextLocation);
+          socketRef.current?.emit('updateLocation', {
+            tripId,
+            lat: nextLocation.lat,
+            lng: nextLocation.lng,
+          });
+        },
+      );
+    }
+
+    void publishDriverLocation();
+
+    return () => {
+      mounted = false;
+      subscription?.remove();
+    };
+  }, [connected, isDriver, tripId]);
 
   const handleDriverStatus = React.useCallback(async () => {
     if (!tripId || !nextDriverStatus || !user) return;

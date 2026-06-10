@@ -42,3 +42,9 @@
 - Implemented functional Language Switcher and Help/Support pages to replace placeholder alerts.
 - Fixed dead links in Profile tab, redirecting "Safety Center" to the functional Trusted Contacts page.
 - Enhanced Wallet UI with a functional Top Up feature integrated with the backend deposit API.
+
+## 2026-06-10 - Parallelizing Finance Dashboard Analytics
+
+**Learning:** Sequential `await` calls for multiple Prisma aggregation and count queries in dashboard endpoints (like `getFinanceAnalytics`) lead to linear latency accumulation. While each query might be fast, the sum of three or more I/O operations becomes noticeable in the admin UI.
+
+**Action:** Wrap independent Prisma queries in `Promise.all`. In `FinanceService.getFinanceAnalytics`, this allows fetching pending settlements, total collections, and active refund counts concurrently, reducing endpoint latency by approximately 50-66%.

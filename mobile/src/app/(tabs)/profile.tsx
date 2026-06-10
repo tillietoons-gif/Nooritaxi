@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, SafeAreaView, ScrollView, Alert, Share } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
-import { User, Shield, Bell, HelpCircle, LogOut, ChevronRight, Globe, Gift, Store, ReceiptText } from 'lucide-react-native';
+import { User, Shield, Bell, HelpCircle, LogOut, ChevronRight, Globe, Gift, Store, ReceiptText, MapPin, Trophy } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { AuthUser, clearSession, getNotifications, getStoredUser, isDriverUser, isMerchantUser } from '../../lib/api';
 import { PatternOverlay } from '../../components/PatternOverlay';
@@ -40,7 +40,14 @@ export default function ProfileScreen() {
           { id: 'orders', icon: <ReceiptText size={22} color="#006947" />, title: 'Orders', subtitle: 'Review incoming customer orders' },
         ]
       : []),
-    ...(!isDriver && !isMerchant ? [{ id: 'referral', icon: <Gift size={22} color="#D4AF37" />, title: 'Refer & Earn', subtitle: 'Invite friends, earn AFN 50' }] : []),
+    ...(!isDriver && !isMerchant
+      ? [
+          { id: 'loyalty', icon: <Trophy size={22} color="#D4AF37" />, title: 'Noori Rewards', subtitle: 'Points, tier, and redemptions' },
+          { id: 'promotions', icon: <Gift size={22} color="#D4AF37" />, title: 'Promotions', subtitle: 'Active offers and promo codes' },
+          { id: 'saved_places', icon: <MapPin size={22} color="#006947" />, title: 'Saved Places', subtitle: 'Home, work, and favorites' },
+          { id: 'referral', icon: <Gift size={22} color="#D4AF37" />, title: 'Refer & Earn', subtitle: 'Invite friends, earn AFN 50' },
+        ]
+      : []),
     { id: 'help', icon: <HelpCircle size={22} color="#006947" />, title: 'Help & Support', subtitle: '24/7 Premium support' },
     ...(isDriver ? [{ id: 'kyc', icon: <User size={22} color="#006947" />, title: 'Verification', subtitle: 'Update your driver documents' }] : []),
   ];
@@ -61,6 +68,15 @@ export default function ProfileScreen() {
         break;
       case 'orders':
         router.push('/(tabs)/orders');
+        break;
+      case 'loyalty':
+        router.push('/loyalty');
+        break;
+      case 'promotions':
+        router.push('/promotions');
+        break;
+      case 'saved_places':
+        router.push('/saved-places');
         break;
       case 'referral': {
         const code = `REF-${user?.phone?.slice(-4) ?? '1234'}`;

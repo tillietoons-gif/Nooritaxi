@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { Order, PaymentMethod } from '@prisma/client';
 import { WalletService } from '../wallet/wallet.service';
@@ -39,6 +39,31 @@ export class FoodService {
 
   addMenuItem(restaurantId: string, data: any) {
     return this.prisma.menuItem.create({ data: { ...data, restaurantId } });
+  }
+
+  async updateMenuItem(restaurantId: string, itemId: string, data: any) {
+    const item = await this.prisma.menuItem.findFirst({
+      where: { id: itemId, restaurantId },
+    });
+    if (!item) throw new NotFoundException('Menu item not found');
+
+    return this.prisma.menuItem.update({
+      where: { id: itemId },
+      data,
+    });
+  }
+
+  async deleteMenuItem(restaurantId: string, itemId: string) {
+    const item = await this.prisma.menuItem.findFirst({
+      where: { id: itemId, restaurantId },
+    });
+    if (!item) throw new NotFoundException('Menu item not found');
+
+    await this.prisma.menuItem.update({
+      where: { id: itemId },
+      data: { isAvailable: false },
+    });
+    return { id: itemId, removed: true };
   }
 
   getRestaurantMenu(restaurantId: string) {

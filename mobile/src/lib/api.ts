@@ -6,6 +6,7 @@ export const SOCKET_URL = process.env.EXPO_PUBLIC_SOCKET_URL ?? API_URL.replace(
 
 const TOKEN_KEY = 'noori_token';
 const USER_KEY = 'noori_user';
+const SAVED_PLACES_KEY = 'noori_saved_places';
 
 let authToken: string | null = null;
 
@@ -121,6 +122,7 @@ export type Trip = {
   safetyCode?: string | null;
   requestedAt?: string;
   createdAt?: string;
+  driver?: AuthUser | null;
 };
 
 export type Delivery = {
@@ -238,6 +240,53 @@ export type FoodOrder = {
     menuItem?: MenuItem;
   }[];
   restaurant?: Restaurant;
+};
+
+export type DriverProfile = {
+  id: string;
+  userId: string;
+  status: 'OFFLINE' | 'ONLINE' | 'BUSY' | 'SUSPENDED';
+  currentLat?: number | null;
+  currentLng?: number | null;
+  completedTrips?: number;
+  completedDeliveries?: number;
+  ratingAverage?: number;
+};
+
+export type LoyaltyAccount = {
+  id: string;
+  userId: string;
+  points: number;
+  lifetime: number;
+  tier: string;
+};
+
+export type LoyaltyTransaction = {
+  id: string;
+  type: 'CREDIT' | 'DEBIT';
+  amount: number;
+  description: string;
+  createdAt: string;
+};
+
+export type Promotion = {
+  id: string;
+  code: string;
+  title: string;
+  description?: string | null;
+  type: string;
+  value: number | string;
+  minSpend?: number | string | null;
+  maxDiscount?: number | string | null;
+  endsAt: string;
+};
+
+export type SavedPlace = {
+  id: string;
+  label: string;
+  address: string;
+  lat?: number;
+  lng?: number;
 };
 
 export function setAuthToken(token: string | null) {
@@ -453,6 +502,37 @@ export async function addRestaurantMenuItem(
   return readJson<MenuItem>(response, 'Unable to add menu item');
 }
 
+export async function updateRestaurantMenuItem(
+  restaurantId: string,
+  itemId: string,
+  payload: Partial<{
+    name: string;
+    description: string;
+    price: number;
+    imageUrl: string;
+    category: string;
+    isAvailable: boolean;
+    preparationMin: number;
+  }>,
+) {
+  const response = await apiFetch(
+    `/food/restaurants/${encodeURIComponent(restaurantId)}/menu-items/${encodeURIComponent(itemId)}`,
+    {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    },
+  );
+  return readJson<MenuItem>(response, 'Unable to update menu item');
+}
+
+export async function deleteRestaurantMenuItem(restaurantId: string, itemId: string) {
+  const response = await apiFetch(
+    `/food/restaurants/${encodeURIComponent(restaurantId)}/menu-items/${encodeURIComponent(itemId)}`,
+    { method: 'DELETE' },
+  );
+  return readJson<{ id: string; removed: boolean }>(response, 'Unable to remove menu item');
+}
+
 export async function placeFoodOrder(payload: {
   riderId: string;
   restaurantId: string;
@@ -485,6 +565,131 @@ export async function updateFoodOrderStatus(
     body: JSON.stringify({ status, actorId }),
   });
   return readJson<FoodOrder>(response, 'Unable to update order');
+}
+
+export async function updateMyDriverStatus(input: {
+  status: 'ONLINE' | 'OFFLINE';
+  lat?: number;
+  lng?: number;
+}) {
+  const response = await apiFetch('/drivers/me/status', {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  });
+  return readJson<DriverProfile>(response, 'Unable to update driver availability');
+}
+
+export async function getMyLoyalty() {
+  const response = await apiFetch('/loyalty/me');
+  return readJson<{
+    account: LoyaltyAccount;
+    recentTransactions: LoyaltyTransaction[];
+  }>(response, 'Unable to load loyalty account');
+}
+
+export async function redeemLoyaltyPoints(points: number, reason: string) {
+  const response = await apiFetch('/loyalty/redeem', {
+    method: 'POST',
+    body: JSON.stringify({ points, reason }),
+  });
+  return readJson<LoyaltyAccount>(response, 'Unable to redeem points');
+}
+
+export async function getPromotions() {
+  const response = await apiFetch('/promotions');
+  return readJson<Promotion[]>(response, 'Unable to load promotions');
+}
+
+export async function createPromotion(payload: {
+  code: string;
+  title: string;
+  description?: string;
+  type: 'PERCENTAGE' | 'FIXED_AMOUNT' | 'FREE_DELIVERY' | 'WALLET_CREDIT';
+  scope?: 'RIDES' | 'FOOD' | 'DELIVERY' | 'WALLET' | 'GLOBAL';
+  value: number;
+  startsAt: string;
+  endsAt: string;
+}) {
+  const response = await apiFetch('/promotions', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+  return readJson<Promotion>(response, 'Unable to create promotion');
+}
+
+export async function redeemPromotion(input: {
+  code: string;
+  userId: string;
+  orderId?: string;
+  tripId?: string;
+  spend?: number;
+}) {
+  const response = await apiFetch('/promotions/redeem', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+  return readJson<{ discount: number }>(response, 'Unable to redeem promotion');
+}
+
+export async function createReview(payload: {
+  authorId: string;
+  targetType: 'DRIVER' | 'RIDER' | 'RESTAURANT';
+  rating: number;
+  comment?: string;
+  tripId?: string;
+  orderId?: string;
+  deliveryId?: string;
+  targetUserId?: string;
+  restaurantId?: string;
+}) {
+  const response = await apiFetch('/reviews', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+  return readJson<any>(response, 'Unable to submit review');
+}
+
+export async function createSupportTicket(payload: {
+  requesterId: string;
+  category: string;
+  subject: string;
+  description: string;
+  priority?: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
+  metadata?: Record<string, unknown>;
+}) {
+  const response = await apiFetch('/support/tickets', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+  return readJson<any>(response, 'Unable to submit request');
+}
+
+export async function getSavedPlaces() {
+  const raw = await getStoredValue(SAVED_PLACES_KEY);
+  if (!raw) return [] as SavedPlace[];
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as SavedPlace[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+export async function saveSavedPlaces(places: SavedPlace[]) {
+  await setStoredValue(SAVED_PLACES_KEY, JSON.stringify(places));
+}
+
+export async function addSavedPlace(input: Omit<SavedPlace, 'id'>) {
+  const places = await getSavedPlaces();
+  const nextPlace = { ...input, id: `place:${Date.now()}` };
+  const nextPlaces = [nextPlace, ...places].slice(0, 10);
+  await saveSavedPlaces(nextPlaces);
+  return nextPlace;
+}
+
+export async function removeSavedPlace(placeId: string) {
+  const places = await getSavedPlaces();
+  await saveSavedPlaces(places.filter((place) => place.id !== placeId));
 }
 
 export async function createDelivery(payload: {

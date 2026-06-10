@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Param,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -11,6 +12,7 @@ import { UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
+import { CurrentUser } from '../auth/current-user.decorator';
 import { SuperAppService } from './super-app.service';
 import {
   AddVehicleDto,
@@ -35,6 +37,13 @@ export class SuperAppController {
     return this.superApp.listDrivers();
   }
 
+  @Patch('drivers/me/status')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.DRIVER)
+  updateMyDriverStatus(@CurrentUser('id') userId: string, @Body() body: any) {
+    return this.superApp.updateMyDriverStatus(userId, body);
+  }
+
   @Post('drivers/:driverId/vehicles')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.DRIVER)
@@ -55,7 +64,7 @@ export class SuperAppController {
 
   @Post('promotions')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.MERCHANT)
   createPromotion(@Body() body: CreatePromotionDto) {
     return this.superApp.createPromotion(body);
   }

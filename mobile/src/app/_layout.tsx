@@ -18,8 +18,13 @@ export default function RootLayout() {
         <Stack.Screen name="active-trip" options={{ headerShown: true, title: 'Active Trip' }} />
         <Stack.Screen name="driver-kyc" options={{ headerShown: true, title: 'Driver Verification' }} />
         <Stack.Screen name="restaurant/[id]" options={{ headerShown: true, title: 'Menu', presentation: 'card' }} />
+        <Stack.Screen name="food-orders" options={{ headerShown: true, title: 'Food Orders' }} />
         <Stack.Screen name="checkout" options={{ headerShown: true, title: 'Checkout', presentation: 'modal' }} />
         <Stack.Screen name="delivery" options={{ headerShown: true, title: 'Delivery', presentation: 'modal' }} />
+        <Stack.Screen name="loyalty" options={{ headerShown: true, title: 'Noori Rewards' }} />
+        <Stack.Screen name="promotions" options={{ headerShown: true, title: 'Promotions' }} />
+        <Stack.Screen name="saved-places" options={{ headerShown: true, title: 'Saved Places' }} />
+        <Stack.Screen name="review" options={{ headerShown: true, title: 'Review' }} />
         <Stack.Screen name="trusted-contacts" options={{ headerShown: true, title: 'Safety Center' }} />
         <Stack.Screen name="language-selection" options={{ headerShown: true, title: 'Language' }} />
         <Stack.Screen name="help-support" options={{ headerShown: true, title: 'Help & Support' }} />

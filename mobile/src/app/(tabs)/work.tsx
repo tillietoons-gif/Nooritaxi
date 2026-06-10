@@ -1,6 +1,7 @@
 import React from 'react';
-import { Alert, SafeAreaView, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, SafeAreaView, ScrollView, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
+import * as Location from 'expo-location';
 import { BriefcaseBusiness, Car, CheckCircle2, ChevronRight, Clock, MapPin, Package } from 'lucide-react-native';
 import {
   AuthUser,
@@ -15,6 +16,7 @@ import {
   isDriverUser,
   Trip,
   updateDeliveryStatus,
+  updateMyDriverStatus,
   updateTripStatus,
 } from '../../lib/api';
 import { PatternOverlay } from '../../components/PatternOverlay';
@@ -27,6 +29,8 @@ export default function WorkScreen() {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState('');
   const [updatingId, setUpdatingId] = React.useState<string | null>(null);
+  const [online, setOnline] = React.useState(false);
+  const [availabilityUpdating, setAvailabilityUpdating] = React.useState(false);
 
   const loadWork = React.useCallback(async () => {
     setLoading(true);
@@ -63,6 +67,75 @@ export default function WorkScreen() {
       loadWork();
     }, [loadWork]),
   );
+
+  React.useEffect(() => {
+    if (!online || !user) return;
+
+    let mounted = true;
+    let subscription: Location.LocationSubscription | null = null;
+
+    async function publishAvailability() {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted' || !mounted) return;
+
+      const current = await Location.getCurrentPositionAsync({}).catch(() => null);
+      if (current) {
+        await updateMyDriverStatus({
+          status: 'ONLINE',
+          lat: current.coords.latitude,
+          lng: current.coords.longitude,
+        }).catch(() => undefined);
+      }
+
+      subscription = await Location.watchPositionAsync(
+        {
+          accuracy: Location.Accuracy.Balanced,
+          distanceInterval: 50,
+          timeInterval: 15000,
+        },
+        (position) => {
+          updateMyDriverStatus({
+            status: 'ONLINE',
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          }).catch(() => undefined);
+        },
+      );
+    }
+
+    void publishAvailability();
+
+    return () => {
+      mounted = false;
+      subscription?.remove();
+    };
+  }, [online, user]);
+
+  async function handleAvailabilityChange(nextOnline: boolean) {
+    try {
+      setAvailabilityUpdating(true);
+      let coords: { lat?: number; lng?: number } = {};
+      if (nextOnline) {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('Location required', 'Drivers need location access to go online for dispatch.');
+          return;
+        }
+        const current = await Location.getCurrentPositionAsync({});
+        coords = { lat: current.coords.latitude, lng: current.coords.longitude };
+      }
+
+      await updateMyDriverStatus({
+        status: nextOnline ? 'ONLINE' : 'OFFLINE',
+        ...coords,
+      });
+      setOnline(nextOnline);
+    } catch (err) {
+      Alert.alert('Unable to update availability', err instanceof Error ? err.message : 'Please try again');
+    } finally {
+      setAvailabilityUpdating(false);
+    }
+  }
 
   async function handleTripAction(trip: Trip) {
     if (!user) return;
@@ -101,6 +174,13 @@ export default function WorkScreen() {
   const workSummary = buildDriverWorkSummary(trips, deliveries);
   const activeTrips = workSummary.activeTrips;
   const activeDeliveries = workSummary.activeDeliveries;
+  const completedTripCash = trips
+    .filter((trip) => trip.status === 'COMPLETED')
+    .reduce((sum, trip) => sum + Number(trip.fare ?? 0), 0);
+  const completedDeliveryCash = deliveries
+    .filter((delivery) => delivery.status === 'DELIVERED')
+    .reduce((sum, delivery) => sum + Number(delivery.fee ?? 0), 0);
+  const cashTotal = completedTripCash + completedDeliveryCash;
 
   return (
     <SafeAreaView className="flex-1 bg-background">
@@ -120,6 +200,33 @@ export default function WorkScreen() {
                 <BriefcaseBusiness size={24} color="#ffffff" />
               </View>
             </View>
+          </View>
+
+          <View className="bg-card rounded-3xl p-5 border border-muted/10 shadow-sm mb-6">
+            <View className="flex-row items-center justify-between gap-4">
+              <View className="flex-1">
+                <Text className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Dispatch availability</Text>
+                <Text className="text-lg font-black text-foreground mt-1">
+                  {online ? 'Online for nearby jobs' : 'Offline'}
+                </Text>
+                <Text className="text-xs text-muted-foreground mt-1">
+                  {online ? 'Your location is updating for ride and delivery matching.' : 'Turn on when you are ready to accept work.'}
+                </Text>
+              </View>
+              <Switch
+                value={online}
+                disabled={availabilityUpdating}
+                onValueChange={handleAvailabilityChange}
+              />
+            </View>
+          </View>
+
+          <View className="bg-secondary/35 rounded-3xl p-5 border border-accent/10 mb-6">
+            <Text className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Cash reconciliation</Text>
+            <Text className="text-2xl font-black text-foreground mt-1">AFN {cashTotal.toLocaleString()}</Text>
+            <Text className="text-xs text-muted-foreground mt-2">
+              Completed rides: AFN {completedTripCash.toLocaleString()} · Completed deliveries: AFN {completedDeliveryCash.toLocaleString()}
+            </Text>
           </View>
 
           {loading ? (

@@ -26,7 +26,7 @@ function RestaurantScreen() {
         if (found) {
           setRestaurant(found);
         }
-        setMenu(menuItems);
+        setMenu(menuItems.filter((item) => item.isAvailable !== false));
       } catch (err) {
         console.error(err);
       } finally {

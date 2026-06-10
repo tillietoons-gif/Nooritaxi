@@ -216,6 +216,15 @@ export default function TripsScreen() {
                         </Text>
                       </TouchableOpacity>
                     ) : null}
+
+                    {!isDriver && trip.status === 'COMPLETED' ? (
+                      <TouchableOpacity
+                        onPress={() => router.push(`/review?targetType=DRIVER&tripId=${trip.id}&targetUserId=${trip.driver?.id ?? ''}` as any)}
+                        className="mt-3 rounded-2xl items-center justify-center py-3 border border-primary/15 bg-primary/5"
+                      >
+                        <Text className="text-primary font-bold">Review driver</Text>
+                      </TouchableOpacity>
+                    ) : null}
                   </View>
                 </View>
               ))

@@ -86,6 +86,9 @@ export default function MerchantOrdersScreen() {
 
   const activeOrders = orders.filter((order) => !['DELIVERED', 'CANCELLED', 'REFUNDED'].includes(order.status));
   const completedToday = orders.filter((order) => order.status === 'DELIVERED').length;
+  const deliveredCash = orders
+    .filter((order) => order.status === 'DELIVERED')
+    .reduce((sum, order) => sum + Number(order.total ?? 0), 0);
 
   return (
     <SafeAreaView className="flex-1 bg-background">
@@ -121,6 +124,14 @@ export default function MerchantOrdersScreen() {
             >
               <Text className="font-bold text-white">Menu</Text>
             </TouchableOpacity>
+          </View>
+
+          <View className="bg-secondary/35 rounded-3xl p-5 border border-accent/10 mb-6">
+            <Text className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Cash reconciliation</Text>
+            <Text className="text-2xl font-black text-foreground mt-1">AFN {deliveredCash.toLocaleString()}</Text>
+            <Text className="text-xs text-muted-foreground mt-2">
+              Delivered cash order value. Admin settlements can reconcile payouts and platform commissions.
+            </Text>
           </View>
 
           {loading ? (

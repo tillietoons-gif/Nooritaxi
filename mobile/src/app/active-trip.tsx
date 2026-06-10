@@ -1,11 +1,12 @@
 import React from 'react';
-import { Alert, Platform, Pressable, SafeAreaView, Text, View } from 'react-native';
+import { Alert, Platform, Pressable, SafeAreaView, Share, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { io, Socket } from 'socket.io-client';
 import * as Location from 'expo-location';
 import { MapPin, ShieldAlert } from 'lucide-react-native';
 import {
   AuthUser,
+  API_URL,
   getAuthToken,
   getDriverTripActionLabel,
   getNextDriverTripStatus,
@@ -209,6 +210,18 @@ function ActiveTripScreen() {
     );
   }, [tripId, location, sosSubmitting]);
 
+  const handleShareTrip = React.useCallback(async () => {
+    if (!trip?.safetyCode) {
+      Alert.alert('Share unavailable', 'This trip does not have a safety code yet.');
+      return;
+    }
+
+    const shareUrl = `${API_URL}/trips/share/${encodeURIComponent(trip.safetyCode)}`;
+    await Share.share({
+      message: `Track my Noori trip: ${shareUrl}\nPickup: ${trip.pickupLocation}\nDropoff: ${trip.dropoffLocation}`,
+    });
+  }, [trip]);
+
   return (
     <SafeAreaView className="flex-1 bg-background">
         <View className="px-4 py-5 border-b border-muted/20 flex-row items-center justify-between">
@@ -282,12 +295,20 @@ function ActiveTripScreen() {
                 </Text>
               </Pressable>
             ) : (
-              <Pressable
-                onPress={() => router.push('/trusted-contacts')}
-                className="rounded-md border border-muted/30 px-3 py-2"
-              >
-                <Text className="text-xs">Manage contacts</Text>
-              </Pressable>
+              <View className="flex-row gap-2">
+                <Pressable
+                  onPress={handleShareTrip}
+                  className="rounded-md bg-primary px-3 py-2"
+                >
+                  <Text className="text-xs font-bold text-white">Share</Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => router.push('/trusted-contacts')}
+                  className="rounded-md border border-muted/30 px-3 py-2"
+                >
+                  <Text className="text-xs">Contacts</Text>
+                </Pressable>
+              </View>
             )}
           </View>
         </View>

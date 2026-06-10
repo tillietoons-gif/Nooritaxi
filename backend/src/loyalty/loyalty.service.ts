@@ -93,6 +93,21 @@ export class LoyaltyService {
     });
   }
 
+  async getUserLoyalty(userId: string) {
+    const account = await this.prisma.loyaltyAccount.upsert({
+      where: { userId },
+      update: {},
+      create: { userId, points: 0, lifetime: 0 },
+    });
+    const recentTransactions = await this.prisma.loyaltyTransaction.findMany({
+      where: { loyaltyAccountId: account.id },
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+    });
+
+    return { account, recentTransactions };
+  }
+
   async getAdminSummary() {
     const [
       totalAccounts,

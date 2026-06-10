@@ -4,7 +4,7 @@ import { router } from 'expo-router';
 import * as Location from 'expo-location';
 import { Car, MapPin, Navigation, ShieldCheck, ChevronLeft } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import { bookRide, getRideEstimate, getStoredUser, RideEstimate } from '../lib/api';
+import { bookRide, getRideEstimate, getSavedPlaces, getStoredUser, RideEstimate, SavedPlace } from '../lib/api';
 import { PatternOverlay } from '../components/PatternOverlay';
 import { withSessionGuard } from '../lib/SessionGuard';
 
@@ -14,6 +14,7 @@ function BookRideScreen() {
   const [dropoffLocation, setDropoffLocation] = React.useState('');
   const [pickupCoords, setPickupCoords] = React.useState<{ lat: number; lng: number } | null>(null);
   const [estimate, setEstimate] = React.useState<RideEstimate | null>(null);
+  const [savedPlaces, setSavedPlaces] = React.useState<SavedPlace[]>([]);
   const [safetyCode, setSafetyCode] = React.useState('');
   const [message, setMessage] = React.useState('');
   const [loading, setLoading] = React.useState(false);
@@ -33,6 +34,10 @@ function BookRideScreen() {
         console.log('Location error:', e);
       }
     })();
+  }, []);
+
+  React.useEffect(() => {
+    getSavedPlaces().then(setSavedPlaces);
   }, []);
 
   React.useEffect(() => {
@@ -124,6 +129,23 @@ function BookRideScreen() {
               </View>
             </View>
           </View>
+
+          {savedPlaces.length ? (
+            <View className="mb-8">
+              <Text className="text-xs font-black text-muted-foreground uppercase mb-3 ml-1 tracking-widest">Saved places</Text>
+              <View className="flex-row flex-wrap gap-2">
+                {savedPlaces.map((place) => (
+                  <TouchableOpacity
+                    key={place.id}
+                    onPress={() => setDropoffLocation(place.address)}
+                    className="bg-primary/5 border border-primary/10 rounded-2xl px-4 py-3"
+                  >
+                    <Text className="text-primary font-bold">{place.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          ) : null}
 
           <View className="bg-primary/5 rounded-3xl border border-primary/10 p-6 mb-8">
             <View className="flex-row items-center justify-between">

@@ -41,6 +41,36 @@ export class SuperAppService {
     });
   }
 
+  updateMyDriverStatus(
+    userId: string,
+    data: {
+      status?: 'ONLINE' | 'OFFLINE';
+      lat?: number;
+      lng?: number;
+    },
+  ) {
+    const status = data.status ?? 'ONLINE';
+    if (!['ONLINE', 'OFFLINE'].includes(status)) {
+      throw new BadRequestException('Invalid driver status');
+    }
+
+    return this.prisma.driver.upsert({
+      where: { userId },
+      update: {
+        status,
+        currentLat: data.lat,
+        currentLng: data.lng,
+      },
+      create: {
+        userId,
+        status,
+        currentLat: data.lat,
+        currentLng: data.lng,
+      },
+      include: { user: true, vehicles: true },
+    });
+  }
+
   upsertRiderProfile(userId: string, data: any) {
     return this.prisma.rider.upsert({
       where: { userId },

@@ -7,15 +7,17 @@ export class FraudService {
 
   // 1. Dashboard Analytics
   async getDashboardAnalytics() {
-    const totalAlerts = await this.prisma.fraudAlert.count({
-      where: { isResolved: false },
-    });
-    const openCases = await this.prisma.fraudCase.count({
-      where: { status: { in: ['OPEN', 'INVESTIGATING'] } },
-    });
-    const criticalScores = await this.prisma.fraudScore.count({
-      where: { riskLevel: 'CRITICAL' },
-    });
+    const [totalAlerts, openCases, criticalScores] = await Promise.all([
+      this.prisma.fraudAlert.count({
+        where: { isResolved: false },
+      }),
+      this.prisma.fraudCase.count({
+        where: { status: { in: ['OPEN', 'INVESTIGATING'] } },
+      }),
+      this.prisma.fraudScore.count({
+        where: { riskLevel: 'CRITICAL' },
+      }),
+    ]);
 
     // Mock trend analytics for the dashboard
     return {

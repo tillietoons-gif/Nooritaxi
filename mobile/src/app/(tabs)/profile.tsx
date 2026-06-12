@@ -31,9 +31,9 @@ export default function ProfileScreen() {
   const isMerchant = isMerchantUser(user);
 
   const menuItems = [
-    { id: 'safety', icon: <Shield size={22} color="#006947" />, title: isDriver ? 'Safety & support' : 'Safety Center', subtitle: isDriver ? 'Emergency contacts and trip safety' : 'Emergency contacts & safety codes' },
-    { id: 'notifications', icon: <Bell size={22} color="#006947" />, title: 'Notifications', subtitle: `${notificationCount} new updates` },
-    { id: 'language', icon: <Globe size={22} color="#006947" />, title: 'Language', subtitle: 'English, Dari, Pashto' },
+    { id: 'safety', icon: <Shield size={22} color="#006947" />, title: isDriver ? t('profile.safety_center') : t('profile.safety_center'), subtitle: isDriver ? t('profile.safety_subtitle_driver') : t('profile.safety_subtitle_rider') },
+    { id: 'notifications', icon: <Bell size={22} color="#006947" />, title: t('profile.notifications', 'Notifications'), subtitle: t('profile.notifications_subtitle', '{{count}} new updates', { count: notificationCount }) },
+    { id: 'language', icon: <Globe size={22} color="#006947" />, title: t('profile.language', 'Language'), subtitle: t('profile.language_subtitle', 'English, Dari, Pashto') },
     ...(isMerchant
       ? [
           { id: 'merchant', icon: <Store size={22} color="#006947" />, title: 'Restaurant', subtitle: 'Manage your profile and menu' },
@@ -42,10 +42,10 @@ export default function ProfileScreen() {
       : []),
     ...(!isDriver && !isMerchant
       ? [
-          { id: 'loyalty', icon: <Trophy size={22} color="#D4AF37" />, title: 'Noori Rewards', subtitle: 'Points, tier, and redemptions' },
-          { id: 'promotions', icon: <Gift size={22} color="#D4AF37" />, title: 'Promotions', subtitle: 'Active offers and promo codes' },
-          { id: 'saved_places', icon: <MapPin size={22} color="#006947" />, title: 'Saved Places', subtitle: 'Home, work, and favorites' },
-          { id: 'referral', icon: <Gift size={22} color="#D4AF37" />, title: 'Refer & Earn', subtitle: 'Invite friends, earn AFN 50' },
+          { id: 'loyalty', icon: <Trophy size={22} color="#D4AF37" />, title: t('profile.loyalty', 'Noori Rewards'), subtitle: t('profile.loyalty_subtitle', 'Points, tier, and redemptions') },
+          { id: 'promotions', icon: <Gift size={22} color="#D4AF37" />, title: t('profile.promotions', 'Promotions'), subtitle: t('profile.promotions_subtitle', 'Active offers and promo codes') },
+          { id: 'saved_places', icon: <MapPin size={22} color="#006947" />, title: t('profile.saved_places', 'Saved Places'), subtitle: t('profile.saved_places_subtitle', 'Home, work, and favorites') },
+          { id: 'referral', icon: <Gift size={22} color="#D4AF37" />, title: t('profile.referral', 'Refer & Earn'), subtitle: t('profile.referral_subtitle') },
         ]
       : []),
     ...(isDriver || isMerchant
@@ -166,7 +166,7 @@ export default function ProfileScreen() {
           <View className="mt-12 items-center">
             <View className="bg-muted/10 px-4 py-2 rounded-full">
               <Text className="text-muted-foreground text-[10px] font-bold tracking-tighter uppercase italic">
-                Noori Mobility System v1.0.0
+                Noori Mobility System v1.2.0 - Complete (offline, real-time, notifications, cart, earnings, background tracking, FlashList, women-only rides)
               </Text>
             </View>
           </View>

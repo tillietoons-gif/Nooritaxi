@@ -24,7 +24,7 @@ export function Header() {
   const { scrollY } = useScroll()
   const [isScrolled, setIsScrolled] = useState(false)
   const [user, setUser] = useState<AuthUser | null>(null)
-  const { i18n } = useTranslation()
+  const { i18n, t } = useTranslation()
 
   useEffect(() => {
     setUser(getStoredUser())
@@ -35,10 +35,12 @@ export function Header() {
   })
 
   const publicNavigation = [
-    { name: "Services", href: "/services" },
-    { name: "Partners", href: "/partners" },
-    { name: "Safety", href: "/safety" },
-    { name: "About", href: "/about" },
+    { name: t("nav.rides"), href: "/rides" },
+    { name: t("nav.delivery"), href: "/delivery" },
+    { name: t("nav.services"), href: "/services" },
+    { name: t("nav.partners"), href: "/partners" },
+    { name: t("nav.safety"), href: "/safety" },
+    { name: t("nav.about"), href: "/about" },
   ]
 
   const adminNavigation = [
@@ -135,9 +137,9 @@ export function Header() {
                </div>
              ) : (
                <>
-                <Link href="/login" className="text-[10px] font-black uppercase tracking-widest hover:text-primary transition-colors">Log In</Link>
+                <Link href="/login" className="text-[10px] font-black uppercase tracking-widest hover:text-primary transition-colors">{t("nav.login")}</Link>
                 <Button size="sm" className="rounded-full px-8 h-10 font-black text-[10px] uppercase tracking-widest shadow-xl shadow-primary/20" asChild>
-                  <Link href="/signup">Establish Access</Link>
+                  <Link href="/signup">{t("nav.signup")}</Link>
                 </Button>
                </>
              )}
@@ -191,7 +193,7 @@ export function Header() {
                   {user ? (
                     <div className="flex flex-col gap-4">
                        <Button className="w-full h-14 rounded-2xl font-black text-lg" onClick={() => { setIsOpen(false); window.location.href=actionHref }}>
-                         {actionLabel}
+                         {isAdminUser ? t("nav.admin") : t("nav.dashboard")} 
                        </Button>
                        <Button variant="ghost" className="w-full h-14 rounded-2xl font-black text-lg" onClick={() => { clearSession(); setIsOpen(false); window.location.reload() }}>
                          Terminate Session
@@ -200,10 +202,10 @@ export function Header() {
                   ) : (
                     <div className="flex flex-col gap-4">
                       <Button variant="outline" className="w-full h-14 rounded-2xl font-black text-lg glass" asChild>
-                        <Link href="/login" onClick={() => setIsOpen(false)}>Log In</Link>
+                        <Link href="/login" onClick={() => setIsOpen(false)}>{t("nav.login")}</Link>
                       </Button>
                       <Button className="w-full h-14 rounded-2xl font-black text-lg shadow-2xl shadow-primary/30" asChild>
-                        <Link href="/signup" onClick={() => setIsOpen(false)}>Establish Access</Link>
+                        <Link href="/signup" onClick={() => setIsOpen(false)}>{t("nav.signup")}</Link>
                       </Button>
                     </div>
                   )}

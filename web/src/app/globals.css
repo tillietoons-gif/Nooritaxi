@@ -98,6 +98,32 @@
   --ring: #63dca6;
 }
 
+/* RTL support for i18n (Dari / Pashto) */
+[dir="rtl"] {
+  text-align: right;
+}
+
+[dir="rtl"] .space-x-3 > * + *,
+[dir="rtl"] .space-x-4 > * + *,
+[dir="rtl"] .space-x-5 > * + *,
+[dir="rtl"] .space-x-6 > * + *,
+[dir="rtl"] .space-x-8 > * + *,
+[dir="rtl"] .space-x-10 > * + *,
+[dir="rtl"] .space-x-12 > * + * {
+  margin-right: calc(var(--tw-space-x-reverse) * 0px);
+  margin-left: calc(var(--tw-space-x-reverse) * var(--tw-space-x-reverse));
+}
+
+[dir="rtl"] nav a,
+[dir="rtl"] .tracking-widest {
+  letter-spacing: 0.02em; /* slightly adjust for script */
+}
+
+/* Flip directional icons in rtl contexts when needed */
+[dir="rtl"] .rtl-flip {
+  transform: scaleX(-1);
+}
+
 @layer base {
   * { @apply border-border outline-ring/50; }
   body { @apply bg-background text-foreground antialiased font-sans selection:bg-primary/20 selection:text-primary; }

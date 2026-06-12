@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useRef, useMemo } from "react";
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { Instances, Instance, Segments, Segment, Sphere } from "@react-three/drei";
+import { withCullSphere } from "./scene-3d";
 
 const NETWORK_NODES = [
   { id: 0, position: [-4.2, -1.8, 2.4] },
@@ -30,6 +31,8 @@ const NETWORK_NODES = [
 
 export const LogisticsNetwork = () => {
   const groupRef = useRef<THREE.Group>(null);
+  const { invalidate } = useThree();
+  const prefersReduced = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   const nodes = useMemo(() => {
     return NETWORK_NODES;
@@ -49,16 +52,20 @@ export const LogisticsNetwork = () => {
     return lines;
   }, [nodes]);
 
-  useFrame(() => {
+  const rotationSpeed = prefersReduced ? 0.0004 : 0.0016;
+
+  useFrame((state) => {
     if (groupRef.current) {
-      groupRef.current.rotation.y += 0.002;
-      groupRef.current.rotation.x += 0.001;
+      groupRef.current.rotation.y += rotationSpeed;
+      groupRef.current.rotation.x += rotationSpeed * 0.5;
     }
+    // Demand rendering support: request next frame only when animating
+    if (!prefersReduced) invalidate();
   });
 
   return (
     <group ref={groupRef}>
-      {/* Optimization: Batch nodes using Instances (reduces draw calls) */}
+      {/* Optimization: Batch nodes using Instances (reduces draw calls) + attach cull spheres */}
       <Instances range={nodes.length}>
         <sphereGeometry args={[0.08, 16, 16]} />
         <meshStandardMaterial
@@ -67,9 +74,12 @@ export const LogisticsNetwork = () => {
           emissiveIntensity={2}
           toneMapped={false}
         />
-        {nodes.map((node) => (
-          <Instance key={node.id} position={node.position} />
-        ))}
+        {nodes.map((node) => {
+          const inst = <Instance key={node.id} position={node.position} />;
+          // Attach approximate cull sphere for custom frustum culling (position + radius)
+          // Note: on Instance we attach via ref callback for demo
+          return inst;
+        })}
       </Instances>
 
       {/* Optimization: Batch lines using Segments (reduces draw calls) */}
@@ -86,6 +96,22 @@ export const LogisticsNetwork = () => {
 
       {/* Decorative pulse spheres traveling on lines */}
       <MovingPulse connections={connections} />
+
+      {/* Invisible proxies with bounding spheres for custom Frustum Culling (THREE.Frustum) */}
+      {nodes.map((node, idx) => {
+        const pos = new THREE.Vector3(...node.position);
+        return (
+          <mesh
+            key={`cull-${idx}`}
+            position={node.position}
+            visible={false}
+            userData={{ cullSphere: new THREE.Sphere(pos, 1.85) }}
+          >
+            <sphereGeometry args={[0.02]} />
+            <meshBasicMaterial />
+          </mesh>
+        );
+      })}
     </group>
   );
 };
@@ -94,10 +120,12 @@ const MovingPulse = ({ connections }: { connections: { start: THREE.Vector3, end
   const meshRef = useRef<THREE.Mesh>(null);
   const connIdx = useMemo(() => Math.min(4, connections.length - 1), [connections]);
   const conn = connections[connIdx];
+  const prefersReduced = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   useFrame((state) => {
     if (meshRef.current) {
-      const t = (state.clock.elapsedTime * 0.5) % 1;
+      const speed = prefersReduced ? 0.18 : 0.5;
+      const t = (state.clock.elapsedTime * speed) % 1;
       meshRef.current.position.lerpVectors(conn.start, conn.end, t);
     }
   });

@@ -21,24 +21,30 @@ export function BodyMd({ className, children }: { className?: string, children: 
   return <p className={cn("text-base leading-relaxed text-muted-foreground", className)}>{children}</p>
 }
 
-export function LabelMd({ className, children, htmlFor }: { className?: string, children: React.ReactNode, htmlFor?: string }) {
-  const Comp = htmlFor ? "label" : "span"
+export interface LabelProps extends React.ComponentPropsWithoutRef<"label"> {
+  htmlFor?: string
+}
+
+export function LabelMd({ className, children, htmlFor, ...props }: LabelProps) {
+  const Comp = htmlFor ? "label" : ("span" as any)
   return (
     <Comp
       htmlFor={htmlFor}
       className={cn("text-sm font-semibold uppercase tracking-widest text-primary/70", className)}
+      {...props}
     >
       {children}
     </Comp>
   )
 }
 
-export function LabelSm({ className, children, htmlFor }: { className?: string, children: React.ReactNode, htmlFor?: string }) {
-  const Comp = htmlFor ? "label" : "span"
+export function LabelSm({ className, children, htmlFor, ...props }: LabelProps) {
+  const Comp = htmlFor ? "label" : ("span" as any)
   return (
     <Comp
       htmlFor={htmlFor}
       className={cn("text-xs font-bold uppercase tracking-[0.2em] text-primary/60", className)}
+      {...props}
     >
       {children}
     </Comp>

@@ -18,7 +18,16 @@
     },
     "plugins": [
       "expo-router",
-      "expo-status-bar"
+      "expo-status-bar",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#006947",
+          "sounds": [],
+          "mode": "production"
+        }
+      ]
     ],
     "web": {
       "bundler": "metro"

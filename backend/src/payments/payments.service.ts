@@ -112,7 +112,8 @@ export class PaymentsService {
     const wallet = await this.prisma.wallet.findUniqueOrThrow({
       where: { id: transaction.walletId },
     });
-    const resolvedProviderRef = providerRef ?? transaction.providerRef ?? undefined;
+    const resolvedProviderRef =
+      providerRef ?? transaction.providerRef ?? undefined;
 
     this.logger.log(
       `Verifying payment intent ${intentId} (ref: ${resolvedProviderRef ?? 'n/a'})`,

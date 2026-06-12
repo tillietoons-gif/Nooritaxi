@@ -7,29 +7,26 @@ export class OperationsService {
 
   // 1. Mission Control Dashboard Metrics
   async getDashboardMetrics() {
-    const [
-      activeDrivers,
-      activeTrips,
-      pendingTrips,
-      sosAlerts,
-      openIncidents,
-    ] = await Promise.all([
-      this.prisma.driver.count({
-        where: { status: { in: ['ONLINE', 'BUSY'] } },
-      }),
-      this.prisma.trip.count({
-        where: { status: { in: ['ACCEPTED', 'DRIVER_ARRIVED', 'IN_PROGRESS'] } },
-      }),
-      this.prisma.trip.count({
-        where: { status: 'REQUESTED' },
-      }),
-      this.prisma.sosAlert.count({
-        where: { status: 'ACTIVE' },
-      }),
-      this.prisma.incident.count({
-        where: { status: { in: ['OPEN', 'INVESTIGATING'] } },
-      }),
-    ]);
+    const [activeDrivers, activeTrips, pendingTrips, sosAlerts, openIncidents] =
+      await Promise.all([
+        this.prisma.driver.count({
+          where: { status: { in: ['ONLINE', 'BUSY'] } },
+        }),
+        this.prisma.trip.count({
+          where: {
+            status: { in: ['ACCEPTED', 'DRIVER_ARRIVED', 'IN_PROGRESS'] },
+          },
+        }),
+        this.prisma.trip.count({
+          where: { status: 'REQUESTED' },
+        }),
+        this.prisma.sosAlert.count({
+          where: { status: 'ACTIVE' },
+        }),
+        this.prisma.incident.count({
+          where: { status: { in: ['OPEN', 'INVESTIGATING'] } },
+        }),
+      ]);
 
     return {
       activeDrivers,

@@ -42,6 +42,12 @@
 
 **Action:** Optimized `FraudService` and `AirportService` analytics methods using `Promise.all` to execute independent Prisma count queries concurrently, further improving administrative dashboard responsiveness across the platform.
 
+## 2025-06-07 - Parallelizing Finance Dashboard Analytics
+
+**Learning:** Sequential `await` calls in `FinanceService.getFinanceAnalytics` for independent aggregation and count queries introduced unnecessary latency in the financial overview dashboard.
+
+**Action:** Applied the `Promise.all` pattern to `FinanceService.getFinanceAnalytics`, parallelizing queries for outstanding receivables, total cash collected, and active refund requests. This maintains consistency with optimizations in other administrative services and reduces API response time for the finance dashboard.
+
 ## Mobile App Performance and Fixes
 - Centralized API calls in `mobile/src/lib/api.ts` to ensure consistent Authorization headers and error handling.
 - Optimized Food and Restaurant screens by reducing redundant fetch calls and improving loading states.

@@ -36,6 +36,12 @@
 
 **Action:** Use `Promise.all` to execute multiple `prisma.model.count()` calls concurrently. This was applied to `SupportService` and `OperationsService` dashboards, resulting in faster page loads for administrative overviews.
 
+## 2025-06-06 - Parallelizing Dashboard Analytics in Fraud and Airport Services
+
+**Learning:** Sequential `await` calls in `FraudService.getDashboardAnalytics` and `AirportService.getAnalytics` for multiple `count` queries were identified as candidates for optimization, consistent with the pattern seen in Support and Operations services.
+
+**Action:** Optimized `FraudService` and `AirportService` analytics methods using `Promise.all` to execute independent Prisma count queries concurrently, further improving administrative dashboard responsiveness across the platform.
+
 ## Mobile App Performance and Fixes
 - Centralized API calls in `mobile/src/lib/api.ts` to ensure consistent Authorization headers and error handling.
 - Optimized Food and Restaurant screens by reducing redundant fetch calls and improving loading states.

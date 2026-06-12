@@ -19,6 +19,7 @@ import {
   updateMyDriverStatus,
   updateTripStatus,
 } from '../../lib/api';
+import { startBackgroundLocation, stopBackgroundLocation } from '../../lib/background-location';
 import { PatternOverlay } from '../../components/PatternOverlay';
 import { buildDriverWorkSummary } from '../../lib/driver-work';
 
@@ -132,6 +133,13 @@ export default function WorkScreen() {
         ...coords,
       });
       setOnline(nextOnline);
+
+      // Background location for continuous tracking while online
+      if (nextOnline) {
+        await startBackgroundLocation();
+      } else {
+        await stopBackgroundLocation();
+      }
     } catch (err) {
       Alert.alert('Unable to update availability', err instanceof Error ? err.message : 'Please try again');
     } finally {

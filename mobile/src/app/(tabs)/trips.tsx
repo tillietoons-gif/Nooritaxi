@@ -2,6 +2,8 @@ import React from 'react';
 import { Alert, View, Text, ScrollView, SafeAreaView, TouchableOpacity } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { Car, Clock, MapPin, CheckCircle2, Plus, Navigation, ChevronRight } from 'lucide-react-native';
+import { FlashList } from '@shopify/flash-list';
+import { getCache, saveCache, TRIPS_CACHE_KEY } from '../../lib/offline-cache';
 import {
   AuthUser,
   getDriverTripActionLabel,
@@ -22,10 +24,12 @@ export default function TripsScreen() {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState('');
   const [updatingTripId, setUpdatingTripId] = React.useState<string | null>(null);
+  const [isOffline, setIsOffline] = React.useState(false);
 
   const loadTrips = React.useCallback(async () => {
     setLoading(true);
     setError('');
+    let usedCache = false;
     try {
       const user = await getStoredUser();
       if (!user) {
@@ -33,9 +37,19 @@ export default function TripsScreen() {
         return;
       }
       setUser(user);
-      setTrips(await getTrips(user.id));
+      const tripsData = await getTrips(user.id);
+      setTrips(tripsData);
+      await saveCache(TRIPS_CACHE_KEY, tripsData); // save for offline
     } catch (err) {
-      setError((err as Error).message);
+      // Offline fallback
+      const cached = await getCache<any[]>(TRIPS_CACHE_KEY);
+      if (cached) {
+        setTrips(cached);
+        setIsOffline(true);
+        setError('Offline mode - showing cached data');
+      } else {
+        setError((err as Error).message);
+      }
     } finally {
       setLoading(false);
     }
@@ -89,6 +103,12 @@ export default function TripsScreen() {
             </TouchableOpacity>
           </View>
 
+          {isOffline && (
+            <View className="bg-yellow-100 p-2 rounded mb-4">
+              <Text className="text-yellow-800 text-xs text-center">Offline - data may be outdated</Text>
+            </View>
+          )}
+
           {activeTrip ? (
             isDriver ? (
               <TouchableOpacity
@@ -129,32 +149,37 @@ export default function TripsScreen() {
             )
           ) : null}
 
-          <View className="space-y-4">
-            {loading ? (
-              [1, 2, 3].map((item) => (
+          {loading ? (
+            <View className="space-y-4">
+              {[1, 2, 3].map((item) => (
                 <View key={item} className="h-32 bg-card border border-muted/10 rounded-3xl mb-4 opacity-50" />
-              ))
-            ) : error ? (
-              <View className="bg-destructive/5 p-6 rounded-3xl border border-destructive/10">
-                <Text className="text-destructive font-bold text-center">{error}</Text>
+              ))}
+            </View>
+          ) : error ? (
+            <View className="bg-destructive/5 p-6 rounded-3xl border border-destructive/10">
+              <Text className="text-destructive font-bold text-center">{error}</Text>
+            </View>
+          ) : trips.length === 0 ? (
+            <View className="items-center justify-center py-20 bg-card rounded-4xl border border-muted/10 border-dashed">
+              <View className="bg-muted/10 p-6 rounded-full mb-4">
+                <Car size={48} color="#6d7a71" />
               </View>
-            ) : trips.length === 0 ? (
-              <View className="items-center justify-center py-20 bg-card rounded-4xl border border-muted/10 border-dashed">
-                <View className="bg-muted/10 p-6 rounded-full mb-4">
-                  <Car size={48} color="#6d7a71" />
-                </View>
-                <Text className="text-lg font-bold text-foreground">
-                  {isDriver ? t('trips.driver_empty_title', 'No assigned jobs yet') : t('trips.no_trips', 'No trips yet')}
-                </Text>
-                <Text className="mt-2 text-center text-muted-foreground px-10">
-                  {isDriver
-                    ? t('trips.driver_empty_subtitle', 'Trips and delivery work assigned to your account will appear here.')
-                    : t('trips.no_trips_subtitle', 'Book your first Noori ride to see it here.')}
-                </Text>
-              </View>
-            ) : (
-              trips.map((trip) => (
-                <View key={trip.id} className="bg-card p-6 rounded-3xl border border-muted/10 mb-5 shadow-sm">
+              <Text className="text-lg font-bold text-foreground">
+                {isDriver ? t('trips.driver_empty_title', 'No assigned jobs yet') : t('trips.no_trips', 'No trips yet')}
+              </Text>
+              <Text className="mt-2 text-center text-muted-foreground px-10">
+                {isDriver
+                  ? t('trips.driver_empty_subtitle', 'Trips and delivery work assigned to your account will appear here.')
+                  : t('trips.no_trips_subtitle', 'Book your first Noori ride to see it here.')}
+              </Text>
+            </View>
+          ) : (
+            <FlashList
+              data={trips}
+              estimatedItemSize={160}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item: trip }) => (
+                <View className="bg-card p-6 rounded-3xl border border-muted/10 mb-5 shadow-sm">
                   <View className="flex-row justify-between items-start mb-6">
                     <View className="flex-row items-center gap-3">
                       <View className="bg-primary/10 p-3 rounded-2xl">
@@ -227,9 +252,9 @@ export default function TripsScreen() {
                     ) : null}
                   </View>
                 </View>
-              ))
-            )}
-          </View>
+              )}
+            />
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>

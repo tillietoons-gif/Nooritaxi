@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, SafeAreaView, TouchableOpacity } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
-import { BriefcaseBusiness, Car, Utensils, Package, Banknote, Bell, ChevronRight, User, Search, Shield, Store, ReceiptText } from 'lucide-react-native';
+import { BriefcaseBusiness, Car, Utensils, Package, Banknote, Bell, ChevronRight, User, Search, Shield, Store, ReceiptText, Gift } from 'lucide-react-native';
 import {
   getStoredUser,
   AuthUser,
@@ -281,6 +281,10 @@ export default function HomeScreen() {
                     {activeWorkStatus}
                   </Text>
                   <Text className="text-xs text-muted-foreground mt-3">{activeWorkSummary}</Text>
+                  {/* Mini earnings summary for active work */}
+                  <Text className="text-xs text-primary font-bold mt-2">
+                    Est. earnings today: AFN {Math.round((completedTrips * 80) + (activeAssignments * 60) + (activeDeliveries * 50))}
+                  </Text>
                 </View>
                 <View className="bg-primary/10 p-3 rounded-2xl">
                   {activeWorkType === 'delivery' ? <Package size={24} color="#006947" /> : <Car size={24} color="#006947" />}
@@ -297,6 +301,22 @@ export default function HomeScreen() {
               </TouchableOpacity>
             </View>
           </View>
+
+          {/* Mini Live Tracking Preview for drivers */}
+          {(activeTrip || activeDelivery) && (
+            <View className="px-6 py-2">
+              <TouchableOpacity
+                onPress={() => router.push('/active-trip' as any)}
+                className="bg-card rounded-3xl p-4 border border-primary/20 flex-row items-center"
+              >
+                <View className="flex-1">
+                  <Text className="text-sm font-bold text-primary">Live Tracking Active</Text>
+                  <Text className="text-xs text-muted-foreground">Tap to view real-time map & updates</Text>
+                </View>
+                <Car size={24} color="#006947" />
+              </TouchableOpacity>
+            </View>
+          )}
 
           <View className="px-6 py-6">
             <Text className="text-lg font-bold text-foreground mb-4">{t('home.driver_tools_title', 'Driver tools')}</Text>
@@ -465,17 +485,40 @@ export default function HomeScreen() {
               <Text className="text-xs text-muted-foreground text-center mt-1">{t('home.parcel_sub')}</Text>
             </TouchableOpacity>
 
-            {/* More / Cultural Info */}
+            {/* More - now functional: Promotions & How it Works */}
             <TouchableOpacity
-              className="w-[48%] bg-accent/5 p-5 rounded-3xl border border-accent/20 shadow-sm items-center border-dashed mb-4"
+              onPress={() => router.push('/promotions')}
+              className="w-[48%] bg-accent/5 p-5 rounded-3xl border border-accent/20 shadow-sm items-center mb-4"
             >
               <View className="bg-accent/10 p-4 rounded-2xl mb-3">
-                <ChevronRight size={32} color="#D4AF37" />
+                <Gift size={32} color="#D4AF37" />
               </View>
-              <Text className="font-bold text-accent">{t('home.more_label')}</Text>
-              <Text className="text-xs text-accent/70 text-center mt-1">{t('home.more_sub')}</Text>
+              <Text className="font-bold text-accent">{t('home.more_title', 'More')}</Text>
+              <Text className="text-xs text-accent/70 text-center mt-1">{t('home.more_sub', 'Promotions & Rewards')}</Text>
             </TouchableOpacity>
 
+          </View>
+        </View>
+
+        {/* How Noori Works - Educational section (mirrors web feature) */}
+        <View className="px-6 pb-4">
+          <Text className="text-lg font-bold text-foreground mb-3">{t('home.how_it_works', 'How Noori Works')}</Text>
+          <View className="space-y-3">
+            {[
+              { num: '1', title: t('home.step_request', 'Request'), desc: t('home.step_request_desc', 'Choose ride, delivery or food and confirm your location.') },
+              { num: '2', title: t('home.step_match', 'Match'), desc: t('home.step_match_desc', 'We instantly connect you with a verified nearby partner.') },
+              { num: '3', title: t('home.step_track', 'Track & Pay'), desc: t('home.step_track_desc', 'Follow live on the map. Pay cash on arrival or delivery.') },
+            ].map((step, idx) => (
+              <View key={idx} className="flex-row bg-card p-4 rounded-3xl border border-muted/10">
+                <View className="w-8 h-8 rounded-2xl bg-primary/10 items-center justify-center mr-4 mt-0.5">
+                  <Text className="font-black text-primary">{step.num}</Text>
+                </View>
+                <View className="flex-1">
+                  <Text className="font-bold text-foreground">{step.title}</Text>
+                  <Text className="text-muted-foreground text-xs mt-1 leading-5">{step.desc}</Text>
+                </View>
+              </View>
+            ))}
           </View>
         </View>
 
@@ -490,8 +533,7 @@ export default function HomeScreen() {
                  <Text className="text-accent font-bold text-[10px] uppercase tracking-widest mb-1">CULTURAL TIP</Text>
                  <Text className="text-foreground font-bold text-lg mb-2">{t('home.cultural_tip_title')}</Text>
                  <Text className="text-muted-foreground text-xs leading-5">
-                   {t('home.cultural_tip_body')}
-                 </Text>
+                   {t('home.cultural_tip_body')}</Text>
                </View>
                <View className="w-16 h-16 bg-white rounded-2xl items-center justify-center shadow-sm">
                   <User size={30} color="#D4AF37" />

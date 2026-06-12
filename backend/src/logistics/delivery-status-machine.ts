@@ -2,7 +2,10 @@ import { BadRequestException } from '@nestjs/common';
 import { DeliveryStatus } from '@prisma/client';
 
 export const DeliveryStatusMachine: Record<DeliveryStatus, DeliveryStatus[]> = {
-  [DeliveryStatus.REQUESTED]: [DeliveryStatus.ASSIGNED, DeliveryStatus.CANCELLED],
+  [DeliveryStatus.REQUESTED]: [
+    DeliveryStatus.ASSIGNED,
+    DeliveryStatus.CANCELLED,
+  ],
   [DeliveryStatus.ASSIGNED]: [
     DeliveryStatus.PICKED_UP,
     DeliveryStatus.FAILED,

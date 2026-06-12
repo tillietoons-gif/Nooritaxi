@@ -80,7 +80,7 @@ export class LogisticsService {
     if (!before) throw new NotFoundException('Delivery not found');
 
     if (before && status) {
-      assertDeliveryStatusTransition(before.status as DeliveryStatus, status);
+      assertDeliveryStatusTransition(before.status, status);
       if (before.status !== status) {
         Object.assign(
           deliveryData,

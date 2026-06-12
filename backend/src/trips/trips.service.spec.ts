@@ -81,7 +81,9 @@ describe('TripsService', () => {
       },
     };
 
-    prisma.$transaction.mockImplementation(async (callback: any) => callback(tx));
+    prisma.$transaction.mockImplementation(async (callback: any) =>
+      callback(tx),
+    );
 
     const trip = await service.updateRide('trip-1', {
       status: TripStatus.ACCEPTED,

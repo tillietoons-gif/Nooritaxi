@@ -8,3 +8,8 @@
   - Maintained high contrast for text (white on emerald, foreground on off-white).
   - Used large touch targets (14-16px height for primary buttons) to accommodate one-handed mobile use.
   - Consistent RTL-ready layout structures.
+
+## 2026-06-12 - Accessible Helper Text Association
+**Learning:** In the 'Noori' design system, helper text (rendered with `LabelSm`) must be explicitly linked to inputs via `aria-describedby` to ensure screen readers announce security protocols or requirements.
+
+**Action:** Always verify `id` and `aria-describedby` linkage when adding contextual hints to forms.

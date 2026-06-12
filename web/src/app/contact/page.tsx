@@ -115,6 +115,7 @@ export default function ContactPage() {
                           <LabelMd htmlFor="name" className="text-primary">{t('contact.name_label', 'Name')}</LabelMd>
                           <Input
                             id="name"
+                            autoComplete="name"
                             required
                             placeholder={t('contact.name_placeholder', 'Your name')}
                             className="h-12 bg-background/50 border-input focus-visible:ring-primary/30 font-bold text-foreground placeholder:text-muted-foreground/50"
@@ -127,6 +128,7 @@ export default function ContactPage() {
                           <Input
                             id="email"
                             type="email"
+                            autoComplete="email"
                             required
                             placeholder={t('contact.email_placeholder', 'you@example.com')}
                             className="h-12 bg-background/50 border-input focus-visible:ring-primary/30 font-bold text-foreground placeholder:text-muted-foreground/50"

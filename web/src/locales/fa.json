@@ -55,5 +55,20 @@
   },
   "accessibility": {
     "skip_to_content": "رفتن به محتوای اصلی"
+  },
+  "contact": {
+    "title": "تماس با ما",
+    "subtitle": "ما برای کمک اینجا هستیم. پیامی بفرستید و ما در اسرع وقت پاسخ خواهیم داد.",
+    "name_label": "نام",
+    "email_label": "ایمیل",
+    "message_label": "پیام",
+    "name_placeholder": "نام شما",
+    "email_placeholder": "you@example.com",
+    "message_placeholder": "چگونه می‌توانیم به شما کمک کنیم؟",
+    "send": "ارسال پیام",
+    "submitting": "در حال ارسال...",
+    "success_title": "پیام ارسال شد",
+    "success_message": "پیام شما دریافت شد. ما به زودی با شما تماس خواهیم گرفت.",
+    "send_another": "ارسال پیام دیگر"
   }
 }

@@ -55,5 +55,20 @@
   },
   "accessibility": {
     "skip_to_content": "اصلي منځپانګې ته لاړ شئ"
+  },
+  "contact": {
+    "title": "موږ سره اړیکه ونیسئ",
+    "subtitle": "موږ دلته د مرستې لپاره یو. موږ ته پیغام واستوئ او موږ به ژر تر ژره ځواب ووایو.",
+    "name_label": "نوم",
+    "email_label": "برېښنالیک",
+    "message_label": "پیغام",
+    "name_placeholder": "ستاسو نوم",
+    "email_placeholder": "you@example.com",
+    "message_placeholder": "موږ څنګه درسره مرسته کولی شو؟",
+    "send": "پیغام واستوئ",
+    "submitting": "د لیږلو په حال کې...",
+    "success_title": "پیغام واستول شو",
+    "success_message": "ستاسو پیغام ترلاسه شو. موږ به ډیر ژر له تاسو سره اړیکه ونیسو.",
+    "send_another": "بل پیغام واستوئ"
   }
 }

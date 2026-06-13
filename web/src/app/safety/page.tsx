@@ -57,7 +57,7 @@ export default function SafetyPage() {
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
-      <main className="flex-1">
+      <main id="main-content" className="flex-1">
         {/* Hero Section */}
         <section className="relative pt-48 pb-32 px-4 overflow-hidden">
           <div className="absolute inset-0 pointer-events-none opacity-30">

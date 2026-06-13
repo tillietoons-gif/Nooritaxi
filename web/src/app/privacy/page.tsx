@@ -10,7 +10,7 @@ export default function PrivacyPage() {
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
-      <main className="flex-1">
+      <main id="main-content" className="flex-1">
         <section className="relative pt-48 pb-32 px-4 overflow-hidden">
           <div className="container mx-auto max-w-4xl">
             <motion.div

@@ -6,7 +6,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Car, ShieldCheck, ClipboardCheck, RefreshCw, Loader2 } from "lucide-react"
+import { Car, ShieldCheck, RefreshCw } from "lucide-react"
 import { authedFetch } from "@/lib/auth"
 import { AdminPageHeader } from "@/components/admin/admin-page-header"
 
@@ -63,7 +63,8 @@ export default function VehicleManagementPage() {
         if (vRes.ok) setVehicles(await vRes.json())
         if (iRes.ok) setInspections(await iRes.json())
       } catch (err) {
-        setError("Failed to load data")
+        setError("Failed to load vehicle registry data")
+        console.error(err)
       } finally {
         setLoading(false)
       }
@@ -85,6 +86,12 @@ export default function VehicleManagementPage() {
               </Button>
             }
           />
+
+          {error && (
+            <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm font-bold">
+              {error}
+            </div>
+          )}
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <Card className="border-primary/10 glass-premium">

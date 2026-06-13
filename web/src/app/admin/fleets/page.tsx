@@ -4,7 +4,7 @@ import { AuthGate } from "@/components/auth-gate"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Building2, Plus, Users, Car, ArrowRight, TrendingUp } from "lucide-react"
+import { Plus, Users, Car, ArrowRight, TrendingUp } from "lucide-react"
 import Link from "next/link"
 import { AdminPageHeader } from "@/components/admin/admin-page-header"
 

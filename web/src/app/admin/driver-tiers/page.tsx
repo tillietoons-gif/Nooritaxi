@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { AuthGate } from "@/components/auth-gate"
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Award, RefreshCw } from "lucide-react"
 import { authedFetch } from "@/lib/auth"

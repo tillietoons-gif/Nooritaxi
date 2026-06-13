@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense, useEffect, useState } from "react";
+import React, { Suspense, useState } from "react";
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
 import { OrbitControls, PerspectiveCamera, Environment, Float, PerformanceMonitor } from "@react-three/drei";
 import * as THREE from "three";
@@ -40,8 +40,15 @@ function FrustumCulling({ children }: { children: React.ReactNode }) {
 
 // Approximate Occlusion Culling via occasional Raycaster (throttled, cheap heuristic)
 function OcclusionCuller({ children }: { children: React.ReactNode }) {
-  const { camera, scene, raycaster } = useThree();
+  const { camera, scene } = useThree();
   const [lastCheck, setLastCheck] = React.useState(0);
+
+  // Use a local raycaster to avoid modifying the shared one from useThree
+  const localRaycaster = React.useMemo(() => {
+    const r = new THREE.Raycaster();
+    r.far = 40;
+    return r;
+  }, []);
 
   useFrame((state) => {
     if (state.clock.elapsedTime - lastCheck < 0.6) return; // throttle ~1.6hz
@@ -55,11 +62,9 @@ function OcclusionCuller({ children }: { children: React.ReactNode }) {
     ];
     const origin = camera.position.clone();
 
-    raycaster.far = 40;
-
     dirs.forEach((dir) => {
-      raycaster.set(origin, dir);
-      const hits = raycaster.intersectObjects(scene.children, true);
+      localRaycaster.set(origin, dir);
+      const hits = localRaycaster.intersectObjects(scene.children, true);
       // Heuristic: if very close large hit, we could hide far objects (simplified demo)
       if (hits.length > 2) {
         // Example: nothing complex here; real impl would mark groups by distance + layers

@@ -24,6 +24,7 @@ export default function RidesPage() {
     <div className="min-h-screen bg-black text-white overflow-hidden">
       <Header />
 
+      <main id="main-content">
       {/* Immersive 3D Hero */}
       <div className="relative h-[100dvh]">
         <Scene3D cameraPosition={[1.5, 2.2, 9.5]}>
@@ -35,9 +36,9 @@ export default function RidesPage() {
             <div className="inline-block mb-3 px-4 py-1 rounded-full bg-white/10 text-xs tracking-[3px] uppercase">{t("rides.hero_tag")}</div>
             <h1 className="text-6xl md:text-7xl font-bold tracking-[-2.5px] mb-4">{t("rides.title")}</h1>
             <p className="text-2xl text-white/90 mb-9">{t("rides.subtitle")}</p>
-            <Link href="/book">
-              <Button size="lg" className="h-14 px-12 text-lg rounded-2xl">{t("rides.cta_book")}</Button>
-            </Link>
+            <Button size="lg" className="h-14 px-12 text-lg rounded-2xl" asChild>
+              <Link href="/book">{t("rides.cta_book")}</Link>
+            </Button>
           </div>
         </div>
         <div className="absolute bottom-10 left-1/2 -translate-x-1/2 text-[10px] tracking-[4px] text-white/50">SCROLL FOR DETAILS ↓</div>
@@ -77,11 +78,13 @@ export default function RidesPage() {
           <h3 className="text-4xl tracking-tighter font-semibold mb-4">Experience the network in motion</h3>
           <p className="text-white/70 max-w-md mx-auto mb-8">Our 3D live maps give you total visibility from request to arrival.</p>
 
-          <Link href="/book">
-            <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white hover:text-black">{t("rides.cta_book")}</Button>
-          </Link>
+          <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white hover:text-black" asChild>
+            <Link href="/book">{t("rides.cta_book")}</Link>
+          </Button>
         </div>
       </section>
+
+      </main>
 
       <Footer />
     </div>

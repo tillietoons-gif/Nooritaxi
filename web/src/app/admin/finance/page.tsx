@@ -6,12 +6,7 @@ import {
   DollarSign,
   Wallet,
   RefreshCw,
-  Check,
-  X,
-  LoaderCircle,
-  FileText,
-  Search,
-  ArrowDownToLine
+  FileText
 } from "lucide-react"
 
 import { AuthGate } from "@/components/auth-gate"
@@ -26,7 +21,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
   DialogFooter
 } from "@/components/ui/dialog"
 

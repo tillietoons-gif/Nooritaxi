@@ -24,6 +24,7 @@ export default function DeliveryPage() {
     <div className="min-h-screen bg-black text-white overflow-hidden">
       <Header />
 
+      <main id="main-content">
       {/* Immersive 3D Hero */}
       <div className="relative h-[100dvh]">
         <Scene3D cameraPosition={[-3.5, 0.5, 8]}>
@@ -35,9 +36,9 @@ export default function DeliveryPage() {
             <div className="inline-block mb-3 px-4 py-1 rounded-full bg-white/10 text-xs tracking-[3px] uppercase">{t("delivery.hero_tag")}</div>
             <h1 className="text-6xl md:text-7xl font-bold tracking-[-2.5px] mb-4">{t("delivery.title")}</h1>
             <p className="text-2xl text-white/90 mb-9">{t("delivery.subtitle")}</p>
-            <Link href="/book">
-              <Button size="lg" className="h-14 px-12 text-lg rounded-2xl">{t("delivery.cta_send")}</Button>
-            </Link>
+            <Button size="lg" className="h-14 px-12 text-lg rounded-2xl" asChild>
+              <Link href="/book">{t("delivery.cta_send")}</Link>
+            </Button>
           </div>
         </div>
         <div className="absolute bottom-10 left-1/2 -translate-x-1/2 text-[10px] tracking-[4px] text-white/50">SCROLL FOR DETAILS ↓</div>
@@ -77,11 +78,13 @@ export default function DeliveryPage() {
           <h3 className="text-4xl tracking-tighter font-semibold mb-4">Track every parcel in stunning 3D</h3>
           <p className="text-white/70 max-w-md mx-auto mb-8">See your delivery move through the city with precision and clarity.</p>
 
-          <Link href="/book">
-            <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white hover:text-black">{t("delivery.cta_send")}</Button>
-          </Link>
+          <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white hover:text-black" asChild>
+            <Link href="/book">{t("delivery.cta_send")}</Link>
+          </Button>
         </div>
       </section>
+
+      </main>
 
       <Footer />
     </div>

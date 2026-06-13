@@ -1,33 +1,18 @@
 "use client"
 
-import { useState, useEffect, useCallback, useMemo } from "react"
+import { useState, useEffect, useCallback } from "react"
 import {
   Shield,
-  Users,
-  Key,
-  Edit2,
   Trash2,
   Plus,
-  RefreshCw,
-  LoaderCircle,
-  AlertCircle
+  RefreshCw
 } from "lucide-react"
 
 import { AuthGate } from "@/components/auth-gate"
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
 import { AdminPageHeader } from "@/components/admin/admin-page-header"
 import { authedFetch } from "@/lib/auth"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter
-} from "@/components/ui/dialog"
 
 type Permission = {
   id: string
@@ -50,8 +35,8 @@ export default function AdminRolesPage() {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [roles, setRoles] = useState<Role[]>([])
-  const [permissions, setPermissions] = useState<Permission[]>([])
-  const [error, setError] = useState<string | null>(null)
+  const [, setPermissions] = useState<Permission[]>([])
+  const [, setError] = useState<string | null>(null)
 
   const load = useCallback(async (isSilent = false) => {
     if (!isSilent) setLoading(true)

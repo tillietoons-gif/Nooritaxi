@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense, useEffect, useState } from "react";
+import React, { Suspense, useState } from "react";
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
 import { OrbitControls, PerspectiveCamera, Environment, Float, PerformanceMonitor } from "@react-three/drei";
 import * as THREE from "three";
@@ -40,8 +40,13 @@ function FrustumCulling({ children }: { children: React.ReactNode }) {
 
 // Approximate Occlusion Culling via occasional Raycaster (throttled, cheap heuristic)
 function OcclusionCuller({ children }: { children: React.ReactNode }) {
-  const { camera, scene, raycaster } = useThree();
+  const { camera, scene } = useThree();
   const [lastCheck, setLastCheck] = React.useState(0);
+  const raycaster = React.useMemo(() => {
+    const r = new THREE.Raycaster();
+    r.far = 40;
+    return r;
+  }, []);
 
   useFrame((state) => {
     if (state.clock.elapsedTime - lastCheck < 0.6) return; // throttle ~1.6hz
@@ -54,8 +59,6 @@ function OcclusionCuller({ children }: { children: React.ReactNode }) {
       new THREE.Vector3(-0.5, -0.2, -1).normalize(),
     ];
     const origin = camera.position.clone();
-
-    raycaster.far = 40;
 
     dirs.forEach((dir) => {
       raycaster.set(origin, dir);

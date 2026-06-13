@@ -48,12 +48,15 @@ export default function AdminUsersPage() {
     setError(null)
 
     try {
-      const [usrRes, rolRes] = await Promise.all([
-        authedFetch("/admin/admin-users"),
-        authedFetch("/admin/roles")
+      const [rolRes, usrRes] = await Promise.all([
+        authedFetch("/admin/roles"),
+        authedFetch("/admin/users?role=ADMIN&limit=100")
       ])
 
-      if (usrRes.ok) setUsers(await usrRes.json())
+      if (usrRes.ok) {
+        const data = await usrRes.json()
+        setUsers(Array.isArray(data) ? data : data.items || [])
+      }
       if (rolRes.ok) setRoles(await rolRes.json())
     } catch (err) {
       setError(err instanceof Error ? err.message : t('admin.failedLoadAdminUsers', "Failed to load admin users"))
@@ -131,12 +134,12 @@ export default function AdminUsersPage() {
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex flex-wrap gap-1">
-                            {u.roles.map(r => (
+                            {u.roles?.map(r => (
                               <Badge key={r.id} variant={r.isSystem ? "default" : "secondary"} className="text-[9px] font-black uppercase tracking-widest">
                                 {r.name}
                               </Badge>
                             ))}
-                            {u.roles.length === 0 && <span className="text-xs text-muted-foreground italic">{t('admin.noRolesAssigned', "No roles assigned")}</span>}
+                            {(u.roles?.length ?? 0) === 0 && <span className="text-xs text-muted-foreground italic">{t('admin.noRolesAssigned', "No roles assigned")}</span>}
                           </div>
                         </td>
                         <td className="px-6 py-4 text-end">

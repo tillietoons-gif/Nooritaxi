@@ -3,7 +3,7 @@ import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import LoginPage from "./page"
-import { apiUrl, canAccessWebPortal, clearSession, getPostAuthRedirect, saveSession, WEB_MOBILE_ONLY_REASON } from "@/lib/auth"
+import { apiUrl, canAccessWebPortal, clearSession, getPostAuthRedirect, saveSession } from "@/lib/auth"
 
 vi.mock("next/link", () => ({
   default: ({ children, href, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => (

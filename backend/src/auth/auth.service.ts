@@ -119,16 +119,17 @@ export class AuthService {
   }
 
   async register(data: any) {
-    const hashedPassword = await bcrypt.hash(data.password, 10);
+    // Optimization: Parallelize password hashing and referrer lookup to reduce registration latency
+    const [hashedPassword, referrer] = await Promise.all([
+      bcrypt.hash(data.password, 10),
+      data.referredByCode
+        ? this.prisma.user.findUnique({
+            where: { referralCode: data.referredByCode },
+          })
+        : Promise.resolve(null),
+    ]);
 
-    // Resolve referredBy from incoming referral code (different from the new user's own code)
-    let referredById: string | undefined;
-    if (data.referredByCode) {
-      const referrer = await this.prisma.user.findUnique({
-        where: { referralCode: data.referredByCode },
-      });
-      if (referrer) referredById = referrer.id;
-    }
+    const referredById = referrer?.id;
 
     const user = await this.usersService.create({
       ...data,

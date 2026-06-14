@@ -54,3 +54,9 @@
 - Implemented functional Language Switcher and Help/Support pages to replace placeholder alerts.
 - Fixed dead links in Profile tab, redirecting "Safety Center" to the functional Trusted Contacts page.
 - Enhanced Wallet UI with a functional Top Up feature integrated with the backend deposit API.
+
+## 2025-06-08 - Parallelizing CPU-Bound and I/O Asynchronous Tasks in Auth
+
+**Learning:** Authentication flows often combine expensive CPU-bound tasks (like `bcrypt.hash` or `bcrypt.compare`) with asynchronous database or network calls. Executing these sequentially unnecessarily blocks the overall request completion time.
+
+**Action:** Identify methods in `AuthService` (like `register`, `resetPassword`, or `refresh`) where hashing and database lookups are independent, and parallelize them using `Promise.all`. In the `register` method, parallelizing password hashing and referrer lookup reduces total registration latency significantly.

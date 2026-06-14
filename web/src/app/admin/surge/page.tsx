@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { AuthGate } from "@/components/auth-gate"
 import { authedFetch } from "@/lib/auth"
-import { AlertCircle, Plus, Power, Activity } from "lucide-react"
+import { AlertCircle, Plus, Power } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { AdminPageHeader } from "@/components/admin/admin-page-header"
 

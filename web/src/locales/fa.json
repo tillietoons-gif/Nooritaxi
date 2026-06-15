@@ -54,7 +54,8 @@
     "tracking_desc": "تجسم با کیفیت بالا از هر دارایی در زنجیره تامین شما."
   },
   "accessibility": {
-    "skip_to_content": "رفتن به محتوای اصلی"
+    "skip_to_content": "رفتن به محتوای اصلی",
+    "language_switcher_label": "زبان فعلی: {{lang}}. برای تغییر زبان کلیک کنید."
   },
   "contact": {
     "title": "تماس با ما",

@@ -55,6 +55,7 @@
   },
   "accessibility": {
     "skip_to_content": "اصلی منړپانګې ته لاړ شئ",
+    "language_switcher_label": "اوسنۍ ژبه: {{lang}}. د ژبې بدلولو لپاره کلیک وکړئ."
   },
   "contact": {
     "title": "موړ سره اړیکه ونیسئ",

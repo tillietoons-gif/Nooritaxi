@@ -6,7 +6,6 @@ import { Platform } from 'react-native';
 import en from '../locales/en.json';
 import fa from '../locales/fa.json';
 import ps from '../locales/ps.json';
-
 export const LANGUAGE_KEY = 'noori_language';
 export const SUPPORTED_LANGUAGES = [
   { code: 'en', label: 'English', nativeLabel: 'English' },
@@ -40,7 +39,7 @@ async function getStoredLanguage(): Promise<LanguageCode> {
   } catch {
     // fall through
   }
-  return 'fa'; // Default: Dari (Afghan majority language)
+  return 'en';
 }
 
 export async function saveLanguage(code: LanguageCode) {

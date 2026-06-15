@@ -171,7 +171,6 @@ export default function MerchantOrdersScreen() {
           ) : (
             <FlashList
               data={orders}
-              estimatedItemSize={220}
               keyExtractor={(item) => item.id}
               renderItem={({ item: order }) => {
                 const nextStatus = NEXT_ORDER_STATUS[order.status];

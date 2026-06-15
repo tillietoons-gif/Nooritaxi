@@ -54,3 +54,9 @@
 - Implemented functional Language Switcher and Help/Support pages to replace placeholder alerts.
 - Fixed dead links in Profile tab, redirecting "Safety Center" to the functional Trusted Contacts page.
 - Enhanced Wallet UI with a functional Top Up feature integrated with the backend deposit API.
+
+## 2026-06-15 - Parallelizing Live Map Data Retrieval
+
+**Learning:** Sequential `await` calls in `OperationsService.getLiveMapData` for retrieving drivers and active trips introduced unnecessary latency in the mission control map view.
+
+**Action:** Refactored `OperationsService.getLiveMapData` to use `Promise.all` for concurrent Prisma queries, reducing API response time for live tracking data.

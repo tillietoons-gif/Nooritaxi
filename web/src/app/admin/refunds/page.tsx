@@ -2,16 +2,11 @@
 
 import { useState, useEffect, useCallback } from "react"
 import {
-  Undo2,
-  Search,
   RefreshCcw,
-  Check,
-  X,
-  LoaderCircle,
 } from "lucide-react"
 
 import { AuthGate } from "@/components/auth-gate"
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -44,8 +39,8 @@ export default function AdminRefundsPage() {
   const [refunds, setRefunds] = useState<RefundRequest[]>([])
   const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState<typeof ALL_STATUSES | RefundStatus>(ALL_STATUSES)
-  const [serviceFilter, setServiceFilter] = useState<typeof ALL_SERVICES | RefundService>(ALL_SERVICES)
-  const [error, setError] = useState<string | null>(null)
+  const [serviceFilter] = useState<typeof ALL_SERVICES | RefundService>(ALL_SERVICES)
+  const [, setError] = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState("")
 
   const loadData = useCallback(async () => {

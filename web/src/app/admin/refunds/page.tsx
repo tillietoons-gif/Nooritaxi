@@ -32,11 +32,14 @@ type RefundRequest = {
 }
 
 const ALL_STATUSES = "ALL" as const
+const ALL_SERVICES = "ALL" as const
+
 export default function AdminRefundsPage() {
   const [loading, setLoading] = useState(true)
   const [refunds, setRefunds] = useState<RefundRequest[]>([])
   const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState<typeof ALL_STATUSES | RefundStatus>(ALL_STATUSES)
+  const [serviceFilter, setServiceFilter] = useState<typeof ALL_SERVICES | RefundService>(ALL_SERVICES)
   const [, setError] = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState("")
 
@@ -90,7 +93,7 @@ export default function AdminRefundsPage() {
       (r.user.name ?? "").toLowerCase().includes(search.toLowerCase()) ||
       (r.user.phone ?? "").toLowerCase().includes(search.toLowerCase())
     const matchesStatus = statusFilter === ALL_STATUSES || r.status === statusFilter
-    const matchesService = true // filter intentionally simplified for now
+    const matchesService = serviceFilter === ALL_SERVICES || s === serviceFilter
     return matchesSearch && matchesStatus && matchesService
   })
 
@@ -122,6 +125,19 @@ export default function AdminRefundsPage() {
                   onChange={(e) => setSearch(e.target.value)}
                   className="bg-background/80 backdrop-blur-sm border-primary/20"
                 />
+              </div>
+              <div className="w-full md:w-48">
+                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Service</label>
+                <select
+                  className="block w-full rounded-md border border-primary/20 bg-background/80 px-3 py-2 text-sm outline-none backdrop-blur-sm"
+                  value={serviceFilter}
+                  onChange={(e) => setServiceFilter(e.target.value as any)}
+                >
+                  <option value="ALL">All Services</option>
+                  <option value="TRIP">Rides</option>
+                  <option value="ORDER">Food</option>
+                  <option value="DELIVERY">Parcel</option>
+                </select>
               </div>
               <div className="w-full md:w-48">
                 <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Status</label>

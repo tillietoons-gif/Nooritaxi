@@ -88,6 +88,7 @@ export default function AdminRefundsPage() {
   }
 
   const filteredRefunds = refunds.filter(r => {
+    const s = getRefundService(r)
     const matchesSearch =
       r.id.toLowerCase().includes(search.toLowerCase()) ||
       (r.user.name ?? "").toLowerCase().includes(search.toLowerCase()) ||

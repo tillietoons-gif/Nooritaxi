@@ -2,16 +2,11 @@
 
 import { useState, useEffect, useCallback } from "react"
 import {
-  Undo2,
-  Search,
-  RefreshCcw,
-  Check,
-  X,
-  LoaderCircle,
+  RefreshCcw
 } from "lucide-react"
 
 import { AuthGate } from "@/components/auth-gate"
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -37,15 +32,12 @@ type RefundRequest = {
 }
 
 const ALL_STATUSES = "ALL" as const
-const ALL_SERVICES = "ALL" as const
-
 export default function AdminRefundsPage() {
   const [loading, setLoading] = useState(true)
   const [refunds, setRefunds] = useState<RefundRequest[]>([])
   const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState<typeof ALL_STATUSES | RefundStatus>(ALL_STATUSES)
-  const [serviceFilter, setServiceFilter] = useState<typeof ALL_SERVICES | RefundService>(ALL_SERVICES)
-  const [error, setError] = useState<string | null>(null)
+  const [, setError] = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState("")
 
   const loadData = useCallback(async () => {
@@ -93,13 +85,12 @@ export default function AdminRefundsPage() {
   }
 
   const filteredRefunds = refunds.filter(r => {
-    const s = getRefundService(r)
     const matchesSearch =
       r.id.toLowerCase().includes(search.toLowerCase()) ||
       (r.user.name ?? "").toLowerCase().includes(search.toLowerCase()) ||
       (r.user.phone ?? "").toLowerCase().includes(search.toLowerCase())
     const matchesStatus = statusFilter === ALL_STATUSES || r.status === statusFilter
-    const matchesService = serviceFilter === ALL_SERVICES || s === serviceFilter
+    const matchesService = true // filter intentionally simplified for now
     return matchesSearch && matchesStatus && matchesService
   })
 

@@ -4,7 +4,6 @@ import React, { useRef, useMemo } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { Instances, Instance, Segments, Segment, Sphere } from "@react-three/drei";
-import { withCullSphere } from "./scene-3d";
 
 const NETWORK_NODES = [
   { id: 0, position: [-4.2, -1.8, 2.4] },
@@ -54,7 +53,7 @@ export const LogisticsNetwork = () => {
 
   const rotationSpeed = prefersReduced ? 0.0004 : 0.0016;
 
-  useFrame((state) => {
+  useFrame(() => {
     if (groupRef.current) {
       groupRef.current.rotation.y += rotationSpeed;
       groupRef.current.rotation.x += rotationSpeed * 0.5;

@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic"
 import { AuthGate } from "@/components/auth-gate"
-import { Crosshair, Layers, Filter } from "lucide-react"
+import { Layers, Filter } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { AdminPageHeader } from "@/components/admin/admin-page-header"
 

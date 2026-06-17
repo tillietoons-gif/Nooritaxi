@@ -40,17 +40,19 @@ export default function AdminRefundsPage() {
   const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState<typeof ALL_STATUSES | RefundStatus>(ALL_STATUSES)
   const [serviceFilter, setServiceFilter] = useState<typeof ALL_SERVICES | RefundService>(ALL_SERVICES)
-  const [, setError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState("")
 
   const loadData = useCallback(async () => {
     setLoading(true)
+    setError(null)
     try {
       const res = await authedFetch("/admin/finance/refunds")
       if (!res.ok) throw new Error("Failed to fetch refunds")
       setRefunds(await res.json())
     } catch (err) {
       console.error(err)
+      setError(err instanceof Error ? err.message : "Failed to fetch refunds")
     } finally {
       setLoading(false)
     }
@@ -62,6 +64,7 @@ export default function AdminRefundsPage() {
 
   const processRefund = async (id: string, status: "APPROVED" | "REJECTED") => {
     setActionLoading(`refund:${id}:${status}`)
+    setError(null)
     try {
       const res = await authedFetch(`/admin/finance/refunds/${id}/process`, {
         method: "POST",
@@ -70,7 +73,7 @@ export default function AdminRefundsPage() {
       if (!res.ok) throw new Error("Processing failed")
       await loadData()
     } catch (err) {
-      alert((err as Error).message)
+      setError(err instanceof Error ? err.message : "Processing failed")
     } finally {
       setActionLoading("")
     }

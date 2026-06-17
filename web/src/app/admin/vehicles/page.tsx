@@ -37,7 +37,7 @@ export default function VehicleManagementPage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [inspections, setInspections] = useState<Inspection[]>([])
   const [loading, setLoading] = useState(true)
-  const [, setError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
   const [query, setQuery] = useState("")
 
   const filteredVehicles = useMemo(() => {
@@ -55,13 +55,16 @@ export default function VehicleManagementPage() {
   useEffect(() => {
     async function load() {
       setLoading(true)
+      setError(null)
       try {
         const [vRes, iRes] = await Promise.all([
           authedFetch("/admin/vehicles"),
           authedFetch("/admin/vehicles/inspections")
         ])
-        if (vRes.ok) setVehicles(await vRes.json())
-        if (iRes.ok) setInspections(await iRes.json())
+        if (!vRes.ok) throw new Error("Failed to load vehicles")
+        if (!iRes.ok) throw new Error("Failed to load vehicle inspections")
+        setVehicles(await vRes.json())
+        setInspections(await iRes.json())
       } catch {
         setError("Failed to load data")
       } finally {

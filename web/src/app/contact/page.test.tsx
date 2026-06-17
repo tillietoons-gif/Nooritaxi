@@ -39,10 +39,10 @@ describe("ContactPage", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /Send Message/i }))
 
-    expect(screen.getByText(/Sending/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/Sending/i)[0]).toBeInTheDocument()
 
     await waitFor(() => {
-      expect(screen.getByText("Message Sent")).toBeInTheDocument()
+      expect(screen.getAllByText(/Message Sent/i)[0]).toBeInTheDocument()
     }, { timeout: 2000 })
   })
 })

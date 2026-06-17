@@ -48,6 +48,12 @@
 
 **Action:** Applied the `Promise.all` pattern to `FinanceService.getFinanceAnalytics`, parallelizing queries for outstanding receivables, total cash collected, and active refund requests. This maintains consistency with optimizations in other administrative services and reduces API response time for the finance dashboard.
 
+## 2025-06-08 - Parallelizing Live Map Data Retrieval
+
+**Learning:** Sequential `await` calls in `OperationsService.getLiveMapData` for fetching drivers and active trips introduced unnecessary latency, impacting the responsiveness of the mission control map.
+
+**Action:** Optimized `OperationsService.getLiveMapData` using `Promise.all` to execute the independent `findMany` queries for drivers and trips concurrently. This reduces the response time for real-time tracking data, ensuring a smoother experience for operations personnel.
+
 ## Mobile App Performance and Fixes
 - Centralized API calls in `mobile/src/lib/api.ts` to ensure consistent Authorization headers and error handling.
 - Optimized Food and Restaurant screens by reducing redundant fetch calls and improving loading states.
@@ -55,8 +61,8 @@
 - Fixed dead links in Profile tab, redirecting "Safety Center" to the functional Trusted Contacts page.
 - Enhanced Wallet UI with a functional Top Up feature integrated with the backend deposit API.
 
-## 2025-06-08 - Parallelizing CPU-Bound and I/O Asynchronous Tasks in Auth
+## 2026-06-16 - Parallelizing Live Map Data Queries
 
-**Learning:** Authentication flows often combine expensive CPU-bound tasks (like `bcrypt.hash` or `bcrypt.compare`) with asynchronous database or network calls. Executing these sequentially unnecessarily blocks the overall request completion time.
+**Learning:** Sequential await calls for independent database queries in high-frequency endpoints like `getLiveMapData` introduce unnecessary latency. In a mocked environment with 50ms query delay, sequential execution takes ~100ms while parallel execution takes ~50ms.
 
-**Action:** Identify methods in `AuthService` (like `register`, `resetPassword`, or `refresh`) where hashing and database lookups are independent, and parallelize them using `Promise.all`. In the `register` method, parallelizing password hashing and referrer lookup reduces total registration latency significantly.
+**Action:** Use `Promise.all` to parallelize independent Prisma queries in tracking and dashboard services to reduce API response time by up to 50%.

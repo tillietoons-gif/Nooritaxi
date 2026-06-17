@@ -3,7 +3,7 @@
 import { AuthGate } from "@/components/auth-gate"
 import { AdminPageHeader } from "@/components/admin/admin-page-header"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { Plane, MapPin, Plus, List } from "lucide-react"
+import { Plane, MapPin, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 export default function AirportAdminPage() {

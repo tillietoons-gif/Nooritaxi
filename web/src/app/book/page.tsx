@@ -193,7 +193,7 @@ export default function BookingPage() {
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
-      <main className="flex-1 bg-muted/20 py-12">
+      <main id="main-content" className="flex-1 bg-muted/20 py-12">
         <div className="container mx-auto px-4 max-w-5xl">
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-5">
             <div className="order-2 space-y-6 lg:order-1 lg:col-span-2">

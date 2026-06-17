@@ -35,6 +35,8 @@ export default function AdminRolesPage() {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [roles, setRoles] = useState<Role[]>([])
+  const [, setPermissions] = useState<Permission[]>([])
+  const [, setError] = useState<string | null>(null)
 
   const load = useCallback(async (isSilent = false) => {
     if (!isSilent) setLoading(true)

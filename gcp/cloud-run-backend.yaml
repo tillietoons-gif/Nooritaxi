@@ -35,6 +35,23 @@ spec:
                   key: latest
             - name: CORS_ORIGIN
               value: https://YOUR_WEB_DOMAIN
+            - name: SMS_PROVIDER
+              value: twilio
+            - name: TWILIO_ACCOUNT_SID
+              valueFrom:
+                secretKeyRef:
+                  name: noori-twilio-account-sid
+                  key: latest
+            - name: TWILIO_AUTH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: noori-twilio-auth-token
+                  key: latest
+            - name: TWILIO_FROM_NUMBER
+              valueFrom:
+                secretKeyRef:
+                  name: noori-twilio-from-number
+                  key: latest
           resources:
             limits:
               cpu: "1"

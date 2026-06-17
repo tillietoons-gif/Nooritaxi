@@ -38,9 +38,9 @@ steps:
       - --port
       - "3001"
       - --set-secrets
-      - DATABASE_URL=noori-database-url:latest,JWT_SECRET=noori-jwt-secret:latest
+      - DATABASE_URL=noori-database-url:latest,JWT_SECRET=noori-jwt-secret:latest,TWILIO_ACCOUNT_SID=noori-twilio-account-sid:latest,TWILIO_AUTH_TOKEN=noori-twilio-auth-token:latest,TWILIO_FROM_NUMBER=noori-twilio-from-number:latest
       - --set-env-vars
-      - NODE_ENV=production,CORS_ORIGIN=https://noori-web-tdkaiss5uq-el.a.run.app,PUSH_PROVIDER=firebase,FIREBASE_PROJECT_ID=academic-pillar-483819-f1
+      - NODE_ENV=production,CORS_ORIGIN=https://noori-web-tdkaiss5uq-el.a.run.app,SMS_PROVIDER=twilio,PUSH_PROVIDER=firebase,FIREBASE_PROJECT_ID=academic-pillar-483819-f1
       - --allow-unauthenticated
 
 images:

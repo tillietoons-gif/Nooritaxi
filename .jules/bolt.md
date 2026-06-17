@@ -66,3 +66,12 @@
 **Learning:** Sequential await calls for independent database queries in high-frequency endpoints like `getLiveMapData` introduce unnecessary latency. In a mocked environment with 50ms query delay, sequential execution takes ~100ms while parallel execution takes ~50ms.
 
 **Action:** Use `Promise.all` to parallelize independent Prisma queries in tracking and dashboard services to reduce API response time by up to 50%.
+
+## 2026-06-17 - Parallelizing Ride Creation Transaction
+
+**Learning:** Core transaction paths like ride creation often involve multiple independent database operations (e.g., creating the trip record while simultaneously searching for the nearest driver). Sequential execution of these steps increases total API latency for critical user journeys.
+
+**Action:** Use `Promise.all` within the Prisma transaction to execute independent queries concurrently. Applied this to `TripsService.createRide` to parallelize:
+1. Initial trip creation and driver dispatch.
+2. Trip update, driver status update, and notification token retrieval.
+This ensures the core ride request flow is as lean as possible.

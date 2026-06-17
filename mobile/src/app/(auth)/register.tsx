@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, TextInput, TouchableOpacity, SafeAreaView, ScrollView } from 'react-native';
 import { ShieldCheck, User, Phone, Lock, Eye, EyeOff, ChevronLeft } from 'lucide-react-native';
 import { Link, router } from 'expo-router';
-import { AuthRole, getSignedInRoute, register } from '../../lib/api';
+import { AuthResponse, AuthRole, getSignedInRoute, register, sendOtp, verifyPhone } from '../../lib/api';
 import { PatternOverlay } from '../../components/PatternOverlay';
 import { useTranslation } from 'react-i18next';
 
@@ -12,6 +12,8 @@ export default function RegisterScreen() {
   const [phone, setPhone] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [role, setRole] = React.useState<AuthRole>('RIDER');
+  const [otpCode, setOtpCode] = React.useState('');
+  const [pendingSession, setPendingSession] = React.useState<AuthResponse | null>(null);
   const [message, setMessage] = React.useState('');
   const [loading, setLoading] = React.useState(false);
   const [showPassword, setShowPassword] = React.useState(false);
@@ -21,7 +23,23 @@ export default function RegisterScreen() {
     setLoading(true);
     try {
       const session = await register(name, phone, password, role);
-      router.replace(getSignedInRoute(session.user));
+      await sendOtp(phone);
+      setPendingSession(session);
+      setMessage(t('auth.verification_code_sent', 'Account created. Enter the verification code sent to your phone.'));
+    } catch (error) {
+      setMessage((error as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function verifyAndContinue() {
+    if (!pendingSession) return;
+    setMessage('');
+    setLoading(true);
+    try {
+      await verifyPhone(phone, otpCode);
+      router.replace(getSignedInRoute(pendingSession.user));
     } catch (error) {
       setMessage((error as Error).message);
     } finally {
@@ -73,6 +91,25 @@ export default function RegisterScreen() {
                 })}
               </View>
             </View>
+
+            {pendingSession ? (
+              <View>
+                <Text className="text-xs font-black text-muted-foreground uppercase mb-2 ml-1 tracking-widest">
+                  {t('auth.phone_verification', 'Phone verification')}
+                </Text>
+                <View className="flex-row items-center bg-card h-16 px-5 rounded-2xl border border-muted/20 shadow-sm">
+                  <ShieldCheck size={20} color="#006947" />
+                  <TextInput
+                    value={otpCode}
+                    onChangeText={setOtpCode}
+                    placeholder="000000"
+                    className="flex-1 ml-4 text-base font-bold text-foreground tracking-widest"
+                    keyboardType="number-pad"
+                    maxLength={6}
+                  />
+                </View>
+              </View>
+            ) : null}
 
             <View>
               <Text className="text-xs font-black text-muted-foreground uppercase mb-2 ml-1 tracking-widest">{t('auth.full_name')}</Text>
@@ -126,13 +163,25 @@ export default function RegisterScreen() {
 
             <TouchableOpacity
               onPress={submit}
-              disabled={loading}
+              disabled={loading || Boolean(pendingSession)}
               className={`h-16 rounded-3xl items-center justify-center shadow-lg mt-4 ${loading ? 'bg-muted' : 'bg-primary shadow-primary/30'}`}
             >
               <Text className="text-white text-lg font-black uppercase tracking-widest">
                 {loading ? t('auth.creating') : role === 'DRIVER' ? t('auth.create_driver_account') : role === 'MERCHANT' ? t('auth.create_merchant_account') : t('auth.sign_up')}
               </Text>
             </TouchableOpacity>
+
+            {pendingSession ? (
+              <TouchableOpacity
+                onPress={verifyAndContinue}
+                disabled={loading || otpCode.length < 6}
+                className={`h-16 rounded-3xl items-center justify-center shadow-lg mt-4 ${loading || otpCode.length < 6 ? 'bg-muted' : 'bg-primary shadow-primary/30'}`}
+              >
+                <Text className="text-white text-lg font-black uppercase tracking-widest">
+                  {loading ? t('auth.verifying', 'Verifying...') : t('auth.verify_continue', 'Verify & Continue')}
+                </Text>
+              </TouchableOpacity>
+            ) : null}
           </View>
 
           <View className="flex-row justify-center mt-10 gap-1 mb-10 items-center">

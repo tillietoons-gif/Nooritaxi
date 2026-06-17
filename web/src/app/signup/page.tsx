@@ -3,20 +3,46 @@
 import Link from "next/link"
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Lock, Phone, User, Eye, EyeOff, ShieldCheck, Zap, Check } from "lucide-react"
+import { Lock, Phone, User, Eye, EyeOff, ShieldCheck, Zap, Check, Car, Store, type LucideIcon } from "lucide-react"
+import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import { GlassSurface } from "@/components/ui/glass-surface"
 import { Input } from "@/components/ui/input"
 import { BodyMd, HeadingMd, LabelMd, LabelSm } from "@/components/ui/typography"
 import { NooriLogo } from "@/components/ui/noori-logo"
-import { apiUrl, saveSession } from "@/lib/auth"
+import { type AuthUser, apiUrl, saveSession } from "@/lib/auth"
 import { cn } from "@/lib/utils"
 
+type SignupRole = "RIDER" | "DRIVER" | "MERCHANT"
+type MessageTone = "error" | "success"
+type PendingSession = {
+  access_token: string
+  user: AuthUser
+}
+
+const signupRoles: Array<{
+  value: SignupRole
+  icon: LucideIcon
+}> = [
+  { value: "RIDER", icon: User },
+  { value: "DRIVER", icon: Car },
+  { value: "MERCHANT", icon: Store },
+]
+
 export default function SignupPage() {
+  const { t } = useTranslation()
+  const [role, setRole] = useState<SignupRole>("RIDER")
   const [name, setName] = useState("")
   const [phone, setPhone] = useState("")
   const [password, setPassword] = useState("")
+  const [restaurantName, setRestaurantName] = useState("")
+  const [restaurantAddress, setRestaurantAddress] = useState("")
+  const [restaurantPhone, setRestaurantPhone] = useState("")
+  const [cuisineTypes, setCuisineTypes] = useState("")
+  const [otpCode, setOtpCode] = useState("")
+  const [pendingSession, setPendingSession] = useState<PendingSession | null>(null)
   const [message, setMessage] = useState("")
+  const [messageTone, setMessageTone] = useState<MessageTone>("error")
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
 
@@ -24,12 +50,13 @@ export default function SignupPage() {
     event.preventDefault()
     setIsLoading(true)
     setMessage("")
+    setMessageTone("error")
 
     try {
       const response = await fetch(`${apiUrl}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, phone, password, role: "RIDER" }),
+        body: JSON.stringify({ name, phone, password, role }),
       })
       const data = await response.json()
 
@@ -38,10 +65,78 @@ export default function SignupPage() {
         return
       }
 
-      saveSession(data.access_token, data.user)
-      window.location.href = "/dashboard"
+      await fetch(`${apiUrl}/auth/send-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone }),
+      })
+
+      setPendingSession(data)
+      setMessageTone("success")
+      setMessage(t("signup.code_sent", "Account created. Enter the verification code sent to your phone."))
     } catch {
       setMessage("Connection to registration authority timed out.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  async function verifyAndContinue(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (!pendingSession) return
+
+    setIsLoading(true)
+    setMessage("")
+    setMessageTone("error")
+
+    try {
+      const verifyResponse = await fetch(`${apiUrl}/auth/verify-phone`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone, code: otpCode }),
+      })
+      const verifyData = await verifyResponse.json().catch(() => null)
+
+      if (!verifyResponse.ok) {
+        setMessage(verifyData?.message ?? t("signup.invalid_code", "Invalid or expired verification code."))
+        return
+      }
+
+      if (role === "DRIVER") {
+        setMessageTone("success")
+        setMessage(t("signup.driver_verified", "Phone verified. Continue in the Noori Driver mobile app to complete KYC."))
+        return
+      }
+
+      if (role === "MERCHANT") {
+        const restaurantResponse = await fetch(`${apiUrl}/food/restaurants`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${pendingSession.access_token}`,
+          },
+          body: JSON.stringify({
+            name: restaurantName,
+            address: restaurantAddress,
+            phone: restaurantPhone || phone,
+            cuisineTypes: cuisineTypes
+              .split(",")
+              .map((item) => item.trim())
+              .filter(Boolean),
+          }),
+        })
+
+        if (!restaurantResponse.ok) {
+          const restaurantData = await restaurantResponse.json().catch(() => null)
+          setMessage(restaurantData?.message ?? t("signup.store_failed", "Merchant account created, but store setup failed."))
+          return
+        }
+      }
+
+      saveSession(pendingSession.access_token, pendingSession.user)
+      window.location.href = "/dashboard"
+    } catch {
+      setMessage(t("signup.verify_timeout", "Connection to verification authority timed out."))
     } finally {
       setIsLoading(false)
     }
@@ -65,18 +160,65 @@ export default function SignupPage() {
         <div className="mb-10 flex flex-col items-center text-center">
            <div className="inline-flex items-center gap-2 bg-primary/5 px-4 py-2 rounded-full border border-primary/10 mb-8">
              <Zap className="h-3 w-3 text-primary animate-pulse" />
-             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Priority Enrollment Active</span>
+             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">{t("signup.badge", "Priority Enrollment Active")}</span>
            </div>
            <NooriLogo size={48} className="text-primary mb-6" />
-           <HeadingMd className="font-black text-4xl mb-4">Join the Ecosystem</HeadingMd>
-           <BodyMd className="text-lg max-w-md mx-auto">Establish your unique identifier to access world-class mobility and logistics.</BodyMd>
+           <HeadingMd className="font-black text-4xl mb-4">{t("signup.title", "Join the Ecosystem")}</HeadingMd>
+           <BodyMd className="text-lg max-w-md mx-auto">{t("signup.subtitle", "Establish your unique identifier to access world-class mobility and logistics.")}</BodyMd>
         </div>
 
         <GlassSurface variant="premium" className="p-8 md:p-16 bento-shadow border-none grid grid-cols-1 md:grid-cols-1 gap-12">
-          <form onSubmit={submit} className="space-y-6">
+          <form onSubmit={pendingSession ? verifyAndContinue : submit} className="space-y-6">
+            {pendingSession ? (
+              <div className="space-y-3">
+                <LabelMd htmlFor="otpCode" className="text-xs font-black">{t("signup.phone_verification", "Phone Verification")}</LabelMd>
+                <Input
+                  id="otpCode"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  className="h-14 rounded-2xl glass border-none text-center text-xl font-black tracking-[0.4em] focus-visible:ring-primary/30"
+                  value={otpCode}
+                  onChange={(event) => setOtpCode(event.target.value)}
+                  placeholder="000000"
+                  minLength={6}
+                  maxLength={6}
+                  required
+                  aria-invalid={!!message && messageTone === "error"}
+                  aria-describedby={message ? "signup-message" : undefined}
+                />
+                <LabelSm className="text-muted-foreground">
+                  {t("signup.code_help", "We sent a 6-digit code to {{phone}}. Verify it to finish onboarding.", { phone })}
+                </LabelSm>
+              </div>
+            ) : (
+              <>
+            <div className="grid grid-cols-3 gap-3">
+              {signupRoles.map((option) => {
+                const Icon = option.icon
+                const isSelected = role === option.value
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => setRole(option.value)}
+                    className={cn(
+                      "flex h-16 items-center justify-center gap-2 rounded-2xl border text-xs font-black uppercase tracking-wider transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
+                      isSelected
+                        ? "border-primary bg-primary text-primary-foreground shadow-lg shadow-primary/20"
+                        : "border-primary/10 bg-background/70 text-muted-foreground hover:border-primary/30 hover:text-foreground"
+                    )}
+                    aria-pressed={isSelected}
+                  >
+                    <Icon className="h-4 w-4" />
+                    <span>{t(`signup.roles.${option.value.toLowerCase()}`, option.value)}</span>
+                  </button>
+                )
+              })}
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <LabelMd htmlFor="name" className="text-xs font-black">Legal Identity</LabelMd>
+                <LabelMd htmlFor="name" className="text-xs font-black">{t("signup.name_label", "Legal Identity")}</LabelMd>
                 <div className="relative group">
                   <User className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40 transition-colors group-focus-within:text-primary" />
                   <Input
@@ -85,16 +227,16 @@ export default function SignupPage() {
                     className="h-14 pl-12 rounded-2xl glass border-none focus-visible:ring-primary/30 font-bold"
                     value={name}
                     onChange={(event) => setName(event.target.value)}
-                    placeholder="Full Name"
+                    placeholder={t("signup.name_placeholder", "Full Name")}
                     required
                     aria-invalid={!!message}
-                    aria-describedby={message ? "signup-error" : undefined}
+                    aria-describedby={message ? "signup-message" : undefined}
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <LabelMd htmlFor="phone" className="text-xs font-black">Communication Node</LabelMd>
+                <LabelMd htmlFor="phone" className="text-xs font-black">{t("signup.phone_label", "Communication Node")}</LabelMd>
                 <div className="relative group">
                   <Phone className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40 transition-colors group-focus-within:text-primary" />
                   <Input
@@ -107,14 +249,14 @@ export default function SignupPage() {
                     placeholder="+93 7XX XXX XXX"
                     required
                     aria-invalid={!!message}
-                    aria-describedby={message ? "signup-error" : undefined}
+                    aria-describedby={message ? "signup-message" : undefined}
                   />
                 </div>
               </div>
             </div>
 
             <div className="space-y-2">
-              <LabelMd htmlFor="password" className="text-xs font-black">Security Protocol</LabelMd>
+              <LabelMd htmlFor="password" className="text-xs font-black">{t("signup.password_label", "Security Protocol")}</LabelMd>
               <div className="relative group">
                 <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40 transition-colors group-focus-within:text-primary" />
                 <Input
@@ -124,11 +266,11 @@ export default function SignupPage() {
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
-                  placeholder="Min. 8 characters"
+                  placeholder={t("signup.password_placeholder", "Min. 8 characters")}
                   minLength={8}
                   required
                   aria-invalid={!!message}
-                  aria-describedby={message ? "signup-error" : "password-hint"}
+                  aria-describedby={message ? "signup-message" : "password-hint"}
                 />
                 <button
                   type="button"
@@ -147,27 +289,96 @@ export default function SignupPage() {
                 )}
               >
                 {password.length >= 8 && <Check className="h-3 w-3" />}
-                Required: Minimum 8 characters for security protocol.
+                {t("signup.password_hint", "Required: Minimum 8 characters for security protocol.")}
               </LabelSm>
             </div>
+
+            {role === "MERCHANT" && (
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <div className="space-y-2">
+                  <LabelMd htmlFor="restaurantName" className="text-xs font-black">{t("signup.store_name", "Store Name")}</LabelMd>
+                  <div className="relative group">
+                    <Store className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40 transition-colors group-focus-within:text-primary" />
+                    <Input
+                      id="restaurantName"
+                      className="h-14 pl-12 rounded-2xl glass border-none focus-visible:ring-primary/30 font-bold"
+                      value={restaurantName}
+                      onChange={(event) => setRestaurantName(event.target.value)}
+                      placeholder={t("signup.store_name_placeholder", "Restaurant or shop")}
+                      required={role === "MERCHANT"}
+                      aria-invalid={!!message && role === "MERCHANT"}
+                      aria-describedby={message ? "signup-message" : undefined}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <LabelMd htmlFor="restaurantPhone" className="text-xs font-black">{t("signup.store_phone", "Store Phone")}</LabelMd>
+                  <div className="relative group">
+                    <Phone className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40 transition-colors group-focus-within:text-primary" />
+                    <Input
+                      id="restaurantPhone"
+                      type="tel"
+                      autoComplete="tel"
+                      className="h-14 pl-12 rounded-2xl glass border-none focus-visible:ring-primary/30 font-bold"
+                      value={restaurantPhone}
+                      onChange={(event) => setRestaurantPhone(event.target.value)}
+                      placeholder={t("signup.store_phone_placeholder", "Defaults to account phone")}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2 md:col-span-2">
+                  <LabelMd htmlFor="restaurantAddress" className="text-xs font-black">{t("signup.store_address", "Store Address")}</LabelMd>
+                  <Input
+                    id="restaurantAddress"
+                    className="h-14 rounded-2xl glass border-none focus-visible:ring-primary/30 font-bold"
+                    value={restaurantAddress}
+                    onChange={(event) => setRestaurantAddress(event.target.value)}
+                    placeholder={t("signup.store_address_placeholder", "Street, district, city")}
+                    required={role === "MERCHANT"}
+                    aria-invalid={!!message && role === "MERCHANT"}
+                    aria-describedby={message ? "signup-message" : undefined}
+                  />
+                </div>
+
+                <div className="space-y-2 md:col-span-2">
+                  <LabelMd htmlFor="cuisineTypes" className="text-xs font-black">{t("signup.categories", "Categories")}</LabelMd>
+                  <Input
+                    id="cuisineTypes"
+                    className="h-14 rounded-2xl glass border-none focus-visible:ring-primary/30 font-bold"
+                    value={cuisineTypes}
+                    onChange={(event) => setCuisineTypes(event.target.value)}
+                    placeholder={t("signup.categories_placeholder", "Afghan, grill, bakery")}
+                  />
+                </div>
+              </div>
+            )}
+              </>
+            )}
 
             <div className="flex items-start gap-3 p-4 bg-primary/5 rounded-2xl border border-primary/10">
               <ShieldCheck className="h-5 w-5 text-primary shrink-0" />
               <p className="text-[10px] text-muted-foreground font-medium leading-relaxed uppercase tracking-wider">
-                By initializing this session, you agree to our 128-bit encrypted terms of service and decentralized privacy protocols.
+                {t("signup.terms_notice", "By initializing this session, you agree to our encrypted terms of service and privacy protocols.")}
               </p>
             </div>
 
             <AnimatePresence mode="wait">
               {message && (
                 <motion.div
-                  key="signup-error"
-                  id="signup-error"
+                  key="signup-message"
+                  id="signup-message"
                   role="alert"
                   initial={{ opacity: 0, height: 0, y: -10 }}
                   animate={{ opacity: 1, height: "auto", y: 0 }}
                   exit={{ opacity: 0, height: 0, y: -10 }}
-                  className="bg-destructive/5 text-destructive p-4 rounded-xl border border-destructive/20 text-xs font-bold overflow-hidden"
+                  className={cn(
+                    "p-4 rounded-xl border text-xs font-bold overflow-hidden",
+                    messageTone === "success"
+                      ? "bg-primary/5 text-primary border-primary/20"
+                      : "bg-destructive/5 text-destructive border-destructive/20"
+                  )}
                 >
                   {message}
                 </motion.div>
@@ -184,13 +395,13 @@ export default function SignupPage() {
                   <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   Synchronizing...
                 </div>
-              ) : "Establish Account"}
+              ) : pendingSession ? t("signup.verify_continue", "Verify & Continue") : t("signup.establish", "Establish Account")}
             </Button>
           </form>
 
           <div className="text-center">
              <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">
-               Already connected? <Link className="text-primary hover:underline" href="/login">Return to Login</Link>
+               {t("signup.already_connected", "Already connected?")} <Link className="text-primary hover:underline" href="/login">{t("signup.return_login", "Return to Login")}</Link>
              </p>
           </div>
         </GlassSurface>

@@ -564,8 +564,10 @@ function OnboardingStatusCard({
   restaurantStatus?: string;
 }) {
   const latest = tickets[0];
-  const status = restaurantStatus === 'ACTIVE'
+  const status = restaurantStatus === 'OPEN'
     ? 'APPROVED'
+    : restaurantStatus === 'SUSPENDED'
+      ? 'REJECTED'
     : latest?.status === 'RESOLVED'
       ? 'APPROVED'
       : latest?.status === 'CLOSED'

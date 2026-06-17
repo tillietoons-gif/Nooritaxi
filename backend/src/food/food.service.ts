@@ -1,10 +1,11 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
-import { Order, PaymentMethod } from '@prisma/client';
+import { Order, PaymentMethod, UserRole } from '@prisma/client';
 import { WalletService } from '../wallet/wallet.service';
 import { DispatchService } from '../dispatch/dispatch.service';
 import {
@@ -41,11 +42,18 @@ export class FoodService {
     });
   }
 
-  addMenuItem(restaurantId: string, data: any) {
+  async addMenuItem(restaurantId: string, data: any, actor?: any) {
+    await this.assertRestaurantAccess(restaurantId, actor);
     return this.prisma.menuItem.create({ data: { ...data, restaurantId } });
   }
 
-  async updateMenuItem(restaurantId: string, itemId: string, data: any) {
+  async updateMenuItem(
+    restaurantId: string,
+    itemId: string,
+    data: any,
+    actor?: any,
+  ) {
+    await this.assertRestaurantAccess(restaurantId, actor);
     const item = await this.prisma.menuItem.findFirst({
       where: { id: itemId, restaurantId },
     });
@@ -57,7 +65,8 @@ export class FoodService {
     });
   }
 
-  async deleteMenuItem(restaurantId: string, itemId: string) {
+  async deleteMenuItem(restaurantId: string, itemId: string, actor?: any) {
+    await this.assertRestaurantAccess(restaurantId, actor);
     const item = await this.prisma.menuItem.findFirst({
       where: { id: itemId, restaurantId },
     });
@@ -157,7 +166,7 @@ export class FoodService {
     });
   }
 
-  async updateOrder(id: string, data: any) {
+  async updateOrder(id: string, data: any, actor?: any) {
     const { actorId, ...orderData } = data ?? {};
     const status = orderData.status;
     if (
@@ -184,6 +193,12 @@ export class FoodService {
       });
 
       if (before && status) {
+        if (
+          actor?.role === UserRole.MERCHANT &&
+          before.restaurant.ownerId !== actor.id
+        ) {
+          throw new ForbiddenException('Cannot update another merchant order');
+        }
         assertOrderStatusTransition(before.status, status);
         if (before.status !== status) {
           Object.assign(orderData, orderStatusTimestampData(status));
@@ -241,6 +256,18 @@ export class FoodService {
 
     await this.audit('ORDER_UPDATED', 'Order', id, actorId, order, before);
     return order;
+  }
+
+  private async assertRestaurantAccess(restaurantId: string, actor?: any) {
+    const restaurant = await this.prisma.restaurant.findUnique({
+      where: { id: restaurantId },
+      select: { id: true, ownerId: true },
+    });
+    if (!restaurant) throw new NotFoundException('Restaurant not found');
+    if (actor?.role === UserRole.MERCHANT && restaurant.ownerId !== actor.id) {
+      throw new ForbiddenException('Cannot manage another merchant restaurant');
+    }
+    return restaurant;
   }
 
   private async audit(

@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { DocumentStatus, DocumentType, UserStatus } from '@prisma/client';
 import { PrismaService } from '../prisma.service';
 import { PushService } from '../push/push.service';
 import { WalletService } from '../wallet/wallet.service';
@@ -10,6 +11,13 @@ const LOYALTY_TIERS = [
   { tier: 'SILVER', min: 500 },
   { tier: 'BRONZE', min: 100 },
   { tier: 'NOORI', min: 0 },
+] as const;
+
+const REQUIRED_DRIVER_DOCUMENTS = [
+  DocumentType.ID_CARD,
+  DocumentType.DRIVERS_LICENSE,
+  DocumentType.VEHICLE_REGISTRATION,
+  DocumentType.INSURANCE,
 ] as const;
 
 function computeTier(lifetime: number): string {
@@ -41,7 +49,7 @@ export class SuperAppService {
     });
   }
 
-  updateMyDriverStatus(
+  async updateMyDriverStatus(
     userId: string,
     data: {
       status?: 'ONLINE' | 'OFFLINE';
@@ -52,6 +60,10 @@ export class SuperAppService {
     const status = data.status ?? 'ONLINE';
     if (!['ONLINE', 'OFFLINE'].includes(status)) {
       throw new BadRequestException('Invalid driver status');
+    }
+
+    if (status === 'ONLINE') {
+      await this.assertDriverCanGoOnline(userId);
     }
 
     return this.prisma.driver.upsert({
@@ -69,6 +81,36 @@ export class SuperAppService {
       },
       include: { user: true, vehicles: true },
     });
+  }
+
+  private async assertDriverCanGoOnline(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, status: true, isVerified: true },
+    });
+
+    if (!user?.isVerified || user.status !== UserStatus.ACTIVE) {
+      throw new BadRequestException('Verify your phone before going online');
+    }
+
+    const verifiedDocs = await this.prisma.driverDocument.findMany({
+      where: {
+        driverId: userId,
+        type: { in: [...REQUIRED_DRIVER_DOCUMENTS] },
+        status: DocumentStatus.VERIFIED,
+      },
+      select: { type: true },
+    });
+    const verifiedTypes = new Set(verifiedDocs.map((doc) => doc.type));
+    const missing = REQUIRED_DRIVER_DOCUMENTS.filter(
+      (type) => !verifiedTypes.has(type),
+    );
+
+    if (missing.length > 0) {
+      throw new BadRequestException(
+        `Complete driver verification before going online: ${missing.join(', ')}`,
+      );
+    }
   }
 
   upsertRiderProfile(userId: string, data: any) {

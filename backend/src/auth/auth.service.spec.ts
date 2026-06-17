@@ -6,21 +6,28 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma.service';
 import { WalletService } from '../wallet/wallet.service';
 import * as bcrypt from 'bcrypt';
+import { BadRequestException } from '@nestjs/common';
+import { UserRole, UserStatus } from '@prisma/client';
 
 describe('AuthService', () => {
   let service: AuthService;
-  let usersService: { findOne: jest.Mock };
+  let usersService: { create: jest.Mock; findOne: jest.Mock };
+  let jwtService: { sign: jest.Mock };
+  let walletService: { deposit: jest.Mock };
   let prisma: {
     phoneOtp: { findFirst: jest.Mock; update: jest.Mock };
-    refreshToken: { updateMany: jest.Mock };
-    user: { update: jest.Mock };
+    refreshToken: { create: jest.Mock; updateMany: jest.Mock };
+    user: { findUnique: jest.Mock; update: jest.Mock };
     $transaction: jest.Mock;
   };
 
   beforeEach(async () => {
     usersService = {
+      create: jest.fn(),
       findOne: jest.fn(),
     };
+    jwtService = { sign: jest.fn().mockReturnValue('access-token') };
+    walletService = { deposit: jest.fn() };
 
     prisma = {
       phoneOtp: {
@@ -28,9 +35,11 @@ describe('AuthService', () => {
         update: jest.fn(),
       },
       refreshToken: {
+        create: jest.fn().mockResolvedValue({ id: 'refresh-1' }),
         updateMany: jest.fn(),
       },
       user: {
+        findUnique: jest.fn(),
         update: jest.fn(),
       },
       $transaction: jest.fn().mockResolvedValue(undefined),
@@ -40,16 +49,67 @@ describe('AuthService', () => {
       providers: [
         AuthService,
         { provide: UsersService, useValue: usersService },
-        { provide: JwtService, useValue: {} },
+        { provide: JwtService, useValue: jwtService },
         { provide: PrismaService, useValue: prisma },
         { provide: ConfigService, useValue: {} },
-        { provide: WalletService, useValue: {} },
+        { provide: WalletService, useValue: walletService },
       ],
     }).compile();
     service = module.get<AuthService>(AuthService);
   });
   it('should be defined', () => {
     expect(service).toBeDefined();
+  });
+
+  it('rejects self-registration for privileged roles', async () => {
+    await expect(
+      service.register({
+        name: 'Admin',
+        phone: '+93700111111',
+        password: 'password123',
+        role: UserRole.ADMIN,
+      }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(usersService.create).not.toHaveBeenCalled();
+  });
+
+  it('creates riders active and partner roles pending verification', async () => {
+    usersService.create.mockImplementation(async (data) => ({
+      id: `${data.role.toLowerCase()}-1`,
+      phone: data.phone,
+      role: data.role,
+      name: data.name,
+      status: data.status,
+      password: data.password,
+    }));
+
+    await service.register({
+      name: 'Rider',
+      phone: '+93700111112',
+      password: 'password123',
+      role: UserRole.RIDER,
+    });
+    await service.register({
+      name: 'Driver',
+      phone: '+93700111113',
+      password: 'password123',
+      role: UserRole.DRIVER,
+    });
+
+    expect(usersService.create).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        role: UserRole.RIDER,
+        status: UserStatus.ACTIVE,
+      }),
+    );
+    expect(usersService.create).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        role: UserRole.DRIVER,
+        status: UserStatus.PENDING_VERIFICATION,
+      }),
+    );
   });
 
   it('resets the password when the OTP is valid', async () => {

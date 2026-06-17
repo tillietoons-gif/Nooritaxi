@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { OrderStatus, PaymentMethod } from '@prisma/client';
+import { OrderStatus, PaymentMethod, UserRole } from '@prisma/client';
 import { FoodService } from './food.service';
 import { PrismaService } from '../prisma.service';
 import { WalletService } from '../wallet/wallet.service';
@@ -10,12 +10,20 @@ describe('FoodService', () => {
   let prisma: {
     $transaction: jest.Mock;
     auditLog: { create: jest.Mock };
+    menuItem: { create: jest.Mock; findFirst: jest.Mock; update: jest.Mock };
+    restaurant: { findUnique: jest.Mock };
   };
 
   beforeEach(async () => {
     prisma = {
       $transaction: jest.fn(),
       auditLog: { create: jest.fn() },
+      menuItem: {
+        create: jest.fn(),
+        findFirst: jest.fn(),
+        update: jest.fn(),
+      },
+      restaurant: { findUnique: jest.fn() },
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -35,6 +43,23 @@ describe('FoodService', () => {
 
   it('should be defined', () => {
     expect(service).toBeDefined();
+  });
+
+  it('prevents merchants from managing another restaurant menu', async () => {
+    prisma.restaurant.findUnique.mockResolvedValue({
+      id: 'restaurant-1',
+      ownerId: 'merchant-owner',
+    });
+
+    await expect(
+      service.addMenuItem(
+        'restaurant-1',
+        { name: 'Kabuli', price: 350 },
+        { id: 'other-merchant', role: UserRole.MERCHANT },
+      ),
+    ).rejects.toThrow('Cannot manage another merchant restaurant');
+
+    expect(prisma.menuItem.create).not.toHaveBeenCalled();
   });
 
   it('applies deliveredAt when an order is delivered', async () => {

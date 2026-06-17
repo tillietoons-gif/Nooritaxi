@@ -2,6 +2,13 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { User, DocumentType, DocumentStatus, UserRole } from '@prisma/client';
 
+const REQUIRED_DRIVER_DOCUMENTS = [
+  DocumentType.ID_CARD,
+  DocumentType.DRIVERS_LICENSE,
+  DocumentType.VEHICLE_REGISTRATION,
+  DocumentType.INSURANCE,
+] as const;
+
 @Injectable()
 export class UsersService {
   constructor(private prisma: PrismaService) {}
@@ -66,13 +73,19 @@ export class UsersService {
     });
 
     if (status === DocumentStatus.VERIFIED) {
-      // Check if all required documents are verified for the driver to be activated
-      // In a real app, you would define what set of documents is required.
-      const pendingDocs = await this.prisma.driverDocument.count({
-        where: { driverId: document.driverId, status: DocumentStatus.PENDING },
+      const verifiedDocs = await this.prisma.driverDocument.findMany({
+        where: {
+          driverId: document.driverId,
+          type: { in: [...REQUIRED_DRIVER_DOCUMENTS] },
+          status: DocumentStatus.VERIFIED,
+        },
+        select: { type: true },
       });
+      const verifiedTypes = new Set(verifiedDocs.map((doc) => doc.type));
 
-      if (pendingDocs === 0) {
+      if (
+        REQUIRED_DRIVER_DOCUMENTS.every((type) => verifiedTypes.has(type))
+      ) {
         await this.prisma.driver.update({
           where: { userId: document.driverId },
           data: { status: 'ONLINE' }, // Automatically activate driver if all docs are verified

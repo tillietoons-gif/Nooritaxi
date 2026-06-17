@@ -10,6 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
+import { CurrentUser } from '../auth/current-user.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
@@ -22,8 +23,9 @@ export class FoodController {
   @Post('restaurants')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.MERCHANT)
-  createRestaurant(@Body() body: any) {
-    return this.foodService.createRestaurant(body);
+  createRestaurant(@Body() body: any, @CurrentUser() user: any) {
+    const ownerId = user?.role === UserRole.MERCHANT ? user.id : body.ownerId;
+    return this.foodService.createRestaurant({ ...body, ownerId });
   }
 
   @Get('restaurants')
@@ -47,8 +49,12 @@ export class FoodController {
   @Post('restaurants/:restaurantId/menu-items')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.MERCHANT)
-  addMenuItem(@Param('restaurantId') restaurantId: string, @Body() body: any) {
-    return this.foodService.addMenuItem(restaurantId, body);
+  addMenuItem(
+    @Param('restaurantId') restaurantId: string,
+    @Body() body: any,
+    @CurrentUser() user: any,
+  ) {
+    return this.foodService.addMenuItem(restaurantId, body, user);
   }
 
   @Patch('restaurants/:restaurantId/menu-items/:itemId')
@@ -58,8 +64,9 @@ export class FoodController {
     @Param('restaurantId') restaurantId: string,
     @Param('itemId') itemId: string,
     @Body() body: any,
+    @CurrentUser() user: any,
   ) {
-    return this.foodService.updateMenuItem(restaurantId, itemId, body);
+    return this.foodService.updateMenuItem(restaurantId, itemId, body, user);
   }
 
   @Delete('restaurants/:restaurantId/menu-items/:itemId')
@@ -68,8 +75,9 @@ export class FoodController {
   deleteMenuItem(
     @Param('restaurantId') restaurantId: string,
     @Param('itemId') itemId: string,
+    @CurrentUser() user: any,
   ) {
-    return this.foodService.deleteMenuItem(restaurantId, itemId);
+    return this.foodService.deleteMenuItem(restaurantId, itemId, user);
   }
 
   @Post('orders')
@@ -97,7 +105,7 @@ export class FoodController {
   @Patch('orders/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.MERCHANT, UserRole.SUPPORT)
-  updateOrder(@Param('id') id: string, @Body() body: any) {
-    return this.foodService.updateOrder(id, body);
+  updateOrder(@Param('id') id: string, @Body() body: any, @CurrentUser() user: any) {
+    return this.foodService.updateOrder(id, body, user);
   }
 }

@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
-import { Prisma } from '@prisma/client';
+import { DocumentStatus, DocumentType, Prisma } from '@prisma/client';
 import { FoodService } from '../food/food.service';
 import { LogisticsService } from '../logistics/logistics.service';
 
@@ -21,6 +21,12 @@ const clampLimit = (limit?: number) =>
   Math.min(Math.max(Number.isFinite(limit) && limit ? limit : 25, 1), 100);
 const clampPage = (page?: number) =>
   Math.max(Number.isFinite(page) && page ? page : 1, 1);
+const REQUIRED_DRIVER_DOCUMENTS = [
+  DocumentType.ID_CARD,
+  DocumentType.DRIVERS_LICENSE,
+  DocumentType.VEHICLE_REGISTRATION,
+  DocumentType.INSURANCE,
+] as const;
 
 @Injectable()
 export class AdminService {
@@ -739,10 +745,18 @@ export class AdminService {
       },
     });
     if (status === 'VERIFIED') {
-      const remainingPending = await this.prisma.driverDocument.count({
-        where: { driverId: doc.driverId, status: 'PENDING' as any },
+      const verifiedDocs = await this.prisma.driverDocument.findMany({
+        where: {
+          driverId: doc.driverId,
+          type: { in: [...REQUIRED_DRIVER_DOCUMENTS] },
+          status: DocumentStatus.VERIFIED,
+        },
+        select: { type: true },
       });
-      if (remainingPending === 0) {
+      const verifiedTypes = new Set(verifiedDocs.map((item) => item.type));
+      if (
+        REQUIRED_DRIVER_DOCUMENTS.every((type) => verifiedTypes.has(type))
+      ) {
         await this.prisma.user.update({
           where: { id: doc.driverId },
           data: { isVerified: true, status: 'ACTIVE' as any },

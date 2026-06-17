@@ -423,6 +423,22 @@ export async function register(
   return data;
 }
 
+export async function sendOtp(phone: string) {
+  const response = await apiFetch('/auth/send-otp', {
+    method: 'POST',
+    body: JSON.stringify({ phone }),
+  });
+  return readJson<{ sent: boolean }>(response, 'Unable to send verification code');
+}
+
+export async function verifyPhone(phone: string, code: string) {
+  const response = await apiFetch('/auth/verify-phone', {
+    method: 'POST',
+    body: JSON.stringify({ phone, code }),
+  });
+  return readJson<{ verified: boolean }>(response, 'Invalid or expired verification code');
+}
+
 export async function getTrips(userId: string) {
   const response = await apiFetch(`/trips?userId=${encodeURIComponent(userId)}&limit=25`);
   return readJson<Trip[]>(response, 'Unable to load trips');

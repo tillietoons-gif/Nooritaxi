@@ -56,6 +56,42 @@
   "accessibility": {
     "skip_to_content": "اصلی منړپانګې ته لاړ شئ"
   },
+  "signup": {
+    "badge": "لومړيتوب لرونکی ثبت فعال دی",
+    "title": "اکوسیستم سره یوځای شئ",
+    "subtitle": "د نوري ترانسپورت او لوژستیک ته د لاسرسي لپاره خپل حساب جوړ کړئ.",
+    "roles": {
+      "rider": "سپروونکی",
+      "driver": "چلوونکی",
+      "merchant": "سوداګر"
+    },
+    "name_label": "قانوني نوم",
+    "name_placeholder": "بشپړ نوم",
+    "phone_label": "د اړیکې شمېره",
+    "password_label": "پټ نوم",
+    "password_placeholder": "لږ تر لږه ۸ توري",
+    "password_hint": "پټ نوم باید لږ تر لږه ۸ توري وي.",
+    "store_name": "د پلورنځي نوم",
+    "store_name_placeholder": "رستورانت یا پلورنځی",
+    "store_phone": "د پلورنځي تلیفون",
+    "store_phone_placeholder": "که تش وي د حساب شمېره کارول کېږي",
+    "store_address": "د پلورنځي پته",
+    "store_address_placeholder": "سړک، سیمه، ښار",
+    "categories": "کټګورۍ",
+    "categories_placeholder": "افغاني، ګریل، نانوایي",
+    "phone_verification": "د تلیفون تایید",
+    "code_help": "۶ رقمي کوډ {{phone}} ته واستول شو. د ثبت بشپړولو لپاره یې ولیکئ.",
+    "code_sent": "حساب جوړ شو. خپل تلیفون ته استول شوی تایید کوډ ولیکئ.",
+    "invalid_code": "تایید کوډ ناسم یا وخت تېر دی.",
+    "driver_verified": "تلیفون تایید شو. د KYC بشپړولو لپاره د نوري چلوونکي اپ کې ادامه ورکړئ.",
+    "store_failed": "د سوداګر حساب جوړ شو، خو پلورنځی جوړ نه شو.",
+    "verify_timeout": "د تایید خدمت سره اړیکه پرې شوه.",
+    "terms_notice": "د حساب په جوړولو سره، تاسو د خدمت شرطونه او د محرمیت اصول منئ.",
+    "establish": "حساب جوړ کړئ",
+    "verify_continue": "تایید او ادامه",
+    "already_connected": "مخکې وصل یاست؟",
+    "return_login": "ننوتلو ته ستنېدل"
+  },
   "contact": {
     "title": "موړ سره اړیکه ونیسئ",
     "subtitle": "موړ دلته د مرستې لپاره یو. موړ ته پیغام واستوئ او موړ به ژر تر ژره ړواب ووایو.",

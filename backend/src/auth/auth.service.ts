@@ -1,9 +1,9 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { Prisma, User, UserStatus } from '@prisma/client';
+import { Prisma, User, UserRole, UserStatus } from '@prisma/client';
 import { PrismaService } from '../prisma.service';
 import { WalletService } from '../wallet/wallet.service';
 import { randomBytes, randomInt } from 'crypto';
@@ -119,6 +119,11 @@ export class AuthService {
   }
 
   async register(data: any) {
+    const role = data.role ?? UserRole.RIDER;
+    if (![UserRole.RIDER, UserRole.DRIVER, UserRole.MERCHANT].includes(role)) {
+      throw new BadRequestException('This role cannot self-register');
+    }
+
     // Optimization: Parallelize password hashing and referrer lookup to reduce registration latency
     const [hashedPassword, referrer] = await Promise.all([
       bcrypt.hash(data.password, 10),
@@ -130,13 +135,20 @@ export class AuthService {
     ]);
 
     const referredById = referrer?.id;
+    const status =
+      role === UserRole.RIDER
+        ? UserStatus.ACTIVE
+        : UserStatus.PENDING_VERIFICATION;
 
     const user = await this.usersService.create({
-      ...data,
+      name: data.name,
+      phone: data.phone,
+      email: data.email,
+      role,
       password: hashedPassword,
       referralCode: this.createReferralCode(data.phone),
       referredById,
-      status: data.status ?? 'ACTIVE',
+      status,
     });
 
     // Award referral credits

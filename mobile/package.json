@@ -6,7 +6,7 @@
     "start": "expo start",
     "start:tunnel": "expo start --tunnel",
     "start:tunnel:win": "node scripts/start-tunnel-win.cjs",
-    "android": "expo start --android",
+    "android": "expo start --tunnel",
     "ios": "expo start --ios",
     "web": "expo start --web",
     "test": "vitest run"

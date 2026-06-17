@@ -5,6 +5,7 @@ import { ArrowLeft, Trash2, Plus, Minus } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { withSessionGuard } from '../lib/SessionGuard';
 import { getStoredUser, placeFoodOrder } from '../lib/api';
+import { safeBack } from '../lib/navigation';
 
 // Simple cart screen. In a full app, this would use global state/context or AsyncStorage.
 // For demo, accepts cart data via params (JSON string) from restaurant screen.
@@ -92,7 +93,7 @@ function CartScreen() {
   return (
     <SafeAreaView className="flex-1 bg-background">
       <View className="px-4 py-4 flex-row items-center border-b border-muted/20">
-        <TouchableOpacity onPress={() => router.back()} className="p-2">
+        <TouchableOpacity onPress={() => safeBack(router, '/(tabs)/food')} className="p-2">
           <ArrowLeft size={24} color="#006947" />
         </TouchableOpacity>
         <Text className="text-xl font-bold ml-3 text-foreground">Your Cart</Text>
@@ -106,7 +107,7 @@ function CartScreen() {
           <View className="items-center justify-center py-20">
             <Text className="text-lg font-bold text-muted-foreground">Your cart is empty</Text>
             <TouchableOpacity
-              onPress={() => router.back()}
+              onPress={() => safeBack(router, '/(tabs)/food')}
               className="mt-6 bg-primary px-8 py-3 rounded-2xl"
             >
               <Text className="text-white font-bold">Browse Menu</Text>

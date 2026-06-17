@@ -4,6 +4,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { Star } from 'lucide-react-native';
 import { createReview, getStoredUser } from '../lib/api';
 import { withSessionGuard } from '../lib/SessionGuard';
+import { safeBack } from '../lib/navigation';
 
 function ReviewScreen() {
   const params = useLocalSearchParams<{
@@ -35,7 +36,7 @@ function ReviewScreen() {
         targetUserId: params.targetUserId || undefined,
         restaurantId: params.restaurantId || undefined,
       });
-      Alert.alert('Thanks', 'Your review was submitted.', [{ text: 'OK', onPress: () => router.back() }]);
+      Alert.alert('Thanks', 'Your review was submitted.', [{ text: 'OK', onPress: () => safeBack(router) }]);
     } catch (err) {
       Alert.alert('Unable to submit review', (err as Error).message);
     } finally {

@@ -5,6 +5,7 @@ import { Clock, MapPin, Plus, Minus, ShoppingBag, ArrowLeft } from 'lucide-react
 import { useTranslation } from 'react-i18next';
 import { getRestaurantMenu, getRestaurants, placeFoodOrder, Restaurant, getStoredUser, MenuItem } from '../../lib/api';
 import { withSessionGuard } from '../../lib/SessionGuard';
+import { safeBack } from '../../lib/navigation';
 
 function RestaurantScreen() {
   const { id } = useLocalSearchParams();
@@ -95,7 +96,7 @@ function RestaurantScreen() {
     return (
       <SafeAreaView className="flex-1 bg-background justify-center items-center">
         <Text className="text-lg font-bold">{t('restaurant.not_found', 'Restaurant not found')}</Text>
-        <TouchableOpacity onPress={() => router.back()} className="mt-4 bg-primary px-6 py-2 rounded-xl">
+        <TouchableOpacity onPress={() => safeBack(router, '/(tabs)/food')} className="mt-4 bg-primary px-6 py-2 rounded-xl">
           <Text className="text-white font-bold">Go Back</Text>
         </TouchableOpacity>
       </SafeAreaView>
@@ -116,7 +117,7 @@ function RestaurantScreen() {
               </View>
             )}
             <TouchableOpacity
-              onPress={() => router.back()}
+              onPress={() => safeBack(router, '/(tabs)/food')}
               className="absolute top-12 left-4 w-10 h-10 bg-black/30 rounded-full items-center justify-center"
             >
               <ArrowLeft size={24} color="white" />

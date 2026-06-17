@@ -5,6 +5,7 @@ import { Banknote, ShieldCheck, ArrowLeft } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { getStoredUser, redeemPromotion } from '../lib/api';
 import { withSessionGuard } from '../lib/SessionGuard';
+import { safeBack } from '../lib/navigation';
 
 function CheckoutScreen() {
   const { t } = useTranslation();
@@ -42,7 +43,7 @@ function CheckoutScreen() {
     try {
       setLoading(true);
       Alert.alert('Success', `Your ${String(type).toLowerCase()} is confirmed. Please pay cash to the partner.`, [
-        { text: 'OK', onPress: () => router.back() }
+        { text: 'OK', onPress: () => safeBack(router) }
       ]);
     } catch (err) {
       Alert.alert('Payment Failed', (err as Error).message);
@@ -57,7 +58,7 @@ function CheckoutScreen() {
           headerShown: true,
           title: t('checkout.title', 'Checkout'),
           headerLeft: () => (
-            <TouchableOpacity onPress={() => router.back()} className="ml-2">
+            <TouchableOpacity onPress={() => safeBack(router)} className="ml-2">
               <ArrowLeft size={24} color="#1b1b1b" />
             </TouchableOpacity>
           ),

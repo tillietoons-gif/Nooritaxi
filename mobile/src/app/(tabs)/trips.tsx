@@ -176,7 +176,6 @@ export default function TripsScreen() {
           ) : (
             <FlashList
               data={trips}
-              estimatedItemSize={160}
               keyExtractor={(item) => item.id}
               renderItem={({ item: trip }) => (
                 <View className="bg-card p-6 rounded-3xl border border-muted/10 mb-5 shadow-sm">

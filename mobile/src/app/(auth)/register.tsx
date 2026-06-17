@@ -4,8 +4,10 @@ import { ShieldCheck, User, Phone, Lock, Eye, EyeOff, ChevronLeft } from 'lucide
 import { Link, router } from 'expo-router';
 import { AuthRole, getSignedInRoute, register } from '../../lib/api';
 import { PatternOverlay } from '../../components/PatternOverlay';
+import { useTranslation } from 'react-i18next';
 
 export default function RegisterScreen() {
+  const { t } = useTranslation();
   const [name, setName] = React.useState('');
   const [phone, setPhone] = React.useState('');
   const [password, setPassword] = React.useState('');
@@ -37,24 +39,24 @@ export default function RegisterScreen() {
             <View className="bg-primary/10 p-6 rounded-4xl mb-6 shadow-sm border border-primary/5">
               <ShieldCheck size={48} color="#006947" />
             </View>
-            <Text className="text-3xl font-black text-primary uppercase tracking-tighter">Get Started</Text>
+            <Text className="text-3xl font-black text-primary uppercase tracking-tighter">{t('auth.get_started')}</Text>
             <Text className="text-muted-foreground text-center mt-2 px-6 font-medium">
               {role === 'DRIVER'
-                ? 'Create a driver account to manage assigned trips and complete verification from the shared app.'
+                ? t('auth.driver_subtitle')
                 : role === 'MERCHANT'
-                  ? 'Create a merchant account to manage your restaurant, menu, and incoming orders.'
-                  : 'Join thousands of people moving smarter.'}
+                  ? t('auth.merchant_subtitle')
+                  : t('auth.rider_subtitle')}
             </Text>
           </View>
 
           <View className="space-y-6">
             <View>
-              <Text className="text-xs font-black text-muted-foreground uppercase mb-3 ml-1 tracking-widest">Account Type</Text>
+              <Text className="text-xs font-black text-muted-foreground uppercase mb-3 ml-1 tracking-widest">{t('auth.account_type')}</Text>
               <View className="flex-row rounded-3xl bg-card border border-muted/20 p-1">
                 {([
-                  { id: 'RIDER', label: 'Rider' },
-                  { id: 'DRIVER', label: 'Driver' },
-                  { id: 'MERCHANT', label: 'Merchant' },
+                  { id: 'RIDER', label: t('auth.rider') },
+                  { id: 'DRIVER', label: t('auth.driver') },
+                  { id: 'MERCHANT', label: t('auth.merchant') },
                 ] as const).map((option) => {
                   const active = role === option.id;
                   return (
@@ -73,20 +75,20 @@ export default function RegisterScreen() {
             </View>
 
             <View>
-              <Text className="text-xs font-black text-muted-foreground uppercase mb-2 ml-1 tracking-widest">Full Name</Text>
+              <Text className="text-xs font-black text-muted-foreground uppercase mb-2 ml-1 tracking-widest">{t('auth.full_name')}</Text>
               <View className="flex-row items-center bg-card h-16 px-5 rounded-2xl border border-muted/20 shadow-sm">
                 <User size={20} color="#006947" />
                 <TextInput
                   value={name}
                   onChangeText={setName}
-                  placeholder="Your name"
+                  placeholder={t('auth.your_name')}
                   className="flex-1 ml-4 text-base font-bold text-foreground"
                 />
               </View>
             </View>
 
             <View>
-              <Text className="text-xs font-black text-muted-foreground uppercase mb-2 ml-1 tracking-widest">Phone Number</Text>
+              <Text className="text-xs font-black text-muted-foreground uppercase mb-2 ml-1 tracking-widest">{t('auth.phone_number')}</Text>
               <View className="flex-row items-center bg-card h-16 px-5 rounded-2xl border border-muted/20 shadow-sm">
                 <Phone size={20} color="#006947" />
                 <TextInput
@@ -100,7 +102,7 @@ export default function RegisterScreen() {
             </View>
 
             <View>
-              <Text className="text-xs font-black text-muted-foreground uppercase mb-2 ml-1 tracking-widest">Password</Text>
+              <Text className="text-xs font-black text-muted-foreground uppercase mb-2 ml-1 tracking-widest">{t('auth.password')}</Text>
               <View className="flex-row items-center bg-card h-16 px-5 rounded-2xl border border-muted/20 shadow-sm">
                 <Lock size={20} color="#006947" />
                 <TextInput
@@ -128,15 +130,15 @@ export default function RegisterScreen() {
               className={`h-16 rounded-3xl items-center justify-center shadow-lg mt-4 ${loading ? 'bg-muted' : 'bg-primary shadow-primary/30'}`}
             >
               <Text className="text-white text-lg font-black uppercase tracking-widest">
-                {loading ? 'Creating...' : role === 'DRIVER' ? 'Create Driver Account' : role === 'MERCHANT' ? 'Create Merchant Account' : 'Sign Up'}
+                {loading ? t('auth.creating') : role === 'DRIVER' ? t('auth.create_driver_account') : role === 'MERCHANT' ? t('auth.create_merchant_account') : t('auth.sign_up')}
               </Text>
             </TouchableOpacity>
           </View>
 
           <View className="flex-row justify-center mt-10 gap-1 mb-10 items-center">
-            <Text className="text-muted-foreground font-medium">Already registered?</Text>
+            <Text className="text-muted-foreground font-medium">{t('auth.already_registered')}</Text>
             <TouchableOpacity onPress={() => router.push('/(auth)/login' as any)}>
-              <Text className="text-primary font-black uppercase text-xs tracking-widest border-b border-primary/30 pb-0.5">Log In</Text>
+              <Text className="text-primary font-black uppercase text-xs tracking-widest border-b border-primary/30 pb-0.5">{t('auth.log_in')}</Text>
             </TouchableOpacity>
           </View>
         </View>

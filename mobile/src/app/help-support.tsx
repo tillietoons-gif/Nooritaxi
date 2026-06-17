@@ -3,6 +3,8 @@ import { View, Text, TouchableOpacity, SafeAreaView, ScrollView, Linking } from 
 import { useRouter, Stack } from 'expo-router';
 import { HelpCircle, Phone, Mail, MessageSquare, ChevronRight, ArrowLeft } from 'lucide-react-native';
 import { withSessionGuard } from '../lib/SessionGuard';
+import { safeBack } from '../lib/navigation';
+import { useTranslation } from 'react-i18next';
 
 const FAQS = [
   { question: 'How do I book a ride?', answer: 'Go to the Trips tab and tap the "Book" button at the top right.' },
@@ -12,6 +14,7 @@ const FAQS = [
 ];
 
 function HelpSupportScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
 
   const handleContact = (type: 'phone' | 'email') => {
@@ -25,10 +28,10 @@ function HelpSupportScreen() {
   return (
     <SafeAreaView className="flex-1 bg-background">
         <Stack.Screen options={{
-          title: 'Help & Support',
+          title: t('support.title'),
           headerShown: true,
           headerLeft: () => (
-            <TouchableOpacity onPress={() => router.back()} className="ml-2">
+            <TouchableOpacity onPress={() => safeBack(router, '/(tabs)/profile')} className="ml-2">
               <ArrowLeft size={24} color="#1b1b1b" />
             </TouchableOpacity>
           ),
@@ -38,13 +41,13 @@ function HelpSupportScreen() {
             <View className="bg-primary/10 w-16 h-16 rounded-3xl items-center justify-center mb-4">
               <HelpCircle size={32} color="#006947" />
             </View>
-            <Text className="text-2xl font-bold text-foreground">How can we help?</Text>
+            <Text className="text-2xl font-bold text-foreground">{t('support.heading')}</Text>
             <Text className="text-muted-foreground mt-2">
-              Our support team is available 24/7 to assist you with any issues.
+              {t('support.subtitle')}
             </Text>
           </View>
 
-          <Text className="text-lg font-bold mb-4">Contact Us</Text>
+          <Text className="text-lg font-bold mb-4">{t('support.contact_us')}</Text>
           <View className="flex-row gap-3 mb-10">
             <TouchableOpacity
               onPress={() => handleContact('phone')}
@@ -53,7 +56,7 @@ function HelpSupportScreen() {
               <View className="bg-primary/5 p-3 rounded-full mb-3">
                 <Phone size={24} color="#006947" />
               </View>
-              <Text className="font-bold">Call Us</Text>
+              <Text className="font-bold">{t('support.call_us')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -63,11 +66,11 @@ function HelpSupportScreen() {
               <View className="bg-primary/5 p-3 rounded-full mb-3">
                 <Mail size={24} color="#006947" />
               </View>
-              <Text className="font-bold">Email Us</Text>
+              <Text className="font-bold">{t('support.email_us')}</Text>
             </TouchableOpacity>
           </View>
 
-          <Text className="text-lg font-bold mb-4">Frequently Asked Questions</Text>
+          <Text className="text-lg font-bold mb-4">{t('support.faq')}</Text>
           <View className="space-y-3 mb-10">
             {FAQS.map((faq, index) => (
               <View key={index} className="bg-card p-5 rounded-2xl border border-muted/10">

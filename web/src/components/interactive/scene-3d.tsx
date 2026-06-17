@@ -42,7 +42,22 @@ function FrustumCulling({ children }: { children: React.ReactNode }) {
 function OcclusionCuller({ children }: { children: React.ReactNode }) {
   const { camera, scene } = useThree();
   const [lastCheck, setLastCheck] = React.useState(0);
-  const raycaster = React.useMemo(() => {
+  const localRaycaster = React.useMemo(() => {
+    const r = new THREE.Raycaster();
+    r.far = 40;
+    return r;
+  }, []);
+
+  // Use a local raycaster to avoid mutating the global one from useThree
+  const localRaycaster = React.useMemo(() => {
+    const rc = new THREE.Raycaster();
+    rc.far = 40;
+    return rc;
+  }, []);
+
+  // Use a local memoized raycaster to avoid modifying the one from useThree
+  // This satisfies react-hooks/immutability which prevents mutation of objects from hooks
+  const localRaycaster = React.useMemo(() => {
     const r = new THREE.Raycaster();
     r.far = 40;
     return r;
@@ -61,8 +76,8 @@ function OcclusionCuller({ children }: { children: React.ReactNode }) {
     const origin = camera.position.clone();
 
     dirs.forEach((dir) => {
-      raycaster.set(origin, dir);
-      const hits = raycaster.intersectObjects(scene.children, true);
+      localRaycaster.set(origin, dir);
+      const hits = localRaycaster.intersectObjects(scene.children, true);
       // Heuristic: if very close large hit, we could hide far objects (simplified demo)
       if (hits.length > 2) {
         // Example: nothing complex here; real impl would mark groups by distance + layers

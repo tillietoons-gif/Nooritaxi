@@ -1,7 +1,8 @@
 import React from 'react';
-import { Alert, SafeAreaView, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, SafeAreaView, ScrollView, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
-import { BriefcaseBusiness, Car, CheckCircle2, ChevronRight, Clock, MapPin, Package } from 'lucide-react-native';
+import * as Location from 'expo-location';
+import { BriefcaseBusiness, Car, CheckCircle2, ChevronRight, Clock, MapPin, Navigation, Package, X } from 'lucide-react-native';
 import {
   AuthUser,
   Delivery,
@@ -15,8 +16,10 @@ import {
   isDriverUser,
   Trip,
   updateDeliveryStatus,
+  updateMyDriverStatus,
   updateTripStatus,
 } from '../../lib/api';
+import { startBackgroundLocation, stopBackgroundLocation } from '../../lib/background-location';
 import { PatternOverlay } from '../../components/PatternOverlay';
 import { buildDriverWorkSummary } from '../../lib/driver-work';
 
@@ -27,6 +30,10 @@ export default function WorkScreen() {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState('');
   const [updatingId, setUpdatingId] = React.useState<string | null>(null);
+  const [online, setOnline] = React.useState(false);
+  const [availabilityUpdating, setAvailabilityUpdating] = React.useState(false);
+  const [handledJobIds, setHandledJobIds] = React.useState<string[]>([]);
+  const [requestSeconds, setRequestSeconds] = React.useState(30);
 
   const loadWork = React.useCallback(async () => {
     setLoading(true);
@@ -64,6 +71,82 @@ export default function WorkScreen() {
     }, [loadWork]),
   );
 
+  React.useEffect(() => {
+    if (!online || !user) return;
+
+    let mounted = true;
+    let subscription: Location.LocationSubscription | null = null;
+
+    async function publishAvailability() {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted' || !mounted) return;
+
+      const current = await Location.getCurrentPositionAsync({}).catch(() => null);
+      if (current) {
+        await updateMyDriverStatus({
+          status: 'ONLINE',
+          lat: current.coords.latitude,
+          lng: current.coords.longitude,
+        }).catch(() => undefined);
+      }
+
+      subscription = await Location.watchPositionAsync(
+        {
+          accuracy: Location.Accuracy.Balanced,
+          distanceInterval: 50,
+          timeInterval: 15000,
+        },
+        (position) => {
+          updateMyDriverStatus({
+            status: 'ONLINE',
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          }).catch(() => undefined);
+        },
+      );
+    }
+
+    void publishAvailability();
+
+    return () => {
+      mounted = false;
+      subscription?.remove();
+    };
+  }, [online, user]);
+
+  async function handleAvailabilityChange(nextOnline: boolean) {
+    try {
+      setAvailabilityUpdating(true);
+      let coords: { lat?: number; lng?: number } = {};
+      if (nextOnline) {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('Location required', 'Drivers need location access to go online for dispatch.');
+          return;
+        }
+        const current = await Location.getCurrentPositionAsync({});
+        coords = { lat: current.coords.latitude, lng: current.coords.longitude };
+      }
+
+      await updateMyDriverStatus({
+        status: nextOnline ? 'ONLINE' : 'OFFLINE',
+        ...coords,
+      });
+      setOnline(nextOnline);
+
+      // Background location for continuous tracking while online
+      if (nextOnline) {
+        await startBackgroundLocation();
+      } else {
+        await stopBackgroundLocation();
+      }
+    } catch (err) {
+      Alert.alert('Unable to update availability', err instanceof Error ? err.message : 'Please try again');
+    } finally {
+      setAvailabilityUpdating(false);
+    }
+  }
+
   async function handleTripAction(trip: Trip) {
     if (!user) return;
 
@@ -99,8 +182,127 @@ export default function WorkScreen() {
   }
 
   const workSummary = buildDriverWorkSummary(trips, deliveries);
+  const nextTripRequest = trips.find((trip) => trip.status === 'ACCEPTED' && !handledJobIds.includes(`trip:${trip.id}`));
+  const nextDeliveryRequest = deliveries.find((delivery) => delivery.status === 'ASSIGNED' && !handledJobIds.includes(`delivery:${delivery.id}`));
+  const jobRequest = nextTripRequest
+    ? { type: 'trip' as const, id: nextTripRequest.id, title: 'New ride request', pickup: nextTripRequest.pickupLocation, dropoff: nextTripRequest.dropoffLocation, amount: Number(nextTripRequest.fare ?? 0), item: nextTripRequest }
+    : nextDeliveryRequest
+      ? { type: 'delivery' as const, id: nextDeliveryRequest.id, title: 'New delivery request', pickup: nextDeliveryRequest.pickupAddress, dropoff: nextDeliveryRequest.dropoffAddress, amount: Number(nextDeliveryRequest.fee ?? 0), item: nextDeliveryRequest }
+      : null;
   const activeTrips = workSummary.activeTrips;
   const activeDeliveries = workSummary.activeDeliveries;
+  const completedTripCash = trips
+    .filter((trip) => trip.status === 'COMPLETED')
+    .reduce((sum, trip) => sum + Number(trip.fare ?? 0), 0);
+  const completedDeliveryCash = deliveries
+    .filter((delivery) => delivery.status === 'DELIVERED')
+    .reduce((sum, delivery) => sum + Number(delivery.fee ?? 0), 0);
+  const cashTotal = completedTripCash + completedDeliveryCash;
+
+  React.useEffect(() => {
+    if (!jobRequest) return;
+    setRequestSeconds(30);
+    const timer = setInterval(() => {
+      setRequestSeconds((seconds) => {
+        if (seconds <= 1) {
+          setHandledJobIds((current) => [...current, `${jobRequest.type}:${jobRequest.id}`]);
+          clearInterval(timer);
+          return 0;
+        }
+        return seconds - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [jobRequest?.id, jobRequest?.type]);
+
+  async function acceptJobRequest() {
+    if (!jobRequest) return;
+    setHandledJobIds((current) => [...current, `${jobRequest.type}:${jobRequest.id}`]);
+    if (jobRequest.type === 'trip') {
+      router.push(`/active-trip?tripId=${jobRequest.id}` as any);
+    }
+  }
+
+  async function declineJobRequest() {
+    if (!user || !jobRequest) return;
+    try {
+      setUpdatingId(jobRequest.id);
+      if (jobRequest.type === 'trip') {
+        await updateTripStatus(jobRequest.id, 'CANCELLED', user.id);
+      } else {
+        await updateDeliveryStatus(jobRequest.id, 'CANCELLED', user.id);
+      }
+      setHandledJobIds((current) => [...current, `${jobRequest.type}:${jobRequest.id}`]);
+      await loadWork();
+    } catch (err) {
+      Alert.alert('Unable to decline job', err instanceof Error ? err.message : 'Please try again');
+    } finally {
+      setUpdatingId(null);
+    }
+  }
+
+  if (!loading && jobRequest) {
+    return (
+      <SafeAreaView className="flex-1 bg-primary">
+        <View className="flex-1 px-6 py-8 justify-between">
+          <View className="items-end">
+            <View className="h-14 w-14 rounded-full bg-white/15 items-center justify-center">
+              <Text className="text-white text-xl font-black">{requestSeconds}</Text>
+            </View>
+          </View>
+          <View>
+            <Text className="text-white/70 text-[10px] font-black uppercase tracking-widest mb-3">Dispatch</Text>
+            <Text className="text-white text-4xl font-black mb-3">{jobRequest.title}</Text>
+            <Text className="text-white/75 text-base leading-6">Review the route and choose quickly so customers know who is coming.</Text>
+          </View>
+          <View className="bg-white rounded-3xl p-6">
+            <View className="flex-row items-center justify-between mb-6">
+              <View className="flex-row items-center gap-3">
+                <View className="h-12 w-12 rounded-2xl bg-primary/10 items-center justify-center">
+                  {jobRequest.type === 'trip' ? <Car size={22} color="#006947" /> : <Package size={22} color="#006947" />}
+                </View>
+                <View>
+                  <Text className="text-xs text-muted-foreground font-bold uppercase">Cash fare</Text>
+                  <Text className="text-2xl font-black text-foreground">AFN {jobRequest.amount.toLocaleString()}</Text>
+                </View>
+              </View>
+              <View className="rounded-full bg-accent/15 px-3 py-1">
+                <Text className="text-[10px] font-black uppercase text-foreground">{jobRequest.type}</Text>
+              </View>
+            </View>
+            <View className="flex-row gap-4 mb-8">
+              <View className="items-center pt-1">
+                <MapPin size={16} color="#006947" />
+                <View className="w-[1px] flex-1 min-h-10 bg-muted/30 my-2" />
+                <Navigation size={16} color="#D4AF37" />
+              </View>
+              <View className="flex-1">
+                <Text className="text-xs text-muted-foreground font-bold">Pickup</Text>
+                <Text className="text-base font-black text-foreground mb-4">{jobRequest.pickup}</Text>
+                <Text className="text-xs text-muted-foreground font-bold">Dropoff</Text>
+                <Text className="text-base font-black text-foreground">{jobRequest.dropoff}</Text>
+              </View>
+            </View>
+            <View className="flex-row gap-3">
+              <TouchableOpacity
+                onPress={declineJobRequest}
+                disabled={updatingId === jobRequest.id}
+                className="h-14 w-16 rounded-2xl bg-destructive/10 items-center justify-center"
+              >
+                <X size={22} color="#ba1a1a" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={acceptJobRequest}
+                className="h-14 flex-1 rounded-2xl bg-primary items-center justify-center"
+              >
+                <Text className="text-white font-black uppercase tracking-widest">Accept Job</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-background">
@@ -120,6 +322,36 @@ export default function WorkScreen() {
                 <BriefcaseBusiness size={24} color="#ffffff" />
               </View>
             </View>
+          </View>
+
+          <View className="bg-card rounded-3xl p-5 border border-muted/10 shadow-sm mb-6">
+            <View className="flex-row items-center justify-between gap-4">
+              <View className="flex-1">
+                <Text className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Dispatch availability</Text>
+                <Text className="text-lg font-black text-foreground mt-1">
+                  {online ? 'Online for nearby jobs' : 'Offline'}
+                </Text>
+                <Text className="text-xs text-muted-foreground mt-1">
+                  {online ? 'Your location is updating for ride and delivery matching.' : 'Turn on when you are ready to accept work.'}
+                </Text>
+              </View>
+              <Switch
+                value={online}
+                disabled={availabilityUpdating}
+                onValueChange={handleAvailabilityChange}
+              />
+            </View>
+          </View>
+
+          <View className="bg-secondary/35 rounded-3xl p-5 border border-accent/10 mb-6">
+            <Text className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Cash reconciliation</Text>
+            <Text className="text-2xl font-black text-foreground mt-1">AFN {cashTotal.toLocaleString()}</Text>
+            <Text className="text-xs text-muted-foreground mt-2">
+              Completed rides: AFN {completedTripCash.toLocaleString()} · Completed deliveries: AFN {completedDeliveryCash.toLocaleString()}
+            </Text>
+            <TouchableOpacity onPress={() => router.push('/cash-ledger')} className="mt-4 rounded-2xl bg-card border border-muted/10 py-3 items-center">
+              <Text className="text-primary font-black uppercase tracking-widest text-xs">Open ledger</Text>
+            </TouchableOpacity>
           </View>
 
           {loading ? (

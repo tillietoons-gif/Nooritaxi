@@ -10,7 +10,9 @@ const getAuthToken = async (): Promise<string | null> => {
   }
 };
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
+const API_BASE_URL =
+  process.env.EXPO_PUBLIC_API_URL ||
+  'https://noori-backend-750921372930.asia-south1.run.app/api';
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,

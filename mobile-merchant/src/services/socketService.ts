@@ -1,6 +1,8 @@
 import { io, Socket } from 'socket.io-client';
 
-const SOCKET_URL = 'http://localhost:3000/orders';
+const SOCKET_URL =
+  process.env.EXPO_PUBLIC_SOCKET_URL ||
+  'https://noori-backend-750921372930.asia-south1.run.app';
 
 class SocketService {
   private static instance: SocketService;

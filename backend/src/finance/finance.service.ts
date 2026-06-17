@@ -147,10 +147,8 @@ export class FinanceService {
 
   // 6. Financial Analytics & High-Level Reports
   async getFinanceAnalytics() {
-    /**
-     * Optimization: Parallelize independent aggregate and count queries to reduce latency.
-     * Estimated Impact: Reduces API response time by ~50-66% (from O(sum(q)) to O(max(q))).
-     */
+    // Highly simplified analytics aggregations for UI
+    // Parallelized independent Prisma queries to reduce latency
     const [pendingSettlements, totalCollected, activeRefunds] =
       await Promise.all([
         this.prisma.settlement.aggregate({

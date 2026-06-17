@@ -6,7 +6,7 @@ import { PatternOverlay } from "@/components/ui/pattern-overlay"
 import { useTranslation } from "react-i18next"
 import { cn } from "@/lib/utils"
 export function Footer() {
-  const { i18n } = useTranslation()
+  const { i18n, t } = useTranslation()
 
   const changeLanguage = (lng: string) => {
     i18n.changeLanguage(lng)
@@ -121,7 +121,7 @@ export function Footer() {
                  i18n.language === 'fa' && "bg-primary/10 text-primary font-bold"
                )}
              >
-               Dari
+               {t("nav.about") === "About" ? "Dari" : "دری"}
              </button>
              <button
                onClick={() => changeLanguage('ps')}
@@ -130,7 +130,7 @@ export function Footer() {
                  i18n.language === 'ps' && "bg-primary/10 text-primary font-bold"
                )}
              >
-               Pashto
+               {t("nav.about") === "About" ? "Pashto" : "پښتو"}
              </button>
              <button
                onClick={() => changeLanguage('en')}

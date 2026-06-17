@@ -41,7 +41,7 @@ export default function NotificationsScreen() {
   return (
     <SafeAreaView className="flex-1 bg-background">
       <View className="px-4 py-6 border-b border-muted/10">
-        <Text className="text-2xl font-bold text-primary">{t('notifications.title', 'Alerts')}</Text>
+        <Text className="text-2xl font-bold text-primary">{t('notifications.alerts', 'Alerts')}</Text>
       </View>
       <ScrollView className="px-4 py-4">
         {loading ? (
@@ -60,7 +60,12 @@ export default function NotificationsScreen() {
           </View>
         ) : (
           notifications.map((n) => (
-            <TouchableOpacity key={n.id} className={`flex-row p-4 rounded-2xl mb-3 border ${n.isRead ? 'bg-card border-muted/10' : 'bg-primary/5 border-primary/20'}`}>
+            <TouchableOpacity 
+              key={n.id} 
+              onPress={() => {
+                setNotifications((prev) => prev.map(item => item.id === n.id ? {...item, isRead: true} : item));
+              }}
+              className={`flex-row p-4 rounded-2xl mb-3 border ${n.isRead ? 'bg-card border-muted/10' : 'bg-primary/5 border-primary/20'}`}>
               <View className="w-10 h-10 rounded-full bg-primary/10 items-center justify-center mr-4">
                 {getIcon((n as any).type)}
               </View>

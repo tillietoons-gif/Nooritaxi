@@ -7,29 +7,26 @@ export class OperationsService {
 
   // 1. Mission Control Dashboard Metrics
   async getDashboardMetrics() {
-    const [
-      activeDrivers,
-      activeTrips,
-      pendingTrips,
-      sosAlerts,
-      openIncidents,
-    ] = await Promise.all([
-      this.prisma.driver.count({
-        where: { status: { in: ['ONLINE', 'BUSY'] } },
-      }),
-      this.prisma.trip.count({
-        where: { status: { in: ['ACCEPTED', 'DRIVER_ARRIVED', 'IN_PROGRESS'] } },
-      }),
-      this.prisma.trip.count({
-        where: { status: 'REQUESTED' },
-      }),
-      this.prisma.sosAlert.count({
-        where: { status: 'ACTIVE' },
-      }),
-      this.prisma.incident.count({
-        where: { status: { in: ['OPEN', 'INVESTIGATING'] } },
-      }),
-    ]);
+    const [activeDrivers, activeTrips, pendingTrips, sosAlerts, openIncidents] =
+      await Promise.all([
+        this.prisma.driver.count({
+          where: { status: { in: ['ONLINE', 'BUSY'] } },
+        }),
+        this.prisma.trip.count({
+          where: {
+            status: { in: ['ACCEPTED', 'DRIVER_ARRIVED', 'IN_PROGRESS'] },
+          },
+        }),
+        this.prisma.trip.count({
+          where: { status: 'REQUESTED' },
+        }),
+        this.prisma.sosAlert.count({
+          where: { status: 'ACTIVE' },
+        }),
+        this.prisma.incident.count({
+          where: { status: { in: ['OPEN', 'INVESTIGATING'] } },
+        }),
+      ]);
 
     return {
       activeDrivers,
@@ -153,29 +150,31 @@ export class OperationsService {
   // 6. Live Tracking Data for Map
   async getLiveMapData() {
     // Highly simplified spatial query replacement for the UI map
-    const drivers = await this.prisma.driver.findMany({
-      where: { status: { in: ['ONLINE', 'BUSY'] } },
-      select: {
-        id: true,
-        currentLat: true,
-        currentLng: true,
-        status: true,
-        user: { select: { name: true } },
-      },
-      take: 200,
-    });
-
-    const activeTrips = await this.prisma.trip.findMany({
-      where: { status: 'IN_PROGRESS' },
-      select: {
-        id: true,
-        pickupLat: true,
-        pickupLng: true,
-        dropoffLat: true,
-        dropoffLng: true,
-      },
-      take: 100,
-    });
+    // Parallelized independent Prisma queries to reduce latency
+    const [drivers, activeTrips] = await Promise.all([
+      this.prisma.driver.findMany({
+        where: { status: { in: ['ONLINE', 'BUSY'] } },
+        select: {
+          id: true,
+          currentLat: true,
+          currentLng: true,
+          status: true,
+          user: { select: { name: true } },
+        },
+        take: 200,
+      }),
+      this.prisma.trip.findMany({
+        where: { status: 'IN_PROGRESS' },
+        select: {
+          id: true,
+          pickupLat: true,
+          pickupLng: true,
+          dropoffLat: true,
+          dropoffLng: true,
+        },
+        take: 100,
+      }),
+    ]);
 
     return { drivers, activeTrips };
   }

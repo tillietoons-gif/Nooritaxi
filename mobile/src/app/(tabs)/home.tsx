@@ -1,8 +1,21 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, SafeAreaView, TouchableOpacity } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
-import { BriefcaseBusiness, Car, Utensils, Package, Banknote, Bell, ChevronRight, User, Search, Shield } from 'lucide-react-native';
-import { getStoredUser, AuthUser, Delivery, getDeliveries, getTrips, Trip, isDriverUser } from '../../lib/api';
+import { BriefcaseBusiness, Car, Utensils, Package, Banknote, Bell, ChevronRight, User, Search, Shield, Store, ReceiptText, Gift } from 'lucide-react-native';
+import {
+  getStoredUser,
+  AuthUser,
+  Delivery,
+  getDeliveries,
+  getTrips,
+  Trip,
+  isDriverUser,
+  isMerchantUser,
+  getRestaurants,
+  Restaurant,
+  FoodOrder,
+  getFoodOrders,
+} from '../../lib/api';
 import { useTranslation } from 'react-i18next';
 import { PatternOverlay } from '../../components/PatternOverlay';
 import { buildDriverWorkSummary } from '../../lib/driver-work';
@@ -12,6 +25,8 @@ export default function HomeScreen() {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
   const [trips, setTrips] = useState<Trip[]>([]);
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [orders, setOrders] = useState<FoodOrder[]>([]);
   const [loadError, setLoadError] = useState('');
 
   const loadData = React.useCallback(async () => {
@@ -20,11 +35,26 @@ export default function HomeScreen() {
       const storedUser = await getStoredUser();
       if (storedUser) {
         setUser(storedUser);
-        setTrips(await getTrips(storedUser.id));
-        setDeliveries(isDriverUser(storedUser) ? await getDeliveries(storedUser.id) : []);
+        if (isMerchantUser(storedUser)) {
+          const ownedRestaurants = (await getRestaurants()).filter((restaurant) => restaurant.ownerId === storedUser.id);
+          const restaurantOrders = (
+            await Promise.all(ownedRestaurants.map((restaurant) => getFoodOrders({ restaurantId: restaurant.id })))
+          ).flat();
+          setRestaurants(ownedRestaurants);
+          setOrders(restaurantOrders);
+          setTrips([]);
+          setDeliveries([]);
+        } else {
+          setTrips(await getTrips(storedUser.id));
+          setDeliveries(isDriverUser(storedUser) ? await getDeliveries(storedUser.id) : []);
+          setRestaurants([]);
+          setOrders([]);
+        }
       } else {
         setTrips([]);
         setDeliveries([]);
+        setRestaurants([]);
+        setOrders([]);
       }
     } catch (err) {
       console.error('Home load error:', err);
@@ -39,6 +69,7 @@ export default function HomeScreen() {
   );
 
   const isDriver = isDriverUser(user);
+  const isMerchant = isMerchantUser(user);
   const workSummary = buildDriverWorkSummary(trips, deliveries);
   const activeTrip = workSummary.primaryTrip;
   const activeDelivery = workSummary.primaryDelivery;
@@ -66,6 +97,120 @@ export default function HomeScreen() {
   );
   const activeWorkRoute = '/(tabs)/work';
 
+  if (isMerchant) {
+    const activeOrders = orders.filter((order) => !['DELIVERED', 'CANCELLED', 'REFUNDED'].includes(order.status));
+    const completedOrders = orders.filter((order) => order.status === 'DELIVERED').length;
+    const primaryRestaurant = restaurants[0] ?? null;
+
+    return (
+      <SafeAreaView className="flex-1 bg-background">
+        <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
+          <View className="px-6 pt-4 pb-2 flex-row justify-between items-center">
+            <View>
+              <Text className="text-muted-foreground text-sm font-medium">{greeting},</Text>
+              <Text className="text-2xl font-bold text-foreground">{user?.name || t('home.merchant')}</Text>
+            </View>
+            <TouchableOpacity
+              onPress={() => router.push('/(tabs)/notifications')}
+              className="bg-card p-3 rounded-full shadow-sm border border-muted/20"
+            >
+              <Bell size={24} color="#006947" />
+            </TouchableOpacity>
+          </View>
+
+          <View className="px-6 py-4">
+            <View className="bg-primary rounded-3xl p-6 overflow-hidden relative shadow-high-tech">
+              <PatternOverlay color="#ffffff" opacity={0.08} />
+              <View className="relative z-10">
+                <Text className="text-white/70 text-[10px] font-bold uppercase tracking-widest mb-2">{t('home.merchant_mode_badge')}</Text>
+                <Text className="text-white text-2xl font-black mb-3">
+                  {primaryRestaurant?.name ?? t('home.merchant_profile_title')}
+                </Text>
+                <Text className="text-white/80 leading-6 mb-6">
+                  {primaryRestaurant
+                    ? t('home.merchant_profile_subtitle_active', { count: activeOrders.length })
+                    : t('home.merchant_profile_subtitle_empty')}
+                </Text>
+                <View className="flex-row gap-3">
+                  <TouchableOpacity
+                    onPress={() => router.push('/(tabs)/merchant')}
+                    className="flex-1 bg-white py-3 rounded-2xl items-center justify-center"
+                  >
+                    <Text className="text-primary font-bold">{t('home.merchant_manage_menu')}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => router.push('/(tabs)/orders')}
+                    className="flex-1 bg-white/10 py-3 rounded-2xl items-center justify-center border border-white/15"
+                  >
+                    <Text className="text-white font-bold">{t('profile.orders')}</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </View>
+
+          {loadError ? (
+            <View className="px-6 pb-2">
+              <View className="bg-destructive/5 p-4 rounded-2xl border border-destructive/10">
+                <Text className="text-center text-xs text-destructive font-bold uppercase tracking-widest">{loadError}</Text>
+              </View>
+            </View>
+          ) : null}
+
+          <View className="px-6 py-2">
+            <View className="bg-card rounded-3xl p-6 border border-muted/20 shadow-sm">
+              <View className="flex-row justify-between items-start mb-4">
+                <View className="flex-1 pr-4">
+                  <Text className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest mb-2">{t('home.today')}</Text>
+                  <Text className="text-foreground text-lg font-bold leading-6">{t('home.active_orders', { count: activeOrders.length })}</Text>
+                  <Text className="text-xs text-muted-foreground mt-3">
+                    {t('home.merchant_today_summary', { restaurants: restaurants.length, orders: completedOrders })}
+                  </Text>
+                </View>
+                <View className="bg-primary/10 p-3 rounded-2xl">
+                  <ReceiptText size={24} color="#006947" />
+                </View>
+              </View>
+              <TouchableOpacity
+                onPress={() => router.push('/(tabs)/orders')}
+                className="bg-secondary/35 py-3 rounded-2xl items-center justify-center border border-accent/10"
+              >
+                <Text className="text-foreground font-bold">{t('home.open_order_queue')}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <View className="px-6 py-6">
+            <Text className="text-lg font-bold text-foreground mb-4">{t('home.merchant_tools')}</Text>
+            <View className="flex-row flex-wrap justify-between">
+              <TouchableOpacity
+                onPress={() => router.push('/(tabs)/merchant')}
+                className="w-[48%] bg-card p-5 rounded-3xl border border-muted/20 shadow-sm items-center mb-4"
+              >
+                <View className="bg-primary/10 p-4 rounded-2xl mb-3">
+                  <Store size={32} color="#006947" />
+                </View>
+                <Text className="font-bold text-foreground text-center">{t('profile.restaurant')}</Text>
+                <Text className="text-xs text-muted-foreground text-center mt-1">{t('home.profile_and_menu')}</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => router.push('/(tabs)/orders')}
+                className="w-[48%] bg-card p-5 rounded-3xl border border-muted/20 shadow-sm items-center mb-4"
+              >
+                <View className="bg-accent/10 p-4 rounded-2xl mb-3">
+                  <ReceiptText size={32} color="#D4AF37" />
+                </View>
+                <Text className="font-bold text-foreground text-center">{t('profile.orders')}</Text>
+                <Text className="text-xs text-muted-foreground text-center mt-1">{t('home.accept_and_prepare')}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
   if (isDriver) {
     return (
       <SafeAreaView className="flex-1 bg-background">
@@ -73,7 +218,7 @@ export default function HomeScreen() {
           <View className="px-6 pt-4 pb-2 flex-row justify-between items-center">
             <View>
               <Text className="text-muted-foreground text-sm font-medium">{greeting},</Text>
-              <Text className="text-2xl font-bold text-foreground">{user?.name || 'Driver'}</Text>
+              <Text className="text-2xl font-bold text-foreground">{user?.name || t('home.driver')}</Text>
             </View>
             <TouchableOpacity
               onPress={() => router.push('/(tabs)/notifications')}
@@ -136,6 +281,10 @@ export default function HomeScreen() {
                     {activeWorkStatus}
                   </Text>
                   <Text className="text-xs text-muted-foreground mt-3">{activeWorkSummary}</Text>
+                  {/* Mini earnings summary for active work */}
+                  <Text className="text-xs text-primary font-bold mt-2">
+                    {t('home.estimated_earnings', { amount: Math.round((completedTrips * 80) + (activeAssignments * 60) + (activeDeliveries * 50)) })}
+                  </Text>
                 </View>
                 <View className="bg-primary/10 p-3 rounded-2xl">
                   {activeWorkType === 'delivery' ? <Package size={24} color="#006947" /> : <Car size={24} color="#006947" />}
@@ -152,6 +301,22 @@ export default function HomeScreen() {
               </TouchableOpacity>
             </View>
           </View>
+
+          {/* Mini Live Tracking Preview for drivers */}
+          {(activeTrip || activeDelivery) && (
+            <View className="px-6 py-2">
+              <TouchableOpacity
+                onPress={() => router.push('/active-trip' as any)}
+                className="bg-card rounded-3xl p-4 border border-primary/20 flex-row items-center"
+              >
+                <View className="flex-1">
+                  <Text className="text-sm font-bold text-primary">{t('home.live_tracking_active')}</Text>
+                  <Text className="text-xs text-muted-foreground">{t('home.live_tracking_subtitle')}</Text>
+                </View>
+                <Car size={24} color="#006947" />
+              </TouchableOpacity>
+            </View>
+          )}
 
           <View className="px-6 py-6">
             <Text className="text-lg font-bold text-foreground mb-4">{t('home.driver_tools_title', 'Driver tools')}</Text>
@@ -222,7 +387,7 @@ export default function HomeScreen() {
               {greeting},
             </Text>
             <Text className="text-2xl font-bold text-foreground">
-              {user?.name || 'Friend'}
+              {user?.name || t('home.friend')}
             </Text>
           </View>
           <TouchableOpacity
@@ -320,17 +485,40 @@ export default function HomeScreen() {
               <Text className="text-xs text-muted-foreground text-center mt-1">{t('home.parcel_sub')}</Text>
             </TouchableOpacity>
 
-            {/* More / Cultural Info */}
+            {/* More - now functional: Promotions & How it Works */}
             <TouchableOpacity
-              className="w-[48%] bg-accent/5 p-5 rounded-3xl border border-accent/20 shadow-sm items-center border-dashed mb-4"
+              onPress={() => router.push('/promotions')}
+              className="w-[48%] bg-accent/5 p-5 rounded-3xl border border-accent/20 shadow-sm items-center mb-4"
             >
               <View className="bg-accent/10 p-4 rounded-2xl mb-3">
-                <ChevronRight size={32} color="#D4AF37" />
+                <Gift size={32} color="#D4AF37" />
               </View>
-              <Text className="font-bold text-accent">{t('home.more_label')}</Text>
-              <Text className="text-xs text-accent/70 text-center mt-1">{t('home.more_sub')}</Text>
+              <Text className="font-bold text-accent">{t('home.more_title', 'More')}</Text>
+              <Text className="text-xs text-accent/70 text-center mt-1">{t('home.more_sub', 'Promotions & Rewards')}</Text>
             </TouchableOpacity>
 
+          </View>
+        </View>
+
+        {/* How Noori Works - Educational section (mirrors web feature) */}
+        <View className="px-6 pb-4">
+          <Text className="text-lg font-bold text-foreground mb-3">{t('home.how_it_works', 'How Noori Works')}</Text>
+          <View className="space-y-3">
+            {[
+              { num: '1', title: t('home.step_request', 'Request'), desc: t('home.step_request_desc', 'Choose ride, delivery or food and confirm your location.') },
+              { num: '2', title: t('home.step_match', 'Match'), desc: t('home.step_match_desc', 'We instantly connect you with a verified nearby partner.') },
+              { num: '3', title: t('home.step_track', 'Track & Pay'), desc: t('home.step_track_desc', 'Follow live on the map. Pay cash on arrival or delivery.') },
+            ].map((step, idx) => (
+              <View key={idx} className="flex-row bg-card p-4 rounded-3xl border border-muted/10">
+                <View className="w-8 h-8 rounded-2xl bg-primary/10 items-center justify-center mr-4 mt-0.5">
+                  <Text className="font-black text-primary">{step.num}</Text>
+                </View>
+                <View className="flex-1">
+                  <Text className="font-bold text-foreground">{step.title}</Text>
+                  <Text className="text-muted-foreground text-xs mt-1 leading-5">{step.desc}</Text>
+                </View>
+              </View>
+            ))}
           </View>
         </View>
 
@@ -342,11 +530,10 @@ export default function HomeScreen() {
 
              <View className="flex-row justify-between items-center">
                <View className="flex-1 pr-4">
-                 <Text className="text-accent font-bold text-[10px] uppercase tracking-widest mb-1">CULTURAL TIP</Text>
+                 <Text className="text-accent font-bold text-[10px] uppercase tracking-widest mb-1">{t('home.cultural_tip_label')}</Text>
                  <Text className="text-foreground font-bold text-lg mb-2">{t('home.cultural_tip_title')}</Text>
                  <Text className="text-muted-foreground text-xs leading-5">
-                   {t('home.cultural_tip_body')}
-                 </Text>
+                   {t('home.cultural_tip_body')}</Text>
                </View>
                <View className="w-16 h-16 bg-white rounded-2xl items-center justify-center shadow-sm">
                   <User size={30} color="#D4AF37" />

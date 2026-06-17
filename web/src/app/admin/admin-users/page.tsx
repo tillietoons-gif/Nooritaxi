@@ -6,26 +6,15 @@ import {
   RefreshCw,
   KeyRound,
   LoaderCircle,
-  Copy,
-  Check,
   FilterX
 } from "lucide-react"
 
 import { AuthGate } from "@/components/auth-gate"
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { AdminPageHeader } from "@/components/admin/admin-page-header"
 import { authedFetch } from "@/lib/auth"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter
-} from "@/components/ui/dialog"
 import { useTranslation } from "react-i18next"
 import { GlassSurface } from "@/components/ui/glass-surface"
 
@@ -49,9 +38,9 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [users, setUsers] = useState<AdminUser[]>([])
-  const [roles, setRoles] = useState<Role[]>([])
+  const [, setRoles] = useState<Role[]>([])
   const [search, setSearch] = useState("")
-  const [error, setError] = useState<string | null>(null)
+  const [, setError] = useState<string | null>(null)
 
   const load = useCallback(async (isSilent = false) => {
     if (!isSilent) setLoading(true)
@@ -59,12 +48,15 @@ export default function AdminUsersPage() {
     setError(null)
 
     try {
-      const [usrRes, rolRes] = await Promise.all([
-        authedFetch("/admin/admin-users"),
-        authedFetch("/admin/roles")
+      const [rolRes, usrRes] = await Promise.all([
+        authedFetch("/admin/roles"),
+        authedFetch("/admin/users?role=ADMIN&limit=100")
       ])
 
-      if (usrRes.ok) setUsers(await usrRes.json())
+      if (usrRes.ok) {
+        const data = await usrRes.json()
+        setUsers(Array.isArray(data) ? data : data.items || [])
+      }
       if (rolRes.ok) setRoles(await rolRes.json())
     } catch (err) {
       setError(err instanceof Error ? err.message : t('admin.failedLoadAdminUsers', "Failed to load admin users"))
@@ -142,12 +134,12 @@ export default function AdminUsersPage() {
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex flex-wrap gap-1">
-                            {u.roles.map(r => (
+                            {u.roles?.map(r => (
                               <Badge key={r.id} variant={r.isSystem ? "default" : "secondary"} className="text-[9px] font-black uppercase tracking-widest">
                                 {r.name}
                               </Badge>
                             ))}
-                            {u.roles.length === 0 && <span className="text-xs text-muted-foreground italic">{t('admin.noRolesAssigned', "No roles assigned")}</span>}
+                            {(u.roles?.length ?? 0) === 0 && <span className="text-xs text-muted-foreground italic">{t('admin.noRolesAssigned', "No roles assigned")}</span>}
                           </div>
                         </td>
                         <td className="px-6 py-4 text-end">

@@ -117,6 +117,7 @@ export function AdminShellHeader() {
               <Link
                 key={item.href}
                 href={item.href}
+                aria-current={active ? "page" : undefined}
                 className={cn(
                   "inline-flex h-9 shrink-0 items-center gap-2 rounded-md px-3 text-sm font-semibold transition-colors",
                   active
@@ -146,6 +147,7 @@ export function AdminShellHeader() {
                     key={item.href}
                     href={item.href}
                     onClick={() => setMobileOpen(false)}
+                    aria-current={active ? "page" : undefined}
                     className={cn(
                       "inline-flex min-h-10 items-center gap-2 rounded-md px-3 text-sm font-semibold transition-colors",
                       active

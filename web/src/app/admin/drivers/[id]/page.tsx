@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Star, MapPin, Phone, Mail, Calendar, ShieldCheck, Car, Wallet, Clock, ArrowRight } from "lucide-react"
+import { Star, MapPin, Phone, Mail, Car } from "lucide-react"
 import { AdminPageHeader } from "@/components/admin/admin-page-header"
 
 export default function DriverDetailPage() {

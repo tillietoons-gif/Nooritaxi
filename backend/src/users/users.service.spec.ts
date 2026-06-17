@@ -28,7 +28,10 @@ describe('UsersService', () => {
   });
 
   it('creates rider accounts with a rider profile', async () => {
-    prisma.user.create.mockResolvedValue({ id: 'user-1', role: UserRole.RIDER });
+    prisma.user.create.mockResolvedValue({
+      id: 'user-1',
+      role: UserRole.RIDER,
+    });
 
     await service.create({
       name: 'Rider User',
@@ -48,7 +51,10 @@ describe('UsersService', () => {
   });
 
   it('creates driver accounts with a driver profile', async () => {
-    prisma.user.create.mockResolvedValue({ id: 'driver-1', role: UserRole.DRIVER });
+    prisma.user.create.mockResolvedValue({
+      id: 'driver-1',
+      role: UserRole.DRIVER,
+    });
 
     await service.create({
       name: 'Driver User',

@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, Image, ActivityIndicator } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
-import { UtensilsCrossed, Star, Clock, ChevronRight, Search } from 'lucide-react-native';
+import { UtensilsCrossed, Star, Clock, ChevronRight, Search, ReceiptText } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { getRestaurants, Restaurant } from '../../lib/api';
 import { PatternOverlay } from '../../components/PatternOverlay';
@@ -39,9 +39,17 @@ export default function FoodScreen() {
         <View className="px-6 py-6">
           <View className="flex-row items-center justify-between mb-6">
             <Text className="text-2xl font-bold text-foreground">{t('food.title', 'Food Delivery')}</Text>
-            <TouchableOpacity className="p-3 bg-card border border-muted/20 rounded-full shadow-sm">
-              <Search size={20} color="#006947" />
-            </TouchableOpacity>
+            <View className="flex-row gap-2">
+              <TouchableOpacity
+                onPress={() => router.push('/food-orders')}
+                className="p-3 bg-card border border-muted/20 rounded-full shadow-sm"
+              >
+                <ReceiptText size={20} color="#006947" />
+              </TouchableOpacity>
+              <TouchableOpacity className="p-3 bg-card border border-muted/20 rounded-full shadow-sm">
+                <Search size={20} color="#006947" />
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* High-Tech Promo Card */}

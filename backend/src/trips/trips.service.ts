@@ -1,5 +1,16 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { DriverStatus, PaymentMethod, Trip, TripStatus } from '@prisma/client';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import {
+  DriverStatus,
+  PaymentMethod,
+  Trip,
+  TripStatus,
+  UserRole,
+} from '@prisma/client';
 import { PrismaService } from '../prisma.service';
 import { PushService } from '../push/push.service';
 import {
@@ -10,6 +21,12 @@ import { WalletService } from '../wallet/wallet.service';
 import { DispatchService } from '../dispatch/dispatch.service';
 
 type GeoJsonPolygon = { type: 'Polygon'; coordinates: number[][][] };
+
+const tripInclude = {
+  customer: true,
+  driver: { include: { driverProfile: true } },
+  vehicle: true,
+} as const;
 
 @Injectable()
 export class TripsService {
@@ -108,7 +125,7 @@ export class TripsService {
       where: userId
         ? { OR: [{ customerId: userId }, { driverId: userId }] }
         : {},
-      include: { customer: true, driver: true, vehicle: true },
+      include: tripInclude,
       skip: (page - 1) * limit,
       take: limit,
       orderBy: { createdAt: 'desc' },
@@ -121,11 +138,21 @@ export class TripsService {
       const { actorId: _, ...rideData } = data;
 
       if (before && rideData.status) {
+        if (
+          rideData.status === TripStatus.IN_PROGRESS &&
+          before.safetyCode &&
+          String(data.safetyCode ?? '').trim() !== before.safetyCode
+        ) {
+          throw new BadRequestException('Invalid safety code');
+        }
+
         assertTripStatusTransition(before.status, rideData.status);
         if (before.status !== rideData.status) {
           Object.assign(rideData, tripStatusTimestampData(rideData.status));
         }
       }
+
+      delete rideData.safetyCode;
 
       const ride = await tx.trip.update({ where: { id }, data: rideData });
 
@@ -158,6 +185,57 @@ export class TripsService {
     });
 
     await this.audit('RIDE_UPDATED', 'Trip', id, data.actorId, ride, before);
+    return ride;
+  }
+
+  async cancelRide(
+    id: string,
+    data: { actorId?: string; actorRole?: UserRole; reason?: string },
+  ) {
+    const { ride, before } = await this.prisma.$transaction(async (tx) => {
+      const before = await tx.trip.findUnique({
+        where: { id },
+        include: tripInclude,
+      });
+
+      if (!before) throw new NotFoundException('Trip not found');
+      if (before.status === TripStatus.COMPLETED)
+        throw new BadRequestException('Completed trips cannot be cancelled');
+      if (before.status === TripStatus.CANCELLED) return { ride: before, before };
+
+      const isStaff = data.actorRole === UserRole.ADMIN;
+      const isTripRider = before.customerId === data.actorId;
+      const isTripDriver = before.driverId === data.actorId;
+
+      if (!isStaff && !isTripRider && !isTripDriver) {
+        throw new ForbiddenException('You cannot cancel this trip');
+      }
+
+      const ride = await tx.trip.update({
+        where: { id },
+        data: {
+          status: TripStatus.CANCELLED,
+          cancelledAt: new Date(),
+          notes: data.reason
+            ? [before.notes, `Cancellation reason: ${data.reason}`]
+                .filter(Boolean)
+                .join('\n')
+            : before.notes,
+        },
+        include: tripInclude,
+      });
+
+      if (before.driverId) {
+        await tx.driver.updateMany({
+          where: { userId: before.driverId },
+          data: { status: DriverStatus.ONLINE },
+        });
+      }
+
+      return { ride, before };
+    });
+
+    await this.audit('RIDE_CANCELLED', 'Trip', id, data.actorId, ride, before);
     return ride;
   }
 

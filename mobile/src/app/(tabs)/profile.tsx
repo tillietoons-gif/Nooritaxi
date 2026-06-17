@@ -1,9 +1,9 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, SafeAreaView, ScrollView, Alert, Share } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
-import { User, Shield, Bell, HelpCircle, LogOut, ChevronRight, Globe, Gift } from 'lucide-react-native';
+import { User, Shield, Bell, HelpCircle, LogOut, ChevronRight, Globe, Gift, Store, ReceiptText, MapPin, Trophy, Banknote } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import { AuthUser, clearSession, getNotifications, getStoredUser, isDriverUser } from '../../lib/api';
+import { AuthUser, clearSession, getNotifications, getStoredUser, isDriverUser, isMerchantUser } from '../../lib/api';
 import { PatternOverlay } from '../../components/PatternOverlay';
 
 export default function ProfileScreen() {
@@ -28,14 +28,31 @@ export default function ProfileScreen() {
   );
 
   const isDriver = isDriverUser(user);
+  const isMerchant = isMerchantUser(user);
 
   const menuItems = [
-    { id: 'safety', icon: <Shield size={22} color="#006947" />, title: isDriver ? 'Safety & support' : 'Safety Center', subtitle: isDriver ? 'Emergency contacts and trip safety' : 'Emergency contacts & safety codes' },
-    { id: 'notifications', icon: <Bell size={22} color="#006947" />, title: 'Notifications', subtitle: `${notificationCount} new updates` },
-    { id: 'language', icon: <Globe size={22} color="#006947" />, title: 'Language', subtitle: 'English, Dari, Pashto' },
-    ...(!isDriver ? [{ id: 'referral', icon: <Gift size={22} color="#D4AF37" />, title: 'Refer & Earn', subtitle: 'Invite friends, earn AFN 50' }] : []),
-    { id: 'help', icon: <HelpCircle size={22} color="#006947" />, title: 'Help & Support', subtitle: '24/7 Premium support' },
-    ...(isDriver ? [{ id: 'kyc', icon: <User size={22} color="#006947" />, title: 'Verification', subtitle: 'Update your driver documents' }] : []),
+    { id: 'safety', icon: <Shield size={22} color="#006947" />, title: isDriver ? t('profile.safety_center') : t('profile.safety_center'), subtitle: isDriver ? t('profile.safety_subtitle_driver') : t('profile.safety_subtitle_rider') },
+    { id: 'notifications', icon: <Bell size={22} color="#006947" />, title: t('profile.notifications', 'Notifications'), subtitle: t('profile.notifications_subtitle', '{{count}} new updates', { count: notificationCount }) },
+    { id: 'language', icon: <Globe size={22} color="#006947" />, title: t('profile.language', 'Language'), subtitle: t('profile.language_subtitle', 'English, Dari, Pashto') },
+    ...(isMerchant
+      ? [
+          { id: 'merchant', icon: <Store size={22} color="#006947" />, title: t('profile.restaurant'), subtitle: t('profile.restaurant_subtitle') },
+          { id: 'orders', icon: <ReceiptText size={22} color="#006947" />, title: t('profile.orders'), subtitle: t('profile.orders_subtitle') },
+        ]
+      : []),
+    ...(!isDriver && !isMerchant
+      ? [
+          { id: 'loyalty', icon: <Trophy size={22} color="#D4AF37" />, title: t('profile.loyalty', 'Noori Rewards'), subtitle: t('profile.loyalty_subtitle', 'Points, tier, and redemptions') },
+          { id: 'promotions', icon: <Gift size={22} color="#D4AF37" />, title: t('profile.promotions', 'Promotions'), subtitle: t('profile.promotions_subtitle', 'Active offers and promo codes') },
+          { id: 'saved_places', icon: <MapPin size={22} color="#006947" />, title: t('profile.saved_places', 'Saved Places'), subtitle: t('profile.saved_places_subtitle', 'Home, work, and favorites') },
+          { id: 'referral', icon: <Gift size={22} color="#D4AF37" />, title: t('profile.referral', 'Refer & Earn'), subtitle: t('profile.referral_subtitle') },
+        ]
+      : []),
+    ...(isDriver || isMerchant
+      ? [{ id: 'cash_ledger', icon: <Banknote size={22} color="#006947" />, title: t('profile.cash_ledger'), subtitle: t('profile.cash_ledger_subtitle') }]
+      : []),
+    { id: 'help', icon: <HelpCircle size={22} color="#006947" />, title: t('profile.help'), subtitle: t('profile.premium_help_subtitle') },
+    ...(isDriver ? [{ id: 'kyc', icon: <User size={22} color="#006947" />, title: t('profile.verification'), subtitle: t('profile.verification_subtitle') }] : []),
   ];
 
   async function handleMenuPress(id: string) {
@@ -49,14 +66,32 @@ export default function ProfileScreen() {
       case 'notifications':
         router.push('/notifications');
         break;
+      case 'merchant':
+        router.push('/(tabs)/merchant');
+        break;
+      case 'orders':
+        router.push('/(tabs)/orders');
+        break;
+      case 'loyalty':
+        router.push('/loyalty');
+        break;
+      case 'promotions':
+        router.push('/promotions');
+        break;
+      case 'saved_places':
+        router.push('/saved-places');
+        break;
+      case 'cash_ledger':
+        router.push('/cash-ledger');
+        break;
       case 'referral': {
         const code = `REF-${user?.phone?.slice(-4) ?? '1234'}`;
         try {
           await Share.share({
-            message: `Join Noori Mobility and get AFN 50 off your first ride! Use my code: ${code}`,
+            message: t('profile.referral_share_message', { code }),
           });
         } catch (error) {
-          Alert.alert('Refer a Friend', `Your Referral Code: ${code}\n\nShare this code with friends to earn AFN 50 when they complete their first ride!`);
+          Alert.alert(t('profile.referral'), t('profile.referral_alert_message', { code }));
         }
         break;
       }
@@ -90,8 +125,8 @@ export default function ProfileScreen() {
                 <User size={40} color="white" />
               </View>
               <View className="flex-1">
-                <Text className="text-white text-2xl font-black">{user?.name ?? (isDriver ? 'Noori driver' : 'Noori user')}</Text>
-                <Text className="text-white/70 text-sm font-bold mt-1">{user?.phone ?? 'Not signed in'}</Text>
+                <Text className="text-white text-2xl font-black">{user?.name ?? (isDriver ? t('profile.noori_driver') : t('profile.noori_user'))}</Text>
+                <Text className="text-white/70 text-sm font-bold mt-1">{user?.phone ?? t('profile.not_signed_in')}</Text>
                 <View className="bg-accent/20 self-start px-2 py-0.5 rounded-lg mt-2 border border-accent/20">
                    <Text className="text-accent text-[10px] font-black uppercase">{user?.role ?? 'RIDER'}</Text>
                 </View>
@@ -131,7 +166,7 @@ export default function ProfileScreen() {
           <View className="mt-12 items-center">
             <View className="bg-muted/10 px-4 py-2 rounded-full">
               <Text className="text-muted-foreground text-[10px] font-bold tracking-tighter uppercase italic">
-                Noori Mobility System v1.0.0
+                Noori Mobility System v1.2.0 - Complete (offline, real-time, notifications, cart, earnings, background tracking, FlashList, women-only rides)
               </Text>
             </View>
           </View>

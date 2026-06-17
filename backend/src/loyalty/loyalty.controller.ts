@@ -18,6 +18,11 @@ export class LoyaltyController {
     return this.loyaltyService.getAdminSummary();
   }
 
+  @Get('me')
+  async getMyLoyalty(@Req() req) {
+    return this.loyaltyService.getUserLoyalty(req.user.id);
+  }
+
   @Post('redeem')
   async redeemPoints(@Req() req, @Body() redeemPointsDto: RedeemPointsDto) {
     const userId = req.user.id;

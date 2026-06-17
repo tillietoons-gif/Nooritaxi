@@ -2,14 +2,15 @@
 
 import Link from "next/link"
 import { useState } from "react"
-import { motion } from "framer-motion"
-import { Lock, Phone, User, Eye, EyeOff, ShieldCheck, Zap } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
+import { Lock, Phone, User, Eye, EyeOff, ShieldCheck, Zap, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { GlassSurface } from "@/components/ui/glass-surface"
 import { Input } from "@/components/ui/input"
-import { BodyMd, HeadingMd, LabelMd } from "@/components/ui/typography"
+import { BodyMd, HeadingMd, LabelMd, LabelSm } from "@/components/ui/typography"
 import { NooriLogo } from "@/components/ui/noori-logo"
 import { apiUrl, saveSession } from "@/lib/auth"
+import { cn } from "@/lib/utils"
 
 export default function SignupPage() {
   const [name, setName] = useState("")
@@ -76,10 +77,11 @@ export default function SignupPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <LabelMd htmlFor="name" className="text-xs font-black">Legal Identity</LabelMd>
-                <div className="relative">
-                  <User className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40" />
+                <div className="relative group">
+                  <User className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40 transition-colors group-focus-within:text-primary" />
                   <Input
                     id="name"
+                    autoComplete="name"
                     className="h-14 pl-12 rounded-2xl glass border-none focus-visible:ring-primary/30 font-bold"
                     value={name}
                     onChange={(event) => setName(event.target.value)}
@@ -93,10 +95,12 @@ export default function SignupPage() {
 
               <div className="space-y-2">
                 <LabelMd htmlFor="phone" className="text-xs font-black">Communication Node</LabelMd>
-                <div className="relative">
-                  <Phone className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40" />
+                <div className="relative group">
+                  <Phone className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40 transition-colors group-focus-within:text-primary" />
                   <Input
                     id="phone"
+                    type="tel"
+                    autoComplete="tel"
                     className="h-14 pl-12 rounded-2xl glass border-none focus-visible:ring-primary/30 font-bold"
                     value={phone}
                     onChange={(event) => setPhone(event.target.value)}
@@ -111,10 +115,11 @@ export default function SignupPage() {
 
             <div className="space-y-2">
               <LabelMd htmlFor="password" className="text-xs font-black">Security Protocol</LabelMd>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40" />
+              <div className="relative group">
+                <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40 transition-colors group-focus-within:text-primary" />
                 <Input
                   id="password"
+                  autoComplete="new-password"
                   className="h-14 pl-12 pr-12 rounded-2xl glass border-none focus-visible:ring-primary/30 font-bold"
                   type={showPassword ? "text" : "password"}
                   value={password}
@@ -123,7 +128,7 @@ export default function SignupPage() {
                   minLength={8}
                   required
                   aria-invalid={!!message}
-                  aria-describedby={message ? "signup-error" : undefined}
+                  aria-describedby={message ? "signup-error" : "password-hint"}
                 />
                 <button
                   type="button"
@@ -134,6 +139,16 @@ export default function SignupPage() {
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
+              <LabelSm
+                id="password-hint"
+                className={cn(
+                  "mt-1 flex items-center gap-1.5 transition-colors duration-300",
+                  password.length >= 8 ? "text-primary font-black" : ""
+                )}
+              >
+                {password.length >= 8 && <Check className="h-3 w-3" />}
+                Required: Minimum 8 characters for security protocol.
+              </LabelSm>
             </div>
 
             <div className="flex items-start gap-3 p-4 bg-primary/5 rounded-2xl border border-primary/10">
@@ -143,22 +158,33 @@ export default function SignupPage() {
               </p>
             </div>
 
-            {message ? (
-              <div
-                id="signup-error"
-                role="alert"
-                className="bg-destructive/5 text-destructive p-4 rounded-xl border border-destructive/20 text-xs font-bold"
-              >
-                {message}
-              </div>
-            ) : null}
+            <AnimatePresence mode="wait">
+              {message && (
+                <motion.div
+                  key="signup-error"
+                  id="signup-error"
+                  role="alert"
+                  initial={{ opacity: 0, height: 0, y: -10 }}
+                  animate={{ opacity: 1, height: "auto", y: 0 }}
+                  exit={{ opacity: 0, height: 0, y: -10 }}
+                  className="bg-destructive/5 text-destructive p-4 rounded-xl border border-destructive/20 text-xs font-bold overflow-hidden"
+                >
+                  {message}
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             <Button
               className="h-16 w-full rounded-2xl bg-primary hover:bg-primary/90 text-xl font-black shadow-2xl shadow-primary/30 transition-all active:scale-[0.98]"
               type="submit"
               disabled={isLoading}
             >
-              {isLoading ? "Synchronizing..." : "Establish Account"}
+              {isLoading ? (
+                <div className="flex items-center gap-3">
+                  <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Synchronizing...
+                </div>
+              ) : "Establish Account"}
             </Button>
           </form>
 

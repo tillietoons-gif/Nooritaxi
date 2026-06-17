@@ -83,25 +83,27 @@ export class AirportService {
   // ==========================
 
   async getAnalytics(airportId: string) {
-    const totalQueue = await this.prisma.airportQueue.count({
-      where: { zone: { airportId }, status: 'WAITING' },
-    });
-    const assignedToday = await this.prisma.airportQueue.count({
-      where: {
-        zone: { airportId },
-        status: 'ASSIGNED',
-        entryTime: { gte: new Date(new Date().setHours(0, 0, 0, 0)) },
-      },
-    });
-    const upcomingFlights = await this.prisma.flight.count({
-      where: {
-        airportId,
-        arrivalTime: {
-          gte: new Date(),
-          lte: new Date(Date.now() + 2 * 60 * 60 * 1000),
-        }, // next 2 hours
-      },
-    });
+    const [totalQueue, assignedToday, upcomingFlights] = await Promise.all([
+      this.prisma.airportQueue.count({
+        where: { zone: { airportId }, status: 'WAITING' },
+      }),
+      this.prisma.airportQueue.count({
+        where: {
+          zone: { airportId },
+          status: 'ASSIGNED',
+          entryTime: { gte: new Date(new Date().setHours(0, 0, 0, 0)) },
+        },
+      }),
+      this.prisma.flight.count({
+        where: {
+          airportId,
+          arrivalTime: {
+            gte: new Date(),
+            lte: new Date(Date.now() + 2 * 60 * 60 * 1000),
+          }, // next 2 hours
+        },
+      }),
+    ]);
 
     return {
       driversInQueue: totalQueue,

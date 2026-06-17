@@ -23,7 +23,10 @@ describe('FoodService', () => {
         FoodService,
         { provide: PrismaService, useValue: prisma },
         { provide: WalletService, useValue: { transfer: jest.fn() } },
-        { provide: DispatchService, useValue: { findNearestOnlineDriver: jest.fn() } },
+        {
+          provide: DispatchService,
+          useValue: { findNearestOnlineDriver: jest.fn() },
+        },
       ],
     }).compile();
 
@@ -40,20 +43,32 @@ describe('FoodService', () => {
         findUnique: jest.fn().mockResolvedValue({
           id: 'order-1',
           status: OrderStatus.OUT_FOR_DELIVERY,
-          restaurant: { lat: 34.5, lng: 69.2, address: 'Kabul', ownerId: 'merchant-1' },
+          restaurant: {
+            lat: 34.5,
+            lng: 69.2,
+            address: 'Kabul',
+            ownerId: 'merchant-1',
+          },
         }),
         update: jest.fn().mockImplementation(async ({ data }: any) => ({
           id: 'order-1',
           status: data.status,
           deliveredAt: data.deliveredAt,
           paymentMethod: PaymentMethod.CASH,
-          restaurant: { ownerId: 'merchant-1', lat: 34.5, lng: 69.2, address: 'Kabul' },
+          restaurant: {
+            ownerId: 'merchant-1',
+            lat: 34.5,
+            lng: 69.2,
+            address: 'Kabul',
+          },
         })),
       },
       delivery: { create: jest.fn() },
     };
 
-    prisma.$transaction.mockImplementation(async (callback: any) => callback(tx));
+    prisma.$transaction.mockImplementation(async (callback: any) =>
+      callback(tx),
+    );
 
     const result = await service.updateOrder('order-1', {
       status: OrderStatus.DELIVERED,
@@ -91,14 +106,21 @@ describe('FoodService', () => {
         findUnique: jest.fn().mockResolvedValue({
           id: 'order-1',
           status: OrderStatus.PLACED,
-          restaurant: { lat: 34.5, lng: 69.2, address: 'Kabul', ownerId: 'merchant-1' },
+          restaurant: {
+            lat: 34.5,
+            lng: 69.2,
+            address: 'Kabul',
+            ownerId: 'merchant-1',
+          },
         }),
         update: jest.fn(),
       },
       delivery: { create: jest.fn() },
     };
 
-    prisma.$transaction.mockImplementation(async (callback: any) => callback(tx));
+    prisma.$transaction.mockImplementation(async (callback: any) =>
+      callback(tx),
+    );
 
     await expect(
       service.updateOrder('order-1', {

@@ -22,6 +22,29 @@ import { DriverDocument } from '@prisma/client';
 export class KycController {
   constructor(private readonly kycService: KycService) {}
 
+  @Post('media')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadMedia(
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }),
+          new FileTypeValidator({ fileType: '.(png|jpeg|jpg|webp)' }),
+        ],
+      }),
+    )
+    file: Express.Multer.File,
+  ) {
+    if (!file) {
+      throw new BadRequestException('File is required.');
+    }
+
+    return {
+      filename: file.filename || file.originalname,
+      url: `/files/kyc/${file.filename || file.originalname}`,
+    };
+  }
+
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))
   async uploadKycDocument(

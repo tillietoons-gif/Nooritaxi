@@ -6,7 +6,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Car, ShieldCheck, ClipboardCheck, RefreshCw, Loader2 } from "lucide-react"
+import { Car, ShieldCheck, RefreshCw } from "lucide-react"
 import { authedFetch } from "@/lib/auth"
 import { AdminPageHeader } from "@/components/admin/admin-page-header"
 
@@ -37,7 +37,7 @@ export default function VehicleManagementPage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [inspections, setInspections] = useState<Inspection[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [, setError] = useState<string | null>(null)
   const [query, setQuery] = useState("")
 
   const filteredVehicles = useMemo(() => {
@@ -62,7 +62,7 @@ export default function VehicleManagementPage() {
         ])
         if (vRes.ok) setVehicles(await vRes.json())
         if (iRes.ok) setInspections(await iRes.json())
-      } catch (err) {
+      } catch {
         setError("Failed to load data")
       } finally {
         setLoading(false)

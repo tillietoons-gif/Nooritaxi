@@ -4,7 +4,7 @@ import { AuthGate } from "@/components/auth-gate"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Wallet, Check, X, Clock } from "lucide-react"
+import { Check, Clock } from "lucide-react"
 import { AdminPageHeader } from "@/components/admin/admin-page-header"
 
 export default function FleetPayoutsPage() {

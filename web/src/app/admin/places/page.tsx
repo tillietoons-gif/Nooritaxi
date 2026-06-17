@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { authedFetch } from "@/lib/auth"
-import { AlertCircle, MapPin, Plus, RefreshCw } from "lucide-react"
+import { AlertCircle, Plus, RefreshCw } from "lucide-react"
 import { AdminPageHeader } from "@/components/admin/admin-page-header"
 
 type CustomPlace = {

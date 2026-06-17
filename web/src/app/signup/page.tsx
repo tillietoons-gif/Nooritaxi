@@ -39,6 +39,9 @@ export default function SignupPage() {
   const [restaurantAddress, setRestaurantAddress] = useState("")
   const [restaurantPhone, setRestaurantPhone] = useState("")
   const [cuisineTypes, setCuisineTypes] = useState("")
+  const [businessLicenseUrl, setBusinessLicenseUrl] = useState("")
+  const [ownerIdUrl, setOwnerIdUrl] = useState("")
+  const [payoutContact, setPayoutContact] = useState("")
   const [otpCode, setOtpCode] = useState("")
   const [pendingSession, setPendingSession] = useState<PendingSession | null>(null)
   const [message, setMessage] = useState("")
@@ -131,9 +134,38 @@ export default function SignupPage() {
           setMessage(restaurantData?.message ?? t("signup.store_failed", "Merchant account created, but store setup failed."))
           return
         }
+        const restaurant = await restaurantResponse.json()
+        const merchantDocuments = [
+          businessLicenseUrl.trim()
+            ? { type: "BUSINESS_LICENSE", url: businessLicenseUrl.trim(), notes: "Business license submitted during web signup" }
+            : null,
+          ownerIdUrl.trim()
+            ? { type: "OWNER_ID", url: ownerIdUrl.trim(), notes: "Owner ID submitted during web signup" }
+            : null,
+          payoutContact.trim()
+            ? { type: "PAYOUT_CONTACT", url: `tel:${payoutContact.trim()}`, notes: "Payout contact submitted during web signup" }
+            : null,
+        ].filter(Boolean)
+
+        await Promise.all(
+          merchantDocuments.map((document) =>
+            fetch(`${apiUrl}/food/restaurants/${restaurant.id}/documents`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${pendingSession.access_token}`,
+              },
+              body: JSON.stringify(document),
+            })
+          )
+        )
       }
 
-      saveSession(pendingSession.access_token, pendingSession.user)
+      const meResponse = await fetch(`${apiUrl}/auth/me`, {
+        headers: { Authorization: `Bearer ${pendingSession.access_token}` },
+      })
+      const me = await meResponse.json().catch(() => null)
+      saveSession(pendingSession.access_token, me?.user ?? pendingSession.user)
       window.location.href = "/dashboard"
     } catch {
       setMessage(t("signup.verify_timeout", "Connection to verification authority timed out."))
@@ -350,6 +382,40 @@ export default function SignupPage() {
                     value={cuisineTypes}
                     onChange={(event) => setCuisineTypes(event.target.value)}
                     placeholder={t("signup.categories_placeholder", "Afghan, grill, bakery")}
+                  />
+                </div>
+
+                <div className="space-y-2 md:col-span-2">
+                  <LabelMd htmlFor="businessLicenseUrl" className="text-xs font-black">{t("signup.business_license", "Business License URL")}</LabelMd>
+                  <Input
+                    id="businessLicenseUrl"
+                    className="h-14 rounded-2xl glass border-none focus-visible:ring-primary/30 font-bold"
+                    value={businessLicenseUrl}
+                    onChange={(event) => setBusinessLicenseUrl(event.target.value)}
+                    placeholder="https://..."
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <LabelMd htmlFor="ownerIdUrl" className="text-xs font-black">{t("signup.owner_id", "Owner ID URL")}</LabelMd>
+                  <Input
+                    id="ownerIdUrl"
+                    className="h-14 rounded-2xl glass border-none focus-visible:ring-primary/30 font-bold"
+                    value={ownerIdUrl}
+                    onChange={(event) => setOwnerIdUrl(event.target.value)}
+                    placeholder="https://..."
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <LabelMd htmlFor="payoutContact" className="text-xs font-black">{t("signup.payout_contact", "Payout Contact")}</LabelMd>
+                  <Input
+                    id="payoutContact"
+                    type="tel"
+                    className="h-14 rounded-2xl glass border-none focus-visible:ring-primary/30 font-bold"
+                    value={payoutContact}
+                    onChange={(event) => setPayoutContact(event.target.value)}
+                    placeholder="+93 7XX XXX XXX"
                   />
                 </div>
               </div>

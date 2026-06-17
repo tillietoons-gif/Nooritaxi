@@ -296,6 +296,8 @@
     "ID_CARD": "National ID Card (Tazkira)",
     "DRIVERS_LICENSE": "Driver's License",
     "VEHICLE_REGISTRATION": "Vehicle Registration (Jawaz Sair)",
+    "INSURANCE": "Vehicle Insurance",
+    "verified": "Verified",
     "tap_upload": "Tap to upload document"
   },
   "active_trip": {

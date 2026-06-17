@@ -184,6 +184,12 @@ enum DocumentStatus {
   REJECTED
 }
 
+enum MerchantDocumentType {
+  BUSINESS_LICENSE
+  OWNER_ID
+  PAYOUT_CONTACT
+}
+
 model User {
   id                String     @id @default(cuid())
   phone             String     @unique
@@ -224,6 +230,7 @@ model User {
   auditLogs            AuditLog[]
   refreshTokens        RefreshToken[]
   verifiedDocuments    DriverDocument[]      @relation("DocumentVerifier")
+  verifiedMerchantDocuments MerchantDocument[] @relation("MerchantDocumentVerifier")
   trustedContacts      TrustedContact[]      @relation("UserTrustedContacts")
   sosAlerts            SosAlert[]            @relation("UserSosAlerts")
   adminRoles           AdminRole[]           @relation("UserAdminRoles")
@@ -442,9 +449,28 @@ model Restaurant {
   fraudScore          FraudScore?          @relation("MerchantFraudScore")
   fraudCases          FraudCase[]          @relation("MerchantFraudCases")
   activeSubscriptions ActiveSubscription[]
+  documents           MerchantDocument[]
 
   @@index([status, ratingAverage])
   @@index([ownerId])
+}
+
+model MerchantDocument {
+  id           String               @id @default(cuid())
+  restaurantId String
+  type         MerchantDocumentType
+  url          String
+  status       DocumentStatus       @default(PENDING)
+  notes        String?
+  verifiedAt   DateTime?
+  verifiedBy   String?
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  admin      User?      @relation("MerchantDocumentVerifier", fields: [verifiedBy], references: [id])
+
+  @@index([restaurantId, status])
 }
 
 model MenuItem {

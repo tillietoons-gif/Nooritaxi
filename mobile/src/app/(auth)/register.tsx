@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, TextInput, TouchableOpacity, SafeAreaView, ScrollView } from 'react-native';
 import { ShieldCheck, User, Phone, Lock, Eye, EyeOff, ChevronLeft } from 'lucide-react-native';
 import { Link, router } from 'expo-router';
-import { AuthResponse, AuthRole, getSignedInRoute, register, sendOtp, verifyPhone } from '../../lib/api';
+import { AuthResponse, AuthRole, getSignedInRoute, refreshCurrentUser, register, sendOtp, verifyPhone } from '../../lib/api';
 import { PatternOverlay } from '../../components/PatternOverlay';
 import { useTranslation } from 'react-i18next';
 
@@ -39,7 +39,8 @@ export default function RegisterScreen() {
     setLoading(true);
     try {
       await verifyPhone(phone, otpCode);
-      router.replace(getSignedInRoute(pendingSession.user));
+      const user = await refreshCurrentUser();
+      router.replace(getSignedInRoute(user));
     } catch (error) {
       setMessage((error as Error).message);
     } finally {

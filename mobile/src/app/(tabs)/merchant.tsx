@@ -6,15 +6,17 @@ import { Camera, CheckCircle2, Clock3, Plus, Store, UtensilsCrossed, XCircle } f
 import {
   addRestaurantMenuItem,
   createPromotion,
-  createSupportTicket,
+  createMerchantDocument,
   createRestaurant,
   deleteRestaurantMenuItem,
+  getMerchantDocuments,
   getMySupportTickets,
   getRestaurantMenu,
   getRestaurants,
   getStoredUser,
   isMerchantUser,
   MenuItem,
+  MerchantDocument,
   Restaurant,
   SupportTicket,
   updateRestaurantMenuItem,
@@ -32,6 +34,7 @@ export default function MerchantScreen() {
   const [editingItemId, setEditingItemId] = React.useState<string | null>(null);
   const [message, setMessage] = React.useState('');
   const [onboardingTickets, setOnboardingTickets] = React.useState<SupportTicket[]>([]);
+  const [merchantDocuments, setMerchantDocuments] = React.useState<MerchantDocument[]>([]);
 
   const [restaurantName, setRestaurantName] = React.useState('');
   const [address, setAddress] = React.useState('');
@@ -77,6 +80,7 @@ export default function MerchantScreen() {
       const owned = restaurants.find((item) => item.ownerId === user.id) ?? null;
       setRestaurant(owned);
       setMenu(owned ? await getRestaurantMenu(owned.id) : []);
+      setMerchantDocuments(owned ? await getMerchantDocuments(owned.id).catch(() => []) : []);
       setOnboardingTickets(tickets.filter((ticket) => ticket.category === 'MERCHANT_ONBOARDING'));
     } catch (err) {
       setMessage((err as Error).message);
@@ -118,21 +122,8 @@ export default function MerchantScreen() {
       });
       setRestaurant(created);
       setMenu([]);
-      if (licenseUrl.trim() || ownerIdUrl.trim() || payoutPhone.trim()) {
-        await createSupportTicket({
-          requesterId: user.id,
-          category: 'MERCHANT_ONBOARDING',
-          subject: `Merchant onboarding: ${restaurantName.trim()}`,
-          description: 'Merchant submitted restaurant onboarding details for admin review.',
-          priority: 'NORMAL',
-          metadata: {
-            restaurantId: created.id,
-            businessLicenseUrl: licenseUrl.trim() || null,
-            ownerIdUrl: ownerIdUrl.trim() || null,
-            payoutPhone: payoutPhone.trim() || null,
-          },
-        }).catch(() => undefined);
-      }
+      await submitMerchantDocuments(created.id);
+      setMerchantDocuments(await getMerchantDocuments(created.id).catch(() => []));
       setRestaurantName('');
       setAddress('');
       setPhone('');
@@ -153,20 +144,9 @@ export default function MerchantScreen() {
 
     try {
       setSubmittingOnboarding(true);
-      await createSupportTicket({
-        requesterId: user.id,
-        category: 'MERCHANT_ONBOARDING',
-        subject: `Merchant verification: ${restaurant.name}`,
-        description: 'Merchant submitted business verification details for admin approval.',
-        priority: 'NORMAL',
-        metadata: {
-          restaurantId: restaurant.id,
-          businessLicenseUrl: licenseUrl.trim() || null,
-          ownerIdUrl: ownerIdUrl.trim() || null,
-          payoutPhone: payoutPhone.trim() || null,
-        },
-      });
+      await submitMerchantDocuments(restaurant.id);
       Alert.alert('Submitted', 'Your merchant verification request was sent for admin review.');
+      setMerchantDocuments(await getMerchantDocuments(restaurant.id).catch(() => merchantDocuments));
       setOnboardingTickets(await getMySupportTickets().then((tickets) => tickets.filter((ticket) => ticket.category === 'MERCHANT_ONBOARDING')).catch(() => onboardingTickets));
       setLicenseUrl('');
       setOwnerIdUrl('');
@@ -176,6 +156,34 @@ export default function MerchantScreen() {
     } finally {
       setSubmittingOnboarding(false);
     }
+  }
+
+  async function submitMerchantDocuments(restaurantId: string) {
+    const submissions = [
+      licenseUrl.trim()
+        ? createMerchantDocument(restaurantId, {
+            type: 'BUSINESS_LICENSE',
+            url: licenseUrl.trim(),
+            notes: 'Business license submitted by merchant',
+          })
+        : null,
+      ownerIdUrl.trim()
+        ? createMerchantDocument(restaurantId, {
+            type: 'OWNER_ID',
+            url: ownerIdUrl.trim(),
+            notes: 'Owner identity document submitted by merchant',
+          })
+        : null,
+      payoutPhone.trim()
+        ? createMerchantDocument(restaurantId, {
+            type: 'PAYOUT_CONTACT',
+            url: `tel:${payoutPhone.trim()}`,
+            notes: 'Merchant payout contact',
+          })
+        : null,
+    ].filter(Boolean);
+
+    await Promise.all(submissions);
   }
 
   async function handleCreatePromotion() {
@@ -381,7 +389,7 @@ export default function MerchantScreen() {
             </View>
           ) : (
             <>
-              <OnboardingStatusCard tickets={onboardingTickets} restaurantStatus={restaurant.status} />
+              <OnboardingStatusCard tickets={onboardingTickets} documents={merchantDocuments} restaurantStatus={restaurant.status} />
 
               <View className="bg-card rounded-3xl border border-muted/10 p-5 shadow-sm mb-8">
                 <Text className="text-lg font-bold text-foreground mb-2">Verification</Text>
@@ -558,16 +566,29 @@ function MerchantInput({
 
 function OnboardingStatusCard({
   tickets,
+  documents,
   restaurantStatus,
 }: {
   tickets: SupportTicket[];
+  documents: MerchantDocument[];
   restaurantStatus?: string;
 }) {
   const latest = tickets[0];
+  const hasRejectedDocument = documents.some((doc) => doc.status === 'REJECTED');
+  const hasPendingDocument = documents.some((doc) => doc.status === 'PENDING');
+  const verifiedTypes = new Set(documents.filter((doc) => doc.status === 'VERIFIED').map((doc) => doc.type));
+  const requiredTypes: MerchantDocument['type'][] = ['BUSINESS_LICENSE', 'OWNER_ID', 'PAYOUT_CONTACT'];
+  const hasAllDocuments = requiredTypes.every((type) => verifiedTypes.has(type));
   const status = restaurantStatus === 'OPEN'
     ? 'APPROVED'
     : restaurantStatus === 'SUSPENDED'
       ? 'REJECTED'
+      : hasRejectedDocument
+        ? 'REJECTED'
+      : hasAllDocuments
+        ? 'APPROVED'
+      : hasPendingDocument
+        ? 'PENDING'
     : latest?.status === 'RESOLVED'
       ? 'APPROVED'
       : latest?.status === 'CLOSED'

@@ -296,6 +296,8 @@
     "ID_CARD": "تذکره",
     "DRIVERS_LICENSE": "جواز رانندگی",
     "VEHICLE_REGISTRATION": "جواز سیر موتر",
+    "INSURANCE": "بیمه موتر",
+    "verified": "تأیید شده",
     "tap_upload": "برای آپلود سند بزنید"
   },
   "active_trip": {

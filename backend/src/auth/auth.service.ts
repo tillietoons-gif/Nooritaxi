@@ -118,6 +118,12 @@ export class AuthService {
     return this.issueTokens(user, this.prisma, payload);
   }
 
+  async currentUser(userId: string) {
+    const user = await this.usersService.findById(userId);
+    if (!user) throw new UnauthorizedException('Invalid session');
+    return this.stripPassword(user);
+  }
+
   async register(data: any) {
     const role = data.role ?? UserRole.RIDER;
     if (![UserRole.RIDER, UserRole.DRIVER, UserRole.MERCHANT].includes(role)) {
@@ -239,6 +245,11 @@ export class AuthService {
       ? smsProvider
       : this.configService.get<string>('SMS_PROVIDER_URL');
 
+    if (smsProvider.toLowerCase() === 'twilio') {
+      await this.dispatchTwilioOtp(phone, code);
+      return;
+    }
+
     if (!providerUrl) {
       console.log(`OTP for ${phone}: ${code}`);
       return;
@@ -256,6 +267,40 @@ export class AuthService {
 
     if (!response.ok) {
       throw new UnauthorizedException('OTP provider request failed');
+    }
+  }
+
+  private async dispatchTwilioOtp(phone: string, code: string): Promise<void> {
+    const accountSid = this.configService.get<string>('TWILIO_ACCOUNT_SID');
+    const authToken = this.configService.get<string>('TWILIO_AUTH_TOKEN');
+    const from = this.configService.get<string>('TWILIO_FROM_NUMBER');
+
+    if (!accountSid || !authToken || !from) {
+      throw new UnauthorizedException('Twilio SMS configuration is incomplete');
+    }
+
+    const body = new URLSearchParams({
+      From: from,
+      To: phone,
+      Body: `Your Noori verification code is ${code}. It expires in 10 minutes.`,
+    });
+    const credentials = Buffer.from(`${accountSid}:${authToken}`).toString(
+      'base64',
+    );
+    const response = await fetch(
+      `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Basic ${credentials}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body,
+      },
+    );
+
+    if (!response.ok) {
+      throw new UnauthorizedException('Twilio SMS request failed');
     }
   }
 

@@ -11,7 +11,7 @@ describe('FoodService', () => {
     $transaction: jest.Mock;
     auditLog: { create: jest.Mock };
     menuItem: { create: jest.Mock; findFirst: jest.Mock; update: jest.Mock };
-    restaurant: { findUnique: jest.Mock };
+    restaurant: { create: jest.Mock; findFirst: jest.Mock; findUnique: jest.Mock };
   };
 
   beforeEach(async () => {
@@ -23,7 +23,11 @@ describe('FoodService', () => {
         findFirst: jest.fn(),
         update: jest.fn(),
       },
-      restaurant: { findUnique: jest.fn() },
+      restaurant: {
+        create: jest.fn(),
+        findFirst: jest.fn(),
+        findUnique: jest.fn(),
+      },
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -60,6 +64,20 @@ describe('FoodService', () => {
     ).rejects.toThrow('Cannot manage another merchant restaurant');
 
     expect(prisma.menuItem.create).not.toHaveBeenCalled();
+  });
+
+  it('prevents duplicate restaurant profiles for a merchant owner', async () => {
+    prisma.restaurant.findFirst.mockResolvedValue({ id: 'existing-restaurant' });
+
+    await expect(
+      service.createRestaurant({
+        ownerId: 'merchant-1',
+        name: 'Second Store',
+        address: 'Kabul',
+        cuisineTypes: ['Afghan'],
+      }),
+    ).rejects.toThrow('Merchant already has a restaurant profile');
+    expect(prisma.restaurant.create).not.toHaveBeenCalled();
   });
 
   it('applies deliveredAt when an order is delivered', async () => {

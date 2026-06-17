@@ -58,6 +58,13 @@ export class UsersService {
     });
   }
 
+  async listDriverDocuments(driverId: string) {
+    return this.prisma.driverDocument.findMany({
+      where: { driverId },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   async verifyKycDocument(
     documentId: string,
     status: DocumentStatus,

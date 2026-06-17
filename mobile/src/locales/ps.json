@@ -296,6 +296,8 @@
     "ID_CARD": "تذکره",
     "DRIVERS_LICENSE": "د رانندګۍ جواز",
     "VEHICLE_REGISTRATION": "د موټر ثبت سند",
+    "INSURANCE": "د موټر بیمه",
+    "verified": "تایید شوی",
     "tap_upload": "د سند اپلوډ لپاره ټپ کړئ"
   },
   "active_trip": {

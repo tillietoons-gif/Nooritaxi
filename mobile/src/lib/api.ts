@@ -228,6 +228,17 @@ export type Restaurant = {
   menu?: MenuItem[];
 };
 
+export type MerchantDocument = {
+  id: string;
+  restaurantId: string;
+  type: 'BUSINESS_LICENSE' | 'OWNER_ID' | 'PAYOUT_CONTACT';
+  url: string;
+  status: 'PENDING' | 'VERIFIED' | 'REJECTED';
+  notes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type MenuItem = {
   id: string;
   name: string;
@@ -439,6 +450,13 @@ export async function verifyPhone(phone: string, code: string) {
   return readJson<{ verified: boolean }>(response, 'Invalid or expired verification code');
 }
 
+export async function refreshCurrentUser() {
+  const response = await apiFetch('/auth/me');
+  const data = await readJson<{ user: AuthUser }>(response, 'Unable to refresh session');
+  await setStoredValue(USER_KEY, JSON.stringify(data.user));
+  return data.user;
+}
+
 export async function getTrips(userId: string) {
   const response = await apiFetch(`/trips?userId=${encodeURIComponent(userId)}&limit=25`);
   return readJson<Trip[]>(response, 'Unable to load trips');
@@ -554,6 +572,26 @@ export async function createRestaurant(payload: {
     body: JSON.stringify(payload),
   });
   return readJson<Restaurant>(response, 'Unable to create restaurant');
+}
+
+export async function createMerchantDocument(
+  restaurantId: string,
+  payload: {
+    type: MerchantDocument['type'];
+    url: string;
+    notes?: string;
+  },
+) {
+  const response = await apiFetch(`/food/restaurants/${encodeURIComponent(restaurantId)}/documents`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+  return readJson<MerchantDocument>(response, 'Unable to submit merchant document');
+}
+
+export async function getMerchantDocuments(restaurantId: string) {
+  const response = await apiFetch(`/food/restaurants/${encodeURIComponent(restaurantId)}/documents`);
+  return readJson<MerchantDocument[]>(response, 'Unable to load merchant documents');
 }
 
 export async function getRestaurantMenu(restaurantId: string) {
@@ -856,6 +894,21 @@ export async function uploadKycDocumentFile(type: string, fileUri: string) {
   });
   
   return readJson<any>(response, 'Unable to upload KYC document');
+}
+
+export type DriverKycDocument = {
+  id: string;
+  driverId: string;
+  type: 'ID_CARD' | 'DRIVERS_LICENSE' | 'VEHICLE_REGISTRATION' | 'INSURANCE' | 'BACKGROUND_CHECK';
+  url: string;
+  status: 'PENDING' | 'VERIFIED' | 'REJECTED';
+  createdAt: string;
+  updatedAt: string;
+};
+
+export async function getMyKycDocuments() {
+  const response = await apiFetch('/users/me/documents');
+  return readJson<DriverKycDocument[]>(response, 'Unable to load KYC documents');
 }
 
 // ---------- Payment ----------

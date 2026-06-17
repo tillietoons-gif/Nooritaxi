@@ -64,7 +64,7 @@ export class AuthController {
   @Get('me')
   @UseGuards(JwtAuthGuard)
   async me(@CurrentUser() user: any) {
-    return { user };
+    return { user: await this.authService.currentUser(user.id) };
   }
 
   @Post('verify-phone')

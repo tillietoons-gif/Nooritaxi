@@ -2,6 +2,8 @@ export type AuthUser = {
   id: string
   phone: string
   name?: string
+  status?: "ACTIVE" | "PENDING_VERIFICATION" | "SUSPENDED" | "DELETED"
+  isVerified?: boolean
   role: "RIDER" | "DRIVER" | "MERCHANT" | "SUPPORT" | "ADMIN"
 }
 

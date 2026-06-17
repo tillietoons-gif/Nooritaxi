@@ -169,6 +169,91 @@ export class AdminService {
     return updated;
   }
 
+  async listMerchants({ status, q, page, limit }: ListArgs) {
+    const safeLimit = clampLimit(limit);
+    const safePage = clampPage(page);
+    const where: Prisma.RestaurantWhereInput = {};
+    if (status) where.status = status as any;
+    if (q) {
+      where.OR = [
+        { name: { contains: q, mode: 'insensitive' } },
+        { owner: { name: { contains: q, mode: 'insensitive' } } },
+        { owner: { phone: { contains: q } } },
+      ];
+    }
+
+    const [items, total] = await Promise.all([
+      this.prisma.restaurant.findMany({
+        where,
+        include: {
+          owner: { select: { id: true, name: true, phone: true, status: true, isVerified: true } },
+          documents: { orderBy: { createdAt: 'desc' } } as any,
+          _count: { select: { menuItems: true, orders: true } },
+        } as any,
+        orderBy: { updatedAt: 'desc' },
+        skip: (safePage - 1) * safeLimit,
+        take: safeLimit,
+      }),
+      this.prisma.restaurant.count({ where }),
+    ]);
+    return { items, total, page: safePage, limit: safeLimit };
+  }
+
+  async updateMerchantStatus(id: string, status: string, actorId?: string) {
+    if (!['PENDING', 'OPEN', 'CLOSED', 'SUSPENDED'].includes(status)) {
+      throw new BadRequestException('Invalid restaurant status');
+    }
+    const restaurant = await this.prisma.restaurant.findUnique({ where: { id } });
+    if (!restaurant) throw new NotFoundException('Restaurant not found');
+
+    const updated = await this.prisma.restaurant.update({
+      where: { id },
+      data: { status: status as any },
+      include: {
+        owner: { select: { id: true, name: true, phone: true, status: true, isVerified: true } },
+        documents: { orderBy: { createdAt: 'desc' } } as any,
+        _count: { select: { menuItems: true, orders: true } },
+      } as any,
+    });
+
+    if (status === 'OPEN') {
+      await this.prisma.user.update({
+        where: { id: restaurant.ownerId },
+        data: { status: 'ACTIVE' as any, isVerified: true },
+      });
+    }
+
+    await this.audit('ADMIN_MERCHANT_STATUS_UPDATED', 'Restaurant', id, actorId, { status }, { status: restaurant.status });
+    return updated;
+  }
+
+  async updateMerchantDocumentStatus(
+    restaurantId: string,
+    docId: string,
+    status: string,
+    actorId?: string,
+  ) {
+    if (!['VERIFIED', 'REJECTED', 'PENDING'].includes(status)) {
+      throw new BadRequestException('Invalid document status');
+    }
+    const doc = await (this.prisma as any).merchantDocument.findFirst({
+      where: { id: docId, restaurantId },
+    });
+    if (!doc) throw new NotFoundException('Merchant document not found');
+
+    const updated = await (this.prisma as any).merchantDocument.update({
+      where: { id: docId },
+      data: {
+        status,
+        verifiedBy: actorId,
+        verifiedAt: status === 'VERIFIED' ? new Date() : null,
+      },
+    });
+
+    await this.audit('MERCHANT_DOCUMENT_REVIEWED', 'MerchantDocument', docId, actorId, { status }, { status: doc.status });
+    return updated;
+  }
+
   async updateDeliveryStatus(id: string, status: string, actorId?: string) {
     const updated = await this.logistics.updateDelivery(id, {
       status,

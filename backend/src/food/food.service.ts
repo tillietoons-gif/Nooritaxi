@@ -22,6 +22,48 @@ export class FoodService {
   ) {}
 
   createRestaurant(data: any) {
+    if (!data.ownerId) {
+      throw new BadRequestException('Restaurant owner is required');
+    }
+    if (data.ownerId && data.preventDuplicateOwner !== false) {
+      return this.createRestaurantForOwner(data);
+    }
+    return this.prisma.restaurant.create({ data });
+  }
+
+  private async createRestaurantForOwner(data: any) {
+    const existing = await this.prisma.restaurant.findFirst({
+      where: { ownerId: data.ownerId },
+      select: { id: true },
+    });
+    if (existing) {
+      throw new BadRequestException('Merchant already has a restaurant profile');
+    }
+    const { preventDuplicateOwner, ...restaurantData } = data;
+    return this.prisma.restaurant.create({ data: restaurantData });
+  }
+
+  async createMerchantDocument(restaurantId: string, data: any, actor?: any) {
+    await this.assertRestaurantAccess(restaurantId, actor);
+    return (this.prisma as any).merchantDocument.create({
+      data: {
+        restaurantId,
+        type: data.type,
+        url: data.url,
+        notes: data.notes,
+      },
+    });
+  }
+
+  async listMerchantDocuments(restaurantId: string, actor?: any) {
+    await this.assertRestaurantAccess(restaurantId, actor);
+    return (this.prisma as any).merchantDocument.findMany({
+      where: { restaurantId },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  createRestaurantLegacy(data: any) {
     return this.prisma.restaurant.create({ data });
   }
 

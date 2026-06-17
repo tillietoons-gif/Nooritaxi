@@ -30,6 +30,13 @@ export class UsersController {
     return this.usersService.uploadKycDocument(driverId, body.type, body.url);
   }
 
+  @Get('me/documents')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.DRIVER)
+  listMyKycDocuments(@CurrentUser('id') userId: string) {
+    return this.usersService.listDriverDocuments(userId);
+  }
+
   @Get('admin/documents/pending')
   @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.SUPPORT)

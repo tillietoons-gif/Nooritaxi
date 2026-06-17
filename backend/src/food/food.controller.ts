@@ -57,6 +57,27 @@ export class FoodController {
     return this.foodService.addMenuItem(restaurantId, body, user);
   }
 
+  @Post('restaurants/:restaurantId/documents')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.MERCHANT)
+  createMerchantDocument(
+    @Param('restaurantId') restaurantId: string,
+    @Body() body: any,
+    @CurrentUser() user: any,
+  ) {
+    return this.foodService.createMerchantDocument(restaurantId, body, user);
+  }
+
+  @Get('restaurants/:restaurantId/documents')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.MERCHANT, UserRole.SUPPORT)
+  listMerchantDocuments(
+    @Param('restaurantId') restaurantId: string,
+    @CurrentUser() user: any,
+  ) {
+    return this.foodService.listMerchantDocuments(restaurantId, user);
+  }
+
   @Patch('restaurants/:restaurantId/menu-items/:itemId')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.MERCHANT)

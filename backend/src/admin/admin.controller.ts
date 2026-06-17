@@ -74,6 +74,16 @@ export class AdminController {
     );
   }
 
+  @Get('merchants')
+  listMerchants(
+    @Query('status') status?: string,
+    @Query('q') q?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.admin.listMerchants(this.parseListArgs(status, q, page, limit));
+  }
+
   @Get('deliveries')
   listDeliveries(
     @Query('status') status?: string,
@@ -156,6 +166,25 @@ export class AdminController {
     @CurrentUser() actor: any,
   ) {
     return this.admin.updateOrderStatus(id, status, actor?.userId);
+  }
+
+  @Patch('merchants/:id/status')
+  updateMerchantStatus(
+    @Param('id') id: string,
+    @Body('status') status: string,
+    @CurrentUser() actor: any,
+  ) {
+    return this.admin.updateMerchantStatus(id, status, actor?.id);
+  }
+
+  @Patch('merchants/:id/documents/:docId')
+  updateMerchantDocumentStatus(
+    @Param('id') id: string,
+    @Param('docId') docId: string,
+    @Body('status') status: string,
+    @CurrentUser() actor: any,
+  ) {
+    return this.admin.updateMerchantDocumentStatus(id, docId, status, actor?.id);
   }
 
   @Patch('deliveries/:id/status')

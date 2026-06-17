@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, SafeAreaView, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
 import { UploadCloud, CheckCircle, ShieldAlert, ArrowLeft } from 'lucide-react-native';
-import { uploadKycDocumentFile, getStoredUser } from '../lib/api';
+import { DriverKycDocument, getMyKycDocuments, uploadKycDocumentFile, getStoredUser } from '../lib/api';
 import * as ImagePicker from 'expo-image-picker';
 import { withSessionGuard } from '../lib/SessionGuard';
 import { safeBack } from '../lib/navigation';
@@ -13,6 +13,21 @@ function DriverKycScreen() {
   const [loading, setLoading] = React.useState(false);
   const [status, setStatus] = React.useState<'PENDING' | 'SUCCESS' | 'ERROR'>('PENDING');
   const [message, setMessage] = React.useState('');
+  const [documents, setDocuments] = React.useState<DriverKycDocument[]>([]);
+
+  const requiredDocuments = ['ID_CARD', 'DRIVERS_LICENSE', 'VEHICLE_REGISTRATION', 'INSURANCE'] as const;
+
+  const loadDocuments = React.useCallback(async () => {
+    try {
+      setDocuments(await getMyKycDocuments());
+    } catch {
+      setDocuments([]);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    void loadDocuments();
+  }, [loadDocuments]);
 
   async function handleUpload(type: string) {
     setLoading(true);
@@ -48,6 +63,7 @@ function DriverKycScreen() {
 
       const fileUri = result.assets[0].uri;
       await uploadKycDocumentFile(type, fileUri);
+      await loadDocuments();
       setStatus('SUCCESS');
       setMessage(t('kyc.upload_success', { document: t(`kyc.${type}`) }));
     } catch (err) {
@@ -92,27 +108,20 @@ function DriverKycScreen() {
           )}
 
           <View className="space-y-4">
-            <DocumentUploadCard
-              title={t('kyc.ID_CARD')}
-              type="ID_CARD"
-              onUpload={() => handleUpload('ID_CARD')}
-              loading={loading}
-              uploadLabel={t('kyc.tap_upload')}
-            />
-            <DocumentUploadCard
-              title={t('kyc.DRIVERS_LICENSE')}
-              type="DRIVERS_LICENSE"
-              onUpload={() => handleUpload('DRIVERS_LICENSE')}
-              loading={loading}
-              uploadLabel={t('kyc.tap_upload')}
-            />
-            <DocumentUploadCard
-              title={t('kyc.VEHICLE_REGISTRATION')}
-              type="VEHICLE_REGISTRATION"
-              onUpload={() => handleUpload('VEHICLE_REGISTRATION')}
-              loading={loading}
-              uploadLabel={t('kyc.tap_upload')}
-            />
+            {requiredDocuments.map((type) => {
+              const latest = documents.find((doc) => doc.type === type);
+              return (
+                <DocumentUploadCard
+                  key={type}
+                  title={t(`kyc.${type}`)}
+                  type={type}
+                  status={latest?.status ?? 'MISSING'}
+                  onUpload={() => handleUpload(type)}
+                  loading={loading}
+                  uploadLabel={latest?.status === 'VERIFIED' ? t('kyc.verified', 'Verified') : t('kyc.tap_upload')}
+                />
+              );
+            })}
           </View>
         </View>
     </SafeAreaView>
@@ -121,7 +130,27 @@ function DriverKycScreen() {
 
 export default withSessionGuard(DriverKycScreen);
 
-function DocumentUploadCard({ title, onUpload, loading, uploadLabel }: { title: string, type: string, onUpload: () => void, loading: boolean, uploadLabel: string }) {
+function DocumentUploadCard({
+  title,
+  onUpload,
+  loading,
+  uploadLabel,
+  status,
+}: {
+  title: string,
+  type: string,
+  onUpload: () => void,
+  loading: boolean,
+  uploadLabel: string,
+  status: 'MISSING' | DriverKycDocument['status'],
+}) {
+  const statusClass =
+    status === 'VERIFIED'
+      ? 'text-success'
+      : status === 'REJECTED'
+        ? 'text-destructive'
+        : 'text-muted-foreground';
+
   return (
     <TouchableOpacity 
       disabled={loading}
@@ -131,6 +160,7 @@ function DocumentUploadCard({ title, onUpload, loading, uploadLabel }: { title: 
       <View>
         <Text className="font-bold text-base mb-1">{title}</Text>
         <Text className="text-muted-foreground text-xs">{uploadLabel}</Text>
+        <Text className={`text-[10px] font-black uppercase tracking-widest mt-2 ${statusClass}`}>{status}</Text>
       </View>
       <View className="w-12 h-12 bg-primary/10 rounded-full items-center justify-center">
         {loading ? <ActivityIndicator color="#006947" /> : <UploadCloud size={24} color="#006947" />}

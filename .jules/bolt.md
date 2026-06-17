@@ -48,6 +48,12 @@
 
 **Action:** Applied the `Promise.all` pattern to `FinanceService.getFinanceAnalytics`, parallelizing queries for outstanding receivables, total cash collected, and active refund requests. This maintains consistency with optimizations in other administrative services and reduces API response time for the finance dashboard.
 
+## 2025-06-08 - Parallelizing Live Map Data Retrieval
+
+**Learning:** Sequential `await` calls in `OperationsService.getLiveMapData` for fetching drivers and active trips introduced unnecessary latency, impacting the responsiveness of the mission control map.
+
+**Action:** Optimized `OperationsService.getLiveMapData` using `Promise.all` to execute the independent `findMany` queries for drivers and trips concurrently. This reduces the response time for real-time tracking data, ensuring a smoother experience for operations personnel.
+
 ## Mobile App Performance and Fixes
 - Centralized API calls in `mobile/src/lib/api.ts` to ensure consistent Authorization headers and error handling.
 - Optimized Food and Restaurant screens by reducing redundant fetch calls and improving loading states.

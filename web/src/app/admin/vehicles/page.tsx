@@ -86,6 +86,12 @@ export default function VehicleManagementPage() {
             }
           />
 
+          {error && (
+            <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm font-bold">
+              {error}
+            </div>
+          )}
+
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <Card className="border-primary/10 glass-premium">
               <CardContent className="p-6 flex items-center justify-between">

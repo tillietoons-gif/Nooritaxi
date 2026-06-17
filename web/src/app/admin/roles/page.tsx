@@ -80,6 +80,12 @@ export default function AdminRolesPage() {
             }
           />
 
+          {error && (
+            <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm font-bold">
+              {error}
+            </div>
+          )}
+
           {loading ? (
             <div className="px-6 py-12 text-center animate-pulse text-muted-foreground font-black uppercase tracking-widest text-xs">Accessing security descriptors...</div>
           ) : (

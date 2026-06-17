@@ -115,6 +115,12 @@ export default function AdminRefundsPage() {
             }
           />
 
+          {error && (
+            <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm font-bold">
+              {error}
+            </div>
+          )}
+
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
             <GlassSurface variant="premium" className="flex flex-col gap-3 p-4 md:flex-row md:items-end">
               <div className="flex-1">

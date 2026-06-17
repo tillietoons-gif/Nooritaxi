@@ -35,17 +35,21 @@ export default function AdminRolesPage() {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [roles, setRoles] = useState<Role[]>([])
+  const [, setPermissions] = useState<Permission[]>([])
+  const [, setError] = useState<string | null>(null)
 
   const load = useCallback(async (isSilent = false) => {
     if (!isSilent) setLoading(true)
     else setRefreshing(true)
 
     try {
-      const roleRes = await authedFetch("/admin/roles?include=permissions,admins")
+      const [roleRes] = await Promise.all([
+        authedFetch("/admin/roles?include=permissions,admins")
+      ])
 
       if (roleRes.ok) setRoles(await roleRes.json())
-    } catch {
-      // Errors handled silently
+    } catch (err) {
+      console.error(err)
     } finally {
       setLoading(false)
       setRefreshing(false)

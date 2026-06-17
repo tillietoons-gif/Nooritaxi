@@ -43,6 +43,12 @@ export type AuthUser = {
   email?: string | null;
   name?: string | null;
   role: 'RIDER' | 'DRIVER' | 'MERCHANT' | 'SUPPORT' | 'ADMIN';
+  driverProfile?: {
+    ratingAverage?: number | null;
+    completedTrips?: number | null;
+    completedDeliveries?: number | null;
+    tier?: string | null;
+  } | null;
 };
 
 export type AuthRole = AuthUser['role'];
@@ -117,12 +123,26 @@ export type Trip = {
   id: string;
   pickupLocation: string;
   dropoffLocation: string;
+  pickupLat?: number | null;
+  pickupLng?: number | null;
+  dropoffLat?: number | null;
+  dropoffLng?: number | null;
   status: TripStatus;
   fare?: number | string | null;
   safetyCode?: string | null;
   requestedAt?: string;
   createdAt?: string;
+  customer?: AuthUser | null;
   driver?: AuthUser | null;
+  vehicle?: {
+    id: string;
+    type?: string | null;
+    make?: string | null;
+    model?: string | null;
+    color?: string | null;
+    plateNumber?: string | null;
+    capacity?: number | null;
+  } | null;
 };
 
 export type Delivery = {
@@ -167,10 +187,14 @@ export type RidePayload = {
   dropoffLat?: number;
   dropoffLng?: number;
   distance?: number;
+  duration?: number;
   paymentMethod?: 'CASH' | 'WALLET';
+  notes?: string;
 };
 
 export type RideEstimate = {
+  baseFare?: number;
+  perKm?: number;
   fare: number;
   currency: string;
   distance: number;
@@ -413,12 +437,21 @@ export async function updateTripStatus(
   tripId: string,
   status: TripStatus,
   actorId?: string,
+  safetyCode?: string,
 ) {
   const response = await apiFetch(`/trips/${encodeURIComponent(tripId)}`, {
     method: 'PATCH',
-    body: JSON.stringify({ status, actorId }),
+    body: JSON.stringify({ status, actorId, safetyCode }),
   });
   return readJson<Trip>(response, 'Unable to update trip status');
+}
+
+export async function cancelTrip(tripId: string, reason?: string) {
+  const response = await apiFetch(`/trips/${encodeURIComponent(tripId)}/cancel`, {
+    method: 'PATCH',
+    body: JSON.stringify({ reason }),
+  });
+  return readJson<Trip>(response, 'Unable to cancel trip');
 }
 
 export async function getWalletBalance(userId: string) {

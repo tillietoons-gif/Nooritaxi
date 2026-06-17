@@ -48,6 +48,13 @@ function OcclusionCuller({ children }: { children: React.ReactNode }) {
     return r;
   }, []);
 
+  // Use a local raycaster to avoid mutating the global one from useThree
+  const localRaycaster = React.useMemo(() => {
+    const rc = new THREE.Raycaster();
+    rc.far = 40;
+    return rc;
+  }, []);
+
   useFrame((state) => {
     if (state.clock.elapsedTime - lastCheck < 0.6) return; // throttle ~1.6hz
     setLastCheck(state.clock.elapsedTime);

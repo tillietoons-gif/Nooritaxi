@@ -12,7 +12,7 @@ import { AdminPageHeader } from "@/components/admin/admin-page-header"
 import { useTranslation } from "react-i18next"
 import { FilterX, LoaderCircle, Search } from "lucide-react"
 
-const PAGE_SIZE = 10
+const PAGE_SIZE = 25
 
 interface Column<T> {
   key: string

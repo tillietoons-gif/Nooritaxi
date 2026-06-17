@@ -47,7 +47,7 @@ export default function AdminRefundsPage() {
     setLoading(true)
     setError(null)
     try {
-      const res = await authedFetch("/admin/finance/refunds")
+      const res = await authedFetch(`/admin/finance/refunds${statusFilter === ALL_STATUSES ? "" : `?status=${statusFilter}`}`)
       if (!res.ok) throw new Error("Failed to fetch refunds")
       setRefunds(await res.json())
     } catch (err) {
@@ -56,7 +56,7 @@ export default function AdminRefundsPage() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [statusFilter])
 
   useEffect(() => {
     void loadData()
@@ -66,8 +66,8 @@ export default function AdminRefundsPage() {
     setActionLoading(`refund:${id}:${status}`)
     setError(null)
     try {
-      const res = await authedFetch(`/admin/finance/refunds/${id}/process`, {
-        method: "POST",
+      const res = await authedFetch(`/admin/finance/refunds/${id}`, {
+        method: "PUT",
         body: JSON.stringify({ status })
       })
       if (!res.ok) throw new Error("Processing failed")
@@ -87,6 +87,13 @@ export default function AdminRefundsPage() {
     if (r.orderId) return "ORDER"
     if (r.deliveryId) return "DELIVERY"
     return "UNKNOWN"
+  }
+
+  const formatService = (service: RefundService) => {
+    if (service === "TRIP") return "Trip"
+    if (service === "ORDER") return "Order"
+    if (service === "DELIVERY") return "Delivery"
+    return "Unknown"
   }
 
   const filteredRefunds = refunds.filter(r => {
@@ -127,8 +134,9 @@ export default function AdminRefundsPage() {
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
             <GlassSurface variant="premium" className="flex flex-col gap-3 p-4 md:flex-row md:items-end">
               <div className="flex-1">
-                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Search Requests</label>
+                <label htmlFor="refund-search" className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Search Requests</label>
                 <Input
+                  id="refund-search"
                   placeholder="ID, customer name, phone..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
@@ -136,21 +144,23 @@ export default function AdminRefundsPage() {
                 />
               </div>
               <div className="w-full md:w-48">
-                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Service</label>
+                <label htmlFor="refund-service" className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Service</label>
                 <select
+                  id="refund-service"
                   className="block w-full rounded-md border border-primary/20 bg-background/80 px-3 py-2 text-sm outline-none backdrop-blur-sm"
                   value={serviceFilter}
                   onChange={(e) => setServiceFilter(e.target.value as any)}
                 >
                   <option value="ALL">All Services</option>
-                  <option value="TRIP">Rides</option>
-                  <option value="ORDER">Food</option>
-                  <option value="DELIVERY">Parcel</option>
+                  <option value="TRIP">Trip</option>
+                  <option value="ORDER">Order</option>
+                  <option value="DELIVERY">Delivery</option>
                 </select>
               </div>
               <div className="w-full md:w-48">
-                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Status</label>
+                <label htmlFor="refund-status" className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Status Filter</label>
                 <select
+                  id="refund-status"
                   className="block w-full rounded-md border border-primary/20 bg-background/80 px-3 py-2 text-sm outline-none backdrop-blur-sm"
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value as any)}
@@ -159,19 +169,6 @@ export default function AdminRefundsPage() {
                   <option value="PENDING">Pending</option>
                   <option value="APPROVED">Approved</option>
                   <option value="REJECTED">Rejected</option>
-                </select>
-              </div>
-              <div className="w-full md:w-48">
-                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Service</label>
-                <select
-                  className="block w-full rounded-md border border-primary/20 bg-background/80 px-3 py-2 text-sm outline-none backdrop-blur-sm"
-                  value={serviceFilter}
-                  onChange={(e) => setServiceFilter(e.target.value as any)}
-                >
-                  <option value="ALL">All Services</option>
-                  <option value="TRIP">Trips</option>
-                  <option value="ORDER">Orders</option>
-                  <option value="DELIVERY">Deliveries</option>
                 </select>
               </div>
             </GlassSurface>
@@ -222,7 +219,7 @@ export default function AdminRefundsPage() {
                             <div className="font-bold">{r.user.name ?? r.user.phone ?? "Unknown"}</div>
                             <div className="text-[10px] text-muted-foreground">{formatDate(r.createdAt)}</div>
                           </td>
-                          <td className="px-6 py-4 text-[10px] font-bold uppercase">{getRefundService(r)}</td>
+                          <td className="px-6 py-4 text-[10px] font-bold uppercase">{formatService(getRefundService(r))}</td>
                           <td className="px-6 py-4 font-black text-gold">{formatMoney(r.amount)}</td>
                           <td className="px-6 py-4">
                             <Badge variant={r.status === "APPROVED" ? "default" : r.status === "REJECTED" ? "destructive" : "secondary"} className="text-[10px]">

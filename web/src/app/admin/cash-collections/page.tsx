@@ -30,6 +30,8 @@ import { GlassSurface } from "@/components/ui/glass-surface"
 
 type Settlement = {
   id: string
+  userId?: string | null
+  fleetId?: string | null
   periodStart: string
   periodEnd: string
   netBalance: number | string
@@ -56,6 +58,7 @@ export default function CashCollectionsPage() {
   const [refreshing, setRefreshing] = useState(false)
   const [settlements, setSettlements] = useState<Settlement[]>([])
   const [collections, setCollections] = useState<CashCollection[]>([])
+  const [analytics, setAnalytics] = useState({ outstandingReceivables: 0, totalCashCollected: 0 })
   const [selectedSettlement, setSelectedSettlement] = useState<Settlement | null>(null)
   const [collectForm, setCollectForm] = useState({ amount: "", receiptNo: "", notes: "" })
   const [collectError, setCollectError] = useState("")
@@ -67,11 +70,13 @@ export default function CashCollectionsPage() {
     else setRefreshing(true)
 
     try {
-      const [setRes, colRes] = await Promise.all([
-        authedFetch("/admin/finance/settlements?status=UNPAID&limit=50"),
-        authedFetch("/admin/finance/collections?limit=20")
+      const [analyticsRes, setRes, colRes] = await Promise.all([
+        authedFetch("/admin/finance/analytics"),
+        authedFetch("/admin/finance/settlements"),
+        authedFetch("/admin/finance/cash-collections?limit=100")
       ])
 
+      if (analyticsRes.ok) setAnalytics(await analyticsRes.json())
       if (setRes.ok) setSettlements(await setRes.json())
       if (colRes.ok) setCollections(await colRes.json())
     } catch (err) {
@@ -92,7 +97,7 @@ export default function CashCollectionsPage() {
   const getSettlementParty = (s: Settlement) => s.user?.name ?? s.user?.phone ?? s.fleet?.name ?? t('admin.unknown', "Unknown")
 
   const openCollectDialog = (s: Settlement) => {
-    const outstanding = Number(s.netBalance) - Number(s.cashCollected)
+    const outstanding = Math.abs(Number(s.netBalance))
     setSelectedSettlement(s)
     setCollectForm({ amount: String(outstanding), receiptNo: "", notes: "" })
     setCollectError("")
@@ -107,9 +112,15 @@ export default function CashCollectionsPage() {
     if (!selectedSettlement) return
     setIsCollecting(true)
     try {
-      const res = await authedFetch(`/admin/finance/settlements/${selectedSettlement.id}/collect`, {
+      const res = await authedFetch("/admin/finance/collect-cash", {
         method: "POST",
-        body: JSON.stringify(collectForm)
+        body: JSON.stringify({
+          settlementId: selectedSettlement.id,
+          amount: Number(collectForm.amount),
+          collectedFrom: selectedSettlement.userId ?? selectedSettlement.fleetId ?? selectedSettlement.id,
+          receiptNo: collectForm.receiptNo,
+          notes: collectForm.notes,
+        })
       })
       if (!res.ok) throw new Error(t('admin.failedToRecordCollection', "Failed to record collection"))
       await load(true)
@@ -147,7 +158,7 @@ export default function CashCollectionsPage() {
                 <div className="bg-primary/10 p-3 rounded-2xl text-primary"><Banknote className="h-6 w-6" /></div>
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t('admin.pendingCollection', "Pending Collection")}</p>
-                  <p className="text-2xl font-black">{filteredSettlements.length}</p>
+                  <p className="text-2xl font-black">{formatMoney(analytics.outstandingReceivables)}</p>
                 </div>
               </div>
             </GlassSurface>
@@ -156,7 +167,7 @@ export default function CashCollectionsPage() {
                 <div className="bg-emerald-500/10 p-3 rounded-2xl text-emerald-600"><Check className="h-6 w-6" /></div>
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t('admin.recentReceipts', "Recent Receipts")}</p>
-                  <p className="text-2xl font-black">{collections.length}</p>
+                  <p className="text-2xl font-black">{formatMoney(analytics.totalCashCollected)}</p>
                 </div>
               </div>
             </GlassSurface>
@@ -209,7 +220,7 @@ export default function CashCollectionsPage() {
                       </tr>
                     ) : (
                       filteredSettlements.map((s) => {
-                        const outstanding = Number(s.netBalance) - Number(s.cashCollected)
+                        const outstanding = Math.abs(Number(s.netBalance))
                         return (
                           <tr key={s.id} className="border-b border-primary/5 hover:bg-primary/5 transition-colors">
                             <td className="px-6 py-4">
@@ -221,10 +232,11 @@ export default function CashCollectionsPage() {
                             </td>
                             <td className="px-6 py-4">
                               <div className="font-black text-primary">{formatMoney(outstanding)}</div>
+                              {s.status === "COMPLETED" ? <div className="text-[10px] font-bold uppercase text-emerald-600">Settled</div> : null}
                             </td>
                             <td className="px-6 py-4 text-end">
                               <Button size="sm" variant="outline" onClick={() => openCollectDialog(s)} className="border-primary/20 hover:bg-primary/10 text-primary font-bold">
-                                {t('admin.collect', "Collect")}
+                                {t('admin.collect', "Record Collection")}
                               </Button>
                             </td>
                           </tr>
@@ -248,9 +260,10 @@ export default function CashCollectionsPage() {
                       <div className="font-bold text-sm">{c.settlement ? getSettlementParty(c.settlement) : t('admin.manualEntry', "Manual Entry")}</div>
                       <div className="font-black text-emerald-600">+{formatMoney(c.amount)}</div>
                     </div>
+                    <div className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">Collected by {c.admin?.name ?? c.admin?.phone ?? c.admin?.email ?? "Unknown"}</div>
                     <div className="flex justify-between items-center text-[10px] uppercase font-bold tracking-widest text-muted-foreground">
                       <span>{formatDate(c.collectedAt)}</span>
-                      <span>{c.receiptNo || t('admin.noReceipt', "NO RECEIPT")}</span>
+                      <span>{c.receiptNo ? `Receipt ${c.receiptNo}` : t('admin.noReceipt', "NO RECEIPT")}</span>
                     </div>
                   </div>
                 ))}
@@ -268,23 +281,23 @@ export default function CashCollectionsPage() {
           </DialogHeader>
           <div className="grid gap-6 py-4">
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t('admin.collectionAmount', "Collection Amount")}</label>
-              <Input type="number" value={collectForm.amount} onChange={(e) => setCollectForm(f => ({ ...f, amount: e.target.value }))} className="bg-muted/50" />
+              <label htmlFor="collection-amount" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t('admin.collectionAmount', "Collection Amount")}</label>
+              <Input id="collection-amount" type="number" value={collectForm.amount} onChange={(e) => setCollectForm(f => ({ ...f, amount: e.target.value }))} className="bg-muted/50" />
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t('admin.receiptReference', "Receipt / Reference")}</label>
-              <Input value={collectForm.receiptNo} onChange={(e) => setCollectForm(f => ({ ...f, receiptNo: e.target.value }))} className="bg-muted/50" placeholder="e.g. RCP-8291" />
+              <label htmlFor="receipt-number" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t('admin.receiptReference', "Receipt Number")}</label>
+              <Input id="receipt-number" value={collectForm.receiptNo} onChange={(e) => setCollectForm(f => ({ ...f, receiptNo: e.target.value }))} className="bg-muted/50" placeholder="e.g. RCP-8291" />
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t('admin.auditNotes', "Audit Notes")}</label>
-              <Input value={collectForm.notes} onChange={(e) => setCollectForm(f => ({ ...f, notes: e.target.value }))} className="bg-muted/50" />
+              <label htmlFor="collection-notes" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t('admin.auditNotes', "Collection Notes")}</label>
+              <Input id="collection-notes" value={collectForm.notes} onChange={(e) => setCollectForm(f => ({ ...f, notes: e.target.value }))} className="bg-muted/50" />
             </div>
             {collectError && <div className="text-xs font-bold text-destructive bg-destructive/5 p-2 rounded border border-destructive/10">{collectError}</div>}
           </div>
           <DialogFooter>
             <Button onClick={submitCashCollection} disabled={isCollecting} className="w-full font-black uppercase tracking-widest">
               {isCollecting ? <LoaderCircle className="me-2 h-4 w-4 animate-spin" /> : null}
-              {t('admin.confirmCollection', "Confirm Collection")}
+              {t('admin.confirmCollection', "Save Collection")}
             </Button>
           </DialogFooter>
         </DialogContent>

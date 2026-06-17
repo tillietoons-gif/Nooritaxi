@@ -24,6 +24,7 @@ type AdminUser = {
   email?: string | null
   name?: string | null
   roles: { id: string; name: string; isSystem: boolean }[]
+  adminRoles?: { role: { id: string; name: string; isSystem: boolean }; cityScope?: string | null }[]
 }
 
 type Role = {
@@ -38,42 +39,58 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [users, setUsers] = useState<AdminUser[]>([])
-  const [, setRoles] = useState<Role[]>([])
+  const [roles, setRoles] = useState<Role[]>([])
   const [search, setSearch] = useState("")
+  const [debouncedSearch, setDebouncedSearch] = useState("")
+  const [selectedRoleId, setSelectedRoleId] = useState("all")
+  const [total, setTotal] = useState(0)
   const [, setError] = useState<string | null>(null)
 
-  const load = useCallback(async (isSilent = false) => {
+  const loadRoles = useCallback(async () => {
+    const rolRes = await authedFetch("/admin/roles")
+    if (rolRes.ok) setRoles(await rolRes.json())
+  }, [])
+
+  const loadUsers = useCallback(async (isSilent = false) => {
     if (!isSilent) setLoading(true)
     else setRefreshing(true)
     setError(null)
 
     try {
-      const [rolRes, usrRes] = await Promise.all([
-        authedFetch("/admin/roles"),
-        authedFetch("/admin/users?role=ADMIN&limit=100")
-      ])
+      const usrRes = await authedFetch(`/admin/users?role=ADMIN&limit=100${debouncedSearch.trim() ? `&q=${encodeURIComponent(debouncedSearch.trim())}` : ""}`)
 
       if (usrRes.ok) {
         const data = await usrRes.json()
-        setUsers(Array.isArray(data) ? data : data.items || [])
+        const items = (Array.isArray(data) ? data : data.items || []).map((user: AdminUser) => ({
+          ...user,
+          roles: user.roles ?? user.adminRoles?.map((assignment) => assignment.role) ?? [],
+        }))
+        setUsers(items)
+        setTotal(Array.isArray(data) ? data.length : data.total ?? items.length)
       }
-      if (rolRes.ok) setRoles(await rolRes.json())
     } catch (err) {
       setError(err instanceof Error ? err.message : t('admin.failedLoadAdminUsers', "Failed to load admin users"))
     } finally {
       setLoading(false)
       setRefreshing(false)
     }
-  }, [t])
+  }, [debouncedSearch, t])
 
   useEffect(() => {
-    void load()
-  }, [load])
+    void loadRoles()
+  }, [loadRoles])
+
+  useEffect(() => {
+    void loadUsers()
+  }, [loadUsers])
+
+  useEffect(() => {
+    const id = window.setTimeout(() => setDebouncedSearch(search), 250)
+    return () => window.clearTimeout(id)
+  }, [search])
 
   const filteredUsers = users.filter(u =>
-    (u.name ?? "").toLowerCase().includes(search.toLowerCase()) ||
-    u.phone.includes(search) ||
-    (u.email ?? "").toLowerCase().includes(search.toLowerCase())
+    selectedRoleId === "all" || u.roles?.some((role) => role.id === selectedRoleId)
   )
 
   return (
@@ -84,7 +101,7 @@ export default function AdminUsersPage() {
             title={t('admin.administratorAccess', "Administrator Access")}
             subtitle={t('admin.manageInternalUsers', "Manage internal users, security roles, and platform permissions.")}
             actions={
-              <Button variant="outline" onClick={() => void load(true)} disabled={refreshing}>
+              <Button variant="outline" onClick={() => void loadUsers(true)} disabled={refreshing}>
                 <RefreshCw className={`me-2 h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
                 {t('admin.refresh', "Refresh")}
               </Button>
@@ -95,12 +112,27 @@ export default function AdminUsersPage() {
             <div className="bg-primary/5 p-4 border-b border-primary/10">
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <h2 className="text-lg font-black uppercase tracking-tight">{t('admin.staffMembers', "Staff Members")}</h2>
-                <div className="relative md:w-80">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t('admin.filterByNamePhoneEmail', "Filter by name, phone, email...")} className="ps-9 bg-background/50" />
+                <div className="flex flex-col gap-3 md:flex-row">
+                  <div className="relative md:w-80">
+                    <label htmlFor="admin-search" className="sr-only">Search admins</label>
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input id="admin-search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t('admin.filterByNamePhoneEmail', "Filter by name, phone, email...")} className="ps-9 bg-background/50" />
+                  </div>
+                  <div>
+                    <label htmlFor="admin-role-filter" className="sr-only">RBAC role</label>
+                    <select id="admin-role-filter" value={selectedRoleId} onChange={(event) => setSelectedRoleId(event.target.value)} className="h-9 rounded-md border border-input bg-background px-3 text-sm">
+                      <option value="all">All roles</option>
+                      {roles.map((role) => <option key={role.id} value={role.id}>{role.name}</option>)}
+                    </select>
+                  </div>
                 </div>
               </div>
             </div>
+            {!loading ? (
+              <div className="border-b border-primary/10 px-6 py-3 text-sm font-bold text-muted-foreground">
+                {debouncedSearch.trim() ? `Showing ${filteredUsers.length} of ${total} matching admin accounts` : `Showing ${total} admin accounts`}
+              </div>
+            ) : null}
             <div className="overflow-x-auto">
               <table className="w-full text-start text-sm">
                 <thead className="border-b border-primary/10 bg-background/50 text-[10px] uppercase font-black tracking-widest text-muted-foreground">
@@ -122,7 +154,7 @@ export default function AdminUsersPage() {
                     <tr>
                       <td colSpan={3} className="px-6 py-12 text-center text-muted-foreground">
                         <FilterX className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                        <span>{t('admin.noStaffFound', "No staff members found.")}</span>
+                        <span>{selectedRoleId === "all" ? t('admin.noStaffFound', "No staff members found.") : "No admins match the current filters"}</span>
                       </td>
                     </tr>
                   ) : (

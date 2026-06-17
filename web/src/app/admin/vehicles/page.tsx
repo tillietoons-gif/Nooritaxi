@@ -158,6 +158,29 @@ export default function VehicleManagementPage() {
               </div>
             </CardContent>
           </Card>
+
+          <Card className="border-primary/10 shadow-xl overflow-hidden glass-premium">
+            <CardHeader className="bg-primary/5">
+              <CardTitle className="text-lg font-black uppercase tracking-tight">Inspection Records</CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
+              {inspections.length === 0 ? (
+                <div className="space-y-2 text-sm text-muted-foreground">
+                  <p>No inspection records have been logged yet.</p>
+                  <p>Vehicle creation and assignment are currently managed through driver onboarding flows.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {inspections.map((inspection) => (
+                    <div key={inspection.id} className="rounded-lg border border-primary/10 p-3 text-sm">
+                      <div className="font-bold">{inspection.status}</div>
+                      <div className="text-muted-foreground">{inspection.notes ?? "No notes"}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </main>
     </AuthGate>

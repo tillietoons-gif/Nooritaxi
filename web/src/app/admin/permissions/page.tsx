@@ -50,7 +50,7 @@ export default function AdminPermissionsPage() {
     try {
       const [roleRes, permRes] = await Promise.all([
         authedFetch("/admin/roles"),
-        authedFetch("/admin/permissions")
+        authedFetch("/admin/roles/permissions")
       ])
 
       if (roleRes.ok) setRoles(await roleRes.json())
@@ -72,7 +72,7 @@ export default function AdminPermissionsPage() {
   const permissionLookup = useMemo(() => {
     const lookup: Record<string, Set<string>> = {}
     roles.forEach(role => {
-      lookup[role.id] = new Set(role.permissions.map(p => p.name))
+      lookup[role.id] = new Set(role.permissions.map(p => "permission" in p ? (p as any).permission.name : p.name))
     })
     return lookup
   }, [roles])
@@ -122,22 +122,22 @@ export default function AdminPermissionsPage() {
             <CardContent className="p-6">
               <div className="grid gap-6 md:grid-cols-3">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Search Permissions</label>
+                  <label htmlFor="permission-search" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Search Permissions</label>
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Filter by name..." className="pl-9 bg-background/50" />
+                    <Input id="permission-search" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Filter by name..." className="pl-9 bg-background/50" />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Module</label>
-                  <select value={selectedModule} onChange={(e) => setSelectedModule(e.target.value)} className="w-full h-10 px-3 rounded-md border border-input bg-background/50 text-sm">
+                  <label htmlFor="permission-module" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Module</label>
+                  <select id="permission-module" value={selectedModule} onChange={(e) => setSelectedModule(e.target.value)} className="w-full h-10 px-3 rounded-md border border-input bg-background/50 text-sm">
                     <option value="all">All Modules</option>
                     {modules.map(m => <option key={m} value={m}>{formatLabel(m)}</option>)}
                   </select>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Role Focus</label>
-                  <select value={selectedRoleId} onChange={(e) => setSelectedRoleId(e.target.value)} className="w-full h-10 px-3 rounded-md border border-input bg-background/50 text-sm">
+                  <label htmlFor="permission-role" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Role Focus</label>
+                  <select id="permission-role" value={selectedRoleId} onChange={(e) => setSelectedRoleId(e.target.value)} className="w-full h-10 px-3 rounded-md border border-input bg-background/50 text-sm">
                     <option value="all">All Roles</option>
                     {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
                   </select>
@@ -147,6 +147,12 @@ export default function AdminPermissionsPage() {
           </Card>
 
           {error && <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm font-bold">{error}</div>}
+          {!loading && (
+            <div className="flex gap-3 text-sm font-bold text-muted-foreground">
+              <span>{filteredPermissions.length === permissions.length ? `Mapped ${permissions.length} permissions across ${roles.length} roles` : `${filteredPermissions.length} matching permissions`}</span>
+              <span>{visibleRoles.length} visible roles</span>
+            </div>
+          )}
 
           {loading ? (
             <div className="h-64 flex flex-col items-center justify-center rounded-3xl border border-primary/10 bg-background/50 animate-pulse">

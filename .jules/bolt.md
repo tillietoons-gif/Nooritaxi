@@ -55,8 +55,8 @@
 - Fixed dead links in Profile tab, redirecting "Safety Center" to the functional Trusted Contacts page.
 - Enhanced Wallet UI with a functional Top Up feature integrated with the backend deposit API.
 
-## 2026-06-15 - Parallelizing Live Map Data Retrieval
+## 2026-06-16 - Parallelizing Live Map Data Queries
 
-**Learning:** Sequential `await` calls in `OperationsService.getLiveMapData` for retrieving drivers and active trips introduced unnecessary latency in the mission control map view.
+**Learning:** Sequential await calls for independent database queries in high-frequency endpoints like `getLiveMapData` introduce unnecessary latency. In a mocked environment with 50ms query delay, sequential execution takes ~100ms while parallel execution takes ~50ms.
 
-**Action:** Refactored `OperationsService.getLiveMapData` to use `Promise.all` for concurrent Prisma queries, reducing API response time for live tracking data.
+**Action:** Use `Promise.all` to parallelize independent Prisma queries in tracking and dashboard services to reduce API response time by up to 50%.

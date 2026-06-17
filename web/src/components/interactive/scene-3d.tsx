@@ -42,6 +42,18 @@ function FrustumCulling({ children }: { children: React.ReactNode }) {
 function OcclusionCuller({ children }: { children: React.ReactNode }) {
   const { camera, scene } = useThree();
   const [lastCheck, setLastCheck] = React.useState(0);
+  const localRaycaster = React.useMemo(() => {
+    const r = new THREE.Raycaster();
+    r.far = 40;
+    return r;
+  }, []);
+
+  // Use a local raycaster to avoid mutating the global one from useThree
+  const localRaycaster = React.useMemo(() => {
+    const rc = new THREE.Raycaster();
+    rc.far = 40;
+    return rc;
+  }, []);
 
   // Use a local memoized raycaster to avoid modifying the one from useThree
   // This satisfies react-hooks/immutability which prevents mutation of objects from hooks

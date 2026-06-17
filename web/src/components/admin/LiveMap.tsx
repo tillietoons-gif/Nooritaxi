@@ -180,9 +180,9 @@ export default function LiveMap() {
     [drivers, surgeZones, places],
   );
 
-  const visibleDrivers = React.useMemo(() => (visibleLayers.drivers ? drivers : []), [visibleLayers.drivers, drivers]);
-  const visibleZones = React.useMemo(() => (visibleLayers.zones ? surgeZones : []), [visibleLayers.zones, surgeZones]);
-  const visiblePlaces = React.useMemo(() => (visibleLayers.places ? places : []), [visibleLayers.places, places]);
+  const visibleDrivers = useMemo(() => (visibleLayers.drivers ? drivers : []), [visibleLayers.drivers, drivers]);
+  const visibleZones = useMemo(() => (visibleLayers.zones ? surgeZones : []), [visibleLayers.zones, surgeZones]);
+  const visiblePlaces = useMemo(() => (visibleLayers.places ? places : []), [visibleLayers.places, places]);
   const fitPoints = useMemo(
     () => [
       ...visibleDrivers.map((driver) => [driver.lat, driver.lng] as [number, number]),

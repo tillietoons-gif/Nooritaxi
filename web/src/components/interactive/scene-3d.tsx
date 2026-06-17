@@ -42,6 +42,11 @@ function FrustumCulling({ children }: { children: React.ReactNode }) {
 function OcclusionCuller({ children }: { children: React.ReactNode }) {
   const { camera, scene } = useThree();
   const [lastCheck, setLastCheck] = React.useState(0);
+  const localRaycaster = React.useMemo(() => {
+    const r = new THREE.Raycaster();
+    r.far = 40;
+    return r;
+  }, []);
 
   // Use a local raycaster to avoid mutating the global one from useThree
   const localRaycaster = React.useMemo(() => {

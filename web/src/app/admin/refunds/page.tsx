@@ -45,13 +45,12 @@ export default function AdminRefundsPage() {
 
   const loadData = useCallback(async () => {
     setLoading(true)
-    setError(null)
     try {
       const res = await authedFetch("/admin/finance/refunds")
       if (!res.ok) throw new Error("Failed to fetch refunds")
       setRefunds(await res.json())
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Connection error")
+      console.error(err)
     } finally {
       setLoading(false)
     }

@@ -130,11 +130,11 @@ export function Header() {
 
              {user ? (
                <div className="flex items-center gap-4">
-                 <Link href={actionHref}>
-                    <Button variant="ghost" size="sm" className="rounded-full font-black text-[10px] uppercase tracking-widest gap-2">
+                 <Button asChild variant="ghost" size="sm" className="rounded-full font-black text-[10px] uppercase tracking-widest gap-2">
+                    <Link href={actionHref} aria-label={`Go to ${actionLabel}`}>
                        <LayoutDashboard className="h-3.5 w-3.5" /> {actionLabel}
-                    </Button>
-                 </Link>
+                    </Link>
+                 </Button>
                  <div className="h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center text-primary border border-primary/20">
                     <User className="h-4 w-4" />
                  </div>

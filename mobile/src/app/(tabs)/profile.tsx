@@ -36,8 +36,8 @@ export default function ProfileScreen() {
     { id: 'language', icon: <Globe size={22} color="#006947" />, title: t('profile.language', 'Language'), subtitle: t('profile.language_subtitle', 'English, Dari, Pashto') },
     ...(isMerchant
       ? [
-          { id: 'merchant', icon: <Store size={22} color="#006947" />, title: 'Restaurant', subtitle: 'Manage your profile and menu' },
-          { id: 'orders', icon: <ReceiptText size={22} color="#006947" />, title: 'Orders', subtitle: 'Review incoming customer orders' },
+          { id: 'merchant', icon: <Store size={22} color="#006947" />, title: t('profile.restaurant'), subtitle: t('profile.restaurant_subtitle') },
+          { id: 'orders', icon: <ReceiptText size={22} color="#006947" />, title: t('profile.orders'), subtitle: t('profile.orders_subtitle') },
         ]
       : []),
     ...(!isDriver && !isMerchant
@@ -49,10 +49,10 @@ export default function ProfileScreen() {
         ]
       : []),
     ...(isDriver || isMerchant
-      ? [{ id: 'cash_ledger', icon: <Banknote size={22} color="#006947" />, title: 'Cash Ledger', subtitle: 'Collected cash and settlement history' }]
+      ? [{ id: 'cash_ledger', icon: <Banknote size={22} color="#006947" />, title: t('profile.cash_ledger'), subtitle: t('profile.cash_ledger_subtitle') }]
       : []),
-    { id: 'help', icon: <HelpCircle size={22} color="#006947" />, title: 'Help & Support', subtitle: '24/7 Premium support' },
-    ...(isDriver ? [{ id: 'kyc', icon: <User size={22} color="#006947" />, title: 'Verification', subtitle: 'Update your driver documents' }] : []),
+    { id: 'help', icon: <HelpCircle size={22} color="#006947" />, title: t('profile.help'), subtitle: t('profile.premium_help_subtitle') },
+    ...(isDriver ? [{ id: 'kyc', icon: <User size={22} color="#006947" />, title: t('profile.verification'), subtitle: t('profile.verification_subtitle') }] : []),
   ];
 
   async function handleMenuPress(id: string) {
@@ -88,10 +88,10 @@ export default function ProfileScreen() {
         const code = `REF-${user?.phone?.slice(-4) ?? '1234'}`;
         try {
           await Share.share({
-            message: `Join Noori Mobility and get AFN 50 off your first ride! Use my code: ${code}`,
+            message: t('profile.referral_share_message', { code }),
           });
         } catch (error) {
-          Alert.alert('Refer a Friend', `Your Referral Code: ${code}\n\nShare this code with friends to earn AFN 50 when they complete their first ride!`);
+          Alert.alert(t('profile.referral'), t('profile.referral_alert_message', { code }));
         }
         break;
       }
@@ -125,8 +125,8 @@ export default function ProfileScreen() {
                 <User size={40} color="white" />
               </View>
               <View className="flex-1">
-                <Text className="text-white text-2xl font-black">{user?.name ?? (isDriver ? 'Noori driver' : 'Noori user')}</Text>
-                <Text className="text-white/70 text-sm font-bold mt-1">{user?.phone ?? 'Not signed in'}</Text>
+                <Text className="text-white text-2xl font-black">{user?.name ?? (isDriver ? t('profile.noori_driver') : t('profile.noori_user'))}</Text>
+                <Text className="text-white/70 text-sm font-bold mt-1">{user?.phone ?? t('profile.not_signed_in')}</Text>
                 <View className="bg-accent/20 self-start px-2 py-0.5 rounded-lg mt-2 border border-accent/20">
                    <Text className="text-accent text-[10px] font-black uppercase">{user?.role ?? 'RIDER'}</Text>
                 </View>

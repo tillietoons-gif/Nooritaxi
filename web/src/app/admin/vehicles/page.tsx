@@ -37,7 +37,7 @@ export default function VehicleManagementPage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [inspections, setInspections] = useState<Inspection[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [, setError] = useState<string | null>(null)
   const [query, setQuery] = useState("")
 
   const filteredVehicles = useMemo(() => {
@@ -62,9 +62,8 @@ export default function VehicleManagementPage() {
         ])
         if (vRes.ok) setVehicles(await vRes.json())
         if (iRes.ok) setInspections(await iRes.json())
-      } catch (err) {
-        setError("Failed to load vehicle registry data")
-        console.error(err)
+      } catch {
+        setError("Failed to load data")
       } finally {
         setLoading(false)
       }

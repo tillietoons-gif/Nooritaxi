@@ -60,3 +60,9 @@
 - Implemented functional Language Switcher and Help/Support pages to replace placeholder alerts.
 - Fixed dead links in Profile tab, redirecting "Safety Center" to the functional Trusted Contacts page.
 - Enhanced Wallet UI with a functional Top Up feature integrated with the backend deposit API.
+
+## 2026-06-16 - Parallelizing Live Map Data Queries
+
+**Learning:** Sequential await calls for independent database queries in high-frequency endpoints like `getLiveMapData` introduce unnecessary latency. In a mocked environment with 50ms query delay, sequential execution takes ~100ms while parallel execution takes ~50ms.
+
+**Action:** Use `Promise.all` to parallelize independent Prisma queries in tracking and dashboard services to reduce API response time by up to 50%.

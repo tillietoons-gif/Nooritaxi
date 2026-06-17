@@ -4,8 +4,10 @@ import { ShieldCheck, Phone, Lock, Eye, EyeOff, ChevronLeft } from 'lucide-react
 import { Link, router } from 'expo-router';
 import { getSignedInRoute, login } from '../../lib/api';
 import { PatternOverlay } from '../../components/PatternOverlay';
+import { useTranslation } from 'react-i18next';
 
 export default function LoginScreen() {
+  const { t } = useTranslation();
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
@@ -35,13 +37,13 @@ export default function LoginScreen() {
             <View className="bg-primary/10 p-6 rounded-4xl mb-6 shadow-sm border border-primary/5">
               <ShieldCheck size={48} color="#006947" />
             </View>
-            <Text className="text-3xl font-black text-primary uppercase tracking-tighter">Welcome Back</Text>
-            <Text className="text-muted-foreground text-center mt-2 px-6 font-medium">Securely access your Noori account.</Text>
+            <Text className="text-3xl font-black text-primary uppercase tracking-tighter">{t('auth.welcome_back')}</Text>
+            <Text className="text-muted-foreground text-center mt-2 px-6 font-medium">{t('auth.login_subtitle')}</Text>
           </View>
 
           <View className="space-y-6">
             <View>
-              <Text className="text-xs font-black text-muted-foreground uppercase mb-2 ml-1 tracking-widest">Phone Number</Text>
+              <Text className="text-xs font-black text-muted-foreground uppercase mb-2 ml-1 tracking-widest">{t('auth.phone_number')}</Text>
               <View className="flex-row items-center bg-card h-16 px-5 rounded-2xl border border-muted/20 shadow-sm">
                 <Phone size={20} color="#006947" />
                 <TextInput
@@ -55,7 +57,7 @@ export default function LoginScreen() {
             </View>
 
             <View>
-              <Text className="text-xs font-black text-muted-foreground uppercase mb-2 ml-1 tracking-widest">Password</Text>
+              <Text className="text-xs font-black text-muted-foreground uppercase mb-2 ml-1 tracking-widest">{t('auth.password')}</Text>
               <View className="flex-row items-center bg-card h-16 px-5 rounded-2xl border border-muted/20 shadow-sm">
                 <Lock size={20} color="#006947" />
                 <TextInput
@@ -83,15 +85,15 @@ export default function LoginScreen() {
               className={`h-16 rounded-3xl items-center justify-center shadow-lg mt-4 ${loading ? 'bg-muted' : 'bg-primary shadow-primary/30'}`}
             >
               <Text className="text-white text-lg font-black uppercase tracking-widest">
-                {loading ? 'Processing...' : 'Secure Login'}
+                {loading ? t('auth.processing') : t('auth.secure_login')}
               </Text>
             </TouchableOpacity>
           </View>
 
           <View className="flex-row justify-center mt-10 gap-1 mb-10 items-center">
-            <Text className="text-muted-foreground font-medium">New to Noori?</Text>
+            <Text className="text-muted-foreground font-medium">{t('auth.new_to_noori')}</Text>
             <TouchableOpacity onPress={() => router.push('/(auth)/register' as any)}>
-              <Text className="text-primary font-black uppercase text-xs tracking-widest border-b border-primary/30 pb-0.5">Create Account</Text>
+              <Text className="text-primary font-black uppercase text-xs tracking-widest border-b border-primary/30 pb-0.5">{t('auth.create_account')}</Text>
             </TouchableOpacity>
           </View>
         </View>

@@ -91,6 +91,7 @@ export function Header() {
                 <Link
                   key={item.name}
                   href={item.href}
+                  aria-current={isActive ? "page" : undefined}
                   className={cn(
                     "text-xs font-black uppercase tracking-[0.2em] transition-all relative group focus-visible:text-primary outline-none",
                     isActive ? "text-primary" : "text-muted-foreground hover:text-primary"
@@ -110,10 +111,13 @@ export function Header() {
         <div className="flex items-center space-x-6">
           <div className="hidden items-center space-x-6 md:flex">
              <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center gap-1 text-primary/60 hover:text-primary cursor-pointer transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-sm outline-none">
-                  <Globe className="h-4 w-4" />
+                <DropdownMenuTrigger
+                  className="flex items-center gap-1 text-primary/60 hover:text-primary cursor-pointer transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-sm outline-none"
+                  aria-label={t("accessibility.language_switcher_label", { lang: currentLang, defaultValue: `Current language: ${currentLang}. Click to change language.` })}
+                >
+                  <Globe className="h-4 w-4" aria-hidden="true" />
                   <span className="text-[10px] font-black uppercase tracking-widest">{currentLang}</span>
-                  <ChevronDown className="h-3 w-3" />
+                  <ChevronDown className="h-3 w-3" aria-hidden="true" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="glass-premium border-none min-w-[120px]">
                   <DropdownMenuItem onClick={() => changeLanguage('en')} className="text-[10px] font-black uppercase cursor-pointer">English</DropdownMenuItem>
@@ -126,11 +130,11 @@ export function Header() {
 
              {user ? (
                <div className="flex items-center gap-4">
-                 <Link href={actionHref}>
-                    <Button variant="ghost" size="sm" className="rounded-full font-black text-[10px] uppercase tracking-widest gap-2">
+                 <Button asChild variant="ghost" size="sm" className="rounded-full font-black text-[10px] uppercase tracking-widest gap-2">
+                    <Link href={actionHref} aria-label={`Go to ${actionLabel}`}>
                        <LayoutDashboard className="h-3.5 w-3.5" /> {actionLabel}
-                    </Button>
-                 </Link>
+                    </Link>
+                 </Button>
                  <div className="h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center text-primary border border-primary/20">
                     <User className="h-4 w-4" />
                  </div>
@@ -171,6 +175,7 @@ export function Header() {
                         <Link
                           href={item.href}
                           onClick={() => setIsOpen(false)}
+                          aria-current={isActive ? "page" : undefined}
                           className={cn(
                             "text-4xl font-black transition-colors font-heading",
                             isActive ? "text-primary" : "hover:text-primary"

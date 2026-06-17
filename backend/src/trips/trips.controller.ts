@@ -13,6 +13,7 @@ import { UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
+import { CurrentUser } from '../auth/current-user.decorator';
 
 @Controller('trips')
 @UseGuards(JwtAuthGuard)
@@ -57,5 +58,20 @@ export class TripsController {
   @Roles(UserRole.ADMIN, UserRole.DRIVER)
   updateRide(@Param('id') id: string, @Body() body: any) {
     return this.tripsService.updateRide(id, body);
+  }
+
+  @Patch(':id/cancel')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.RIDER, UserRole.DRIVER)
+  cancelRide(
+    @Param('id') id: string,
+    @Body() body: any,
+    @CurrentUser() actor: any,
+  ) {
+    return this.tripsService.cancelRide(id, {
+      actorId: actor?.id,
+      actorRole: actor?.role,
+      reason: body?.reason,
+    });
   }
 }

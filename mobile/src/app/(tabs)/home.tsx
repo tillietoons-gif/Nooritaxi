@@ -108,7 +108,7 @@ export default function HomeScreen() {
           <View className="px-6 pt-4 pb-2 flex-row justify-between items-center">
             <View>
               <Text className="text-muted-foreground text-sm font-medium">{greeting},</Text>
-              <Text className="text-2xl font-bold text-foreground">{user?.name || 'Merchant'}</Text>
+              <Text className="text-2xl font-bold text-foreground">{user?.name || t('home.merchant')}</Text>
             </View>
             <TouchableOpacity
               onPress={() => router.push('/(tabs)/notifications')}
@@ -122,27 +122,27 @@ export default function HomeScreen() {
             <View className="bg-primary rounded-3xl p-6 overflow-hidden relative shadow-high-tech">
               <PatternOverlay color="#ffffff" opacity={0.08} />
               <View className="relative z-10">
-                <Text className="text-white/70 text-[10px] font-bold uppercase tracking-widest mb-2">Merchant mode</Text>
+                <Text className="text-white/70 text-[10px] font-bold uppercase tracking-widest mb-2">{t('home.merchant_mode_badge')}</Text>
                 <Text className="text-white text-2xl font-black mb-3">
-                  {primaryRestaurant?.name ?? 'Build your restaurant profile'}
+                  {primaryRestaurant?.name ?? t('home.merchant_profile_title')}
                 </Text>
                 <Text className="text-white/80 leading-6 mb-6">
                   {primaryRestaurant
-                    ? `${activeOrders.length} active orders need attention. Keep your menu current and prepare orders from one workspace.`
-                    : 'Create your restaurant and add menu items so customers can order from you.'}
+                    ? t('home.merchant_profile_subtitle_active', { count: activeOrders.length })
+                    : t('home.merchant_profile_subtitle_empty')}
                 </Text>
                 <View className="flex-row gap-3">
                   <TouchableOpacity
                     onPress={() => router.push('/(tabs)/merchant')}
                     className="flex-1 bg-white py-3 rounded-2xl items-center justify-center"
                   >
-                    <Text className="text-primary font-bold">Manage menu</Text>
+                    <Text className="text-primary font-bold">{t('home.merchant_manage_menu')}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     onPress={() => router.push('/(tabs)/orders')}
                     className="flex-1 bg-white/10 py-3 rounded-2xl items-center justify-center border border-white/15"
                   >
-                    <Text className="text-white font-bold">Orders</Text>
+                    <Text className="text-white font-bold">{t('profile.orders')}</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -161,10 +161,10 @@ export default function HomeScreen() {
             <View className="bg-card rounded-3xl p-6 border border-muted/20 shadow-sm">
               <View className="flex-row justify-between items-start mb-4">
                 <View className="flex-1 pr-4">
-                  <Text className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest mb-2">Today</Text>
-                  <Text className="text-foreground text-lg font-bold leading-6">{activeOrders.length} active orders</Text>
+                  <Text className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest mb-2">{t('home.today')}</Text>
+                  <Text className="text-foreground text-lg font-bold leading-6">{t('home.active_orders', { count: activeOrders.length })}</Text>
                   <Text className="text-xs text-muted-foreground mt-3">
-                    {restaurants.length} restaurant profile{restaurants.length === 1 ? '' : 's'} and {completedOrders} delivered orders in history.
+                    {t('home.merchant_today_summary', { restaurants: restaurants.length, orders: completedOrders })}
                   </Text>
                 </View>
                 <View className="bg-primary/10 p-3 rounded-2xl">
@@ -175,13 +175,13 @@ export default function HomeScreen() {
                 onPress={() => router.push('/(tabs)/orders')}
                 className="bg-secondary/35 py-3 rounded-2xl items-center justify-center border border-accent/10"
               >
-                <Text className="text-foreground font-bold">Open order queue</Text>
+                <Text className="text-foreground font-bold">{t('home.open_order_queue')}</Text>
               </TouchableOpacity>
             </View>
           </View>
 
           <View className="px-6 py-6">
-            <Text className="text-lg font-bold text-foreground mb-4">Merchant tools</Text>
+            <Text className="text-lg font-bold text-foreground mb-4">{t('home.merchant_tools')}</Text>
             <View className="flex-row flex-wrap justify-between">
               <TouchableOpacity
                 onPress={() => router.push('/(tabs)/merchant')}
@@ -190,8 +190,8 @@ export default function HomeScreen() {
                 <View className="bg-primary/10 p-4 rounded-2xl mb-3">
                   <Store size={32} color="#006947" />
                 </View>
-                <Text className="font-bold text-foreground text-center">Restaurant</Text>
-                <Text className="text-xs text-muted-foreground text-center mt-1">Profile and menu</Text>
+                <Text className="font-bold text-foreground text-center">{t('profile.restaurant')}</Text>
+                <Text className="text-xs text-muted-foreground text-center mt-1">{t('home.profile_and_menu')}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -201,8 +201,8 @@ export default function HomeScreen() {
                 <View className="bg-accent/10 p-4 rounded-2xl mb-3">
                   <ReceiptText size={32} color="#D4AF37" />
                 </View>
-                <Text className="font-bold text-foreground text-center">Orders</Text>
-                <Text className="text-xs text-muted-foreground text-center mt-1">Accept and prepare</Text>
+                <Text className="font-bold text-foreground text-center">{t('profile.orders')}</Text>
+                <Text className="text-xs text-muted-foreground text-center mt-1">{t('home.accept_and_prepare')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -218,7 +218,7 @@ export default function HomeScreen() {
           <View className="px-6 pt-4 pb-2 flex-row justify-between items-center">
             <View>
               <Text className="text-muted-foreground text-sm font-medium">{greeting},</Text>
-              <Text className="text-2xl font-bold text-foreground">{user?.name || 'Driver'}</Text>
+              <Text className="text-2xl font-bold text-foreground">{user?.name || t('home.driver')}</Text>
             </View>
             <TouchableOpacity
               onPress={() => router.push('/(tabs)/notifications')}
@@ -283,7 +283,7 @@ export default function HomeScreen() {
                   <Text className="text-xs text-muted-foreground mt-3">{activeWorkSummary}</Text>
                   {/* Mini earnings summary for active work */}
                   <Text className="text-xs text-primary font-bold mt-2">
-                    Est. earnings today: AFN {Math.round((completedTrips * 80) + (activeAssignments * 60) + (activeDeliveries * 50))}
+                    {t('home.estimated_earnings', { amount: Math.round((completedTrips * 80) + (activeAssignments * 60) + (activeDeliveries * 50)) })}
                   </Text>
                 </View>
                 <View className="bg-primary/10 p-3 rounded-2xl">
@@ -310,8 +310,8 @@ export default function HomeScreen() {
                 className="bg-card rounded-3xl p-4 border border-primary/20 flex-row items-center"
               >
                 <View className="flex-1">
-                  <Text className="text-sm font-bold text-primary">Live Tracking Active</Text>
-                  <Text className="text-xs text-muted-foreground">Tap to view real-time map & updates</Text>
+                  <Text className="text-sm font-bold text-primary">{t('home.live_tracking_active')}</Text>
+                  <Text className="text-xs text-muted-foreground">{t('home.live_tracking_subtitle')}</Text>
                 </View>
                 <Car size={24} color="#006947" />
               </TouchableOpacity>
@@ -387,7 +387,7 @@ export default function HomeScreen() {
               {greeting},
             </Text>
             <Text className="text-2xl font-bold text-foreground">
-              {user?.name || 'Friend'}
+              {user?.name || t('home.friend')}
             </Text>
           </View>
           <TouchableOpacity
@@ -530,7 +530,7 @@ export default function HomeScreen() {
 
              <View className="flex-row justify-between items-center">
                <View className="flex-1 pr-4">
-                 <Text className="text-accent font-bold text-[10px] uppercase tracking-widest mb-1">CULTURAL TIP</Text>
+                 <Text className="text-accent font-bold text-[10px] uppercase tracking-widest mb-1">{t('home.cultural_tip_label')}</Text>
                  <Text className="text-foreground font-bold text-lg mb-2">{t('home.cultural_tip_title')}</Text>
                  <Text className="text-muted-foreground text-xs leading-5">
                    {t('home.cultural_tip_body')}</Text>

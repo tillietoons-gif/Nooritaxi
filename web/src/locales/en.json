@@ -54,7 +54,8 @@
     "tracking_desc": "High-fidelity WebGL visualization of every asset in your supply chain."
   },
   "accessibility": {
-    "skip_to_content": "Skip to main content"
+    "skip_to_content": "Skip to main content",
+    "language_switcher_label": "Current language: {{lang}}. Click to change language."
   },
   "contact": {
     "title": "Contact Us",

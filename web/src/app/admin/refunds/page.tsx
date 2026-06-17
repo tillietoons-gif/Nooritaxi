@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import {
-  RefreshCcw,
+  RefreshCcw
 } from "lucide-react"
 
 import { AuthGate } from "@/components/auth-gate"
@@ -40,18 +40,17 @@ export default function AdminRefundsPage() {
   const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState<typeof ALL_STATUSES | RefundStatus>(ALL_STATUSES)
   const [serviceFilter, setServiceFilter] = useState<typeof ALL_SERVICES | RefundService>(ALL_SERVICES)
-  const [error, setError] = useState<string | null>(null)
+  const [, setError] = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState("")
 
   const loadData = useCallback(async () => {
     setLoading(true)
-    setError(null)
     try {
       const res = await authedFetch("/admin/finance/refunds")
       if (!res.ok) throw new Error("Failed to fetch refunds")
       setRefunds(await res.json())
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Connection error")
+      console.error(err)
     } finally {
       setLoading(false)
     }
@@ -132,6 +131,19 @@ export default function AdminRefundsPage() {
                   onChange={(e) => setSearch(e.target.value)}
                   className="bg-background/80 backdrop-blur-sm border-primary/20"
                 />
+              </div>
+              <div className="w-full md:w-48">
+                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Service</label>
+                <select
+                  className="block w-full rounded-md border border-primary/20 bg-background/80 px-3 py-2 text-sm outline-none backdrop-blur-sm"
+                  value={serviceFilter}
+                  onChange={(e) => setServiceFilter(e.target.value as any)}
+                >
+                  <option value="ALL">All Services</option>
+                  <option value="TRIP">Rides</option>
+                  <option value="ORDER">Food</option>
+                  <option value="DELIVERY">Parcel</option>
+                </select>
               </div>
               <div className="w-full md:w-48">
                 <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Status</label>

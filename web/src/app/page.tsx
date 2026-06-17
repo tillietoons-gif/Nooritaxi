@@ -35,6 +35,7 @@ export default function HomePage() {
     <>
       <Header />
 
+      <main id="main-content">
       {/* Hero Section */}
       <section className="relative min-h-[90vh] flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-black text-white overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(#ffffff10_1px,transparent_1px)] bg-[length:4px_4px]" />
@@ -50,16 +51,16 @@ export default function HomePage() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/book">
-              <Button size="lg" className="px-10 text-lg h-14">
+            <Button size="lg" className="px-10 text-lg h-14" asChild>
+              <Link href="/book">
                 {t("home.cta_primary")}
-              </Button>
-            </Link>
-            <Link href="/signup">
-              <Button size="lg" variant="outline" className="px-10 text-lg h-14 border-white/40 hover:bg-white/10">
+              </Link>
+            </Button>
+            <Button size="lg" variant="outline" className="px-10 text-lg h-14 border-white/40 hover:bg-white/10" asChild>
+              <Link href="/signup">
                 {t("home.cta_secondary")}
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           </div>
 
           <div className="mt-8 text-sm text-white/60">
@@ -164,6 +165,8 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      </main>
 
       <Footer />
     </>

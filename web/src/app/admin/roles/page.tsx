@@ -41,18 +41,15 @@ export default function AdminRolesPage() {
   const load = useCallback(async (isSilent = false) => {
     if (!isSilent) setLoading(true)
     else setRefreshing(true)
-    setError(null)
 
     try {
-      const [roleRes, permRes] = await Promise.all([
-        authedFetch("/admin/roles?include=permissions,admins"),
-        authedFetch("/admin/permissions")
+      const [roleRes] = await Promise.all([
+        authedFetch("/admin/roles?include=permissions,admins")
       ])
 
       if (roleRes.ok) setRoles(await roleRes.json())
-      if (permRes.ok) setPermissions(await permRes.json())
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load roles")
+      console.error(err)
     } finally {
       setLoading(false)
       setRefreshing(false)

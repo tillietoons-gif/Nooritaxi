@@ -41,36 +41,6 @@ export class SuperAppService {
     });
   }
 
-  updateMyDriverStatus(
-    userId: string,
-    data: {
-      status?: 'ONLINE' | 'OFFLINE';
-      lat?: number;
-      lng?: number;
-    },
-  ) {
-    const status = data.status ?? 'ONLINE';
-    if (!['ONLINE', 'OFFLINE'].includes(status)) {
-      throw new BadRequestException('Invalid driver status');
-    }
-
-    return this.prisma.driver.upsert({
-      where: { userId },
-      update: {
-        status,
-        currentLat: data.lat,
-        currentLng: data.lng,
-      },
-      create: {
-        userId,
-        status,
-        currentLat: data.lat,
-        currentLng: data.lng,
-      },
-      include: { user: true, vehicles: true },
-    });
-  }
-
   upsertRiderProfile(userId: string, data: any) {
     return this.prisma.rider.upsert({
       where: { userId },
@@ -153,10 +123,6 @@ export class SuperAppService {
       throw new BadRequestException('You have already used this promotion');
     }
 
-    const linkedOrder = orderId
-      ? await this.prisma.order.findUnique({ where: { id: orderId } })
-      : null;
-
     // Compute discount
     let discount = Number(promo.value);
     if (promo.type === 'PERCENTAGE' && spend != null) {
@@ -165,23 +131,10 @@ export class SuperAppService {
         promo.maxDiscount ? Number(promo.maxDiscount) : Infinity,
       );
     }
-    if (promo.type === 'FREE_DELIVERY' && linkedOrder) {
-      discount = Number(linkedOrder.deliveryFee ?? 0);
-    }
 
     const redemption = await this.prisma.promotionRedemption.create({
       data: { promotionId: promo.id, userId, orderId, tripId, discount },
     });
-
-    if (linkedOrder && discount > 0) {
-      await this.prisma.order.update({
-        where: { id: linkedOrder.id },
-        data: {
-          discount: { increment: discount },
-          total: Math.max(Number(linkedOrder.total ?? 0) - discount, 0),
-        },
-      });
-    }
 
     // Credit wallet for WALLET_CREDIT type promos
     if (promo.type === 'WALLET_CREDIT') {
@@ -275,15 +228,6 @@ export class SuperAppService {
       orderBy: { updatedAt: 'desc' },
       skip: (safePage - 1) * safeLimit,
       take: safeLimit,
-    });
-  }
-
-  listSupportTicketsForRequester(requesterId: string) {
-    return this.prisma.supportTicket.findMany({
-      where: { requesterId },
-      include: { messages: true },
-      orderBy: { updatedAt: 'desc' },
-      take: 25,
     });
   }
 

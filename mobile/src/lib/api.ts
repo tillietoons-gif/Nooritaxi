@@ -6,7 +6,6 @@ export const SOCKET_URL = process.env.EXPO_PUBLIC_SOCKET_URL ?? API_URL.replace(
 
 const TOKEN_KEY = 'noori_token';
 const USER_KEY = 'noori_user';
-const SAVED_PLACES_KEY = 'noori_saved_places';
 
 let authToken: string | null = null;
 
@@ -43,12 +42,6 @@ export type AuthUser = {
   email?: string | null;
   name?: string | null;
   role: 'RIDER' | 'DRIVER' | 'MERCHANT' | 'SUPPORT' | 'ADMIN';
-  driverProfile?: {
-    ratingAverage?: number | null;
-    completedTrips?: number | null;
-    completedDeliveries?: number | null;
-    tier?: string | null;
-  } | null;
 };
 
 export type AuthRole = AuthUser['role'];
@@ -77,10 +70,6 @@ export type AuthResponse = {
 
 export function isDriverUser(user?: Pick<AuthUser, 'role'> | null) {
   return user?.role === 'DRIVER';
-}
-
-export function isMerchantUser(user?: Pick<AuthUser, 'role'> | null) {
-  return user?.role === 'MERCHANT';
 }
 
 export function getSignedInRoute(user?: Pick<AuthUser, 'role'> | null) {
@@ -123,36 +112,17 @@ export type Trip = {
   id: string;
   pickupLocation: string;
   dropoffLocation: string;
-  pickupLat?: number | null;
-  pickupLng?: number | null;
-  dropoffLat?: number | null;
-  dropoffLng?: number | null;
   status: TripStatus;
   fare?: number | string | null;
   safetyCode?: string | null;
   requestedAt?: string;
   createdAt?: string;
-  customer?: AuthUser | null;
-  driver?: AuthUser | null;
-  vehicle?: {
-    id: string;
-    type?: string | null;
-    make?: string | null;
-    model?: string | null;
-    color?: string | null;
-    plateNumber?: string | null;
-    capacity?: number | null;
-  } | null;
 };
 
 export type Delivery = {
   id: string;
   pickupAddress: string;
   dropoffAddress: string;
-  pickupLat?: number | null;
-  pickupLng?: number | null;
-  dropoffLat?: number | null;
-  dropoffLng?: number | null;
   pickupName?: string | null;
   dropoffName?: string | null;
   packageType?: string | null;
@@ -182,19 +152,10 @@ export type RidePayload = {
   customerId: string;
   pickupLocation: string;
   dropoffLocation: string;
-  pickupLat?: number;
-  pickupLng?: number;
-  dropoffLat?: number;
-  dropoffLng?: number;
-  distance?: number;
-  duration?: number;
   paymentMethod?: 'CASH' | 'WALLET';
-  notes?: string;
 };
 
 export type RideEstimate = {
-  baseFare?: number;
-  perKm?: number;
   fare: number;
   currency: string;
   distance: number;
@@ -211,20 +172,13 @@ export type NotificationItem = {
 
 export type Restaurant = {
   id: string;
-  ownerId?: string;
   name: string;
   description?: string;
   cuisineTypes: string[];
   ratingAverage: number;
-  status?: string;
-  address?: string;
-  lat?: number | null;
-  lng?: number | null;
-  phone?: string | null;
   deliveryRadius?: number;
   imageUrl?: string;
   avgPrepMinutes?: number;
-  menuItems?: MenuItem[];
   menu?: MenuItem[];
 };
 
@@ -232,114 +186,8 @@ export type MenuItem = {
   id: string;
   name: string;
   description?: string;
-  price: string | number;
+  price: string;
   imageUrl?: string;
-  category?: string | null;
-  isAvailable?: boolean;
-  preparationMin?: number | null;
-};
-
-export type FoodOrderStatus =
-  | 'CART'
-  | 'PLACED'
-  | 'ACCEPTED'
-  | 'PREPARING'
-  | 'READY_FOR_PICKUP'
-  | 'OUT_FOR_DELIVERY'
-  | 'DELIVERED'
-  | 'CANCELLED'
-  | 'REFUNDED';
-
-export type FoodOrder = {
-  id: string;
-  riderId: string;
-  restaurantId: string;
-  status: FoodOrderStatus;
-  subtotal: number | string;
-  deliveryFee: number | string;
-  discount: number | string;
-  total: number | string;
-  deliveryAddress: string;
-  notes?: string | null;
-  createdAt: string;
-  placedAt?: string;
-  items?: {
-    id: string;
-    quantity: number;
-    unitPrice: number | string;
-    menuItem?: MenuItem;
-  }[];
-  restaurant?: Restaurant;
-  delivery?: Delivery | null;
-};
-
-export type DriverProfile = {
-  id: string;
-  userId: string;
-  status: 'OFFLINE' | 'ONLINE' | 'BUSY' | 'SUSPENDED';
-  currentLat?: number | null;
-  currentLng?: number | null;
-  completedTrips?: number;
-  completedDeliveries?: number;
-  ratingAverage?: number;
-};
-
-export type LoyaltyAccount = {
-  id: string;
-  userId: string;
-  points: number;
-  lifetime: number;
-  tier: string;
-};
-
-export type LoyaltyTransaction = {
-  id: string;
-  type: 'CREDIT' | 'DEBIT';
-  amount: number;
-  description: string;
-  createdAt: string;
-};
-
-export type Promotion = {
-  id: string;
-  code: string;
-  title: string;
-  description?: string | null;
-  type: string;
-  value: number | string;
-  minSpend?: number | string | null;
-  maxDiscount?: number | string | null;
-  endsAt: string;
-};
-
-export type SavedPlace = {
-  id: string;
-  label: string;
-  address: string;
-  lat?: number;
-  lng?: number;
-};
-
-export type PlaceSuggestion = {
-  id: string;
-  name: string;
-  address: string;
-  city?: string | null;
-  lat: number;
-  lng: number;
-  category?: string | null;
-};
-
-export type SupportTicket = {
-  id: string;
-  category: string;
-  subject: string;
-  description: string;
-  status: 'OPEN' | 'PENDING' | 'RESOLVED' | 'CLOSED';
-  priority: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
-  metadata?: Record<string, unknown> | null;
-  updatedAt: string;
-  createdAt: string;
 };
 
 export function setAuthToken(token: string | null) {
@@ -437,21 +285,12 @@ export async function updateTripStatus(
   tripId: string,
   status: TripStatus,
   actorId?: string,
-  safetyCode?: string,
 ) {
   const response = await apiFetch(`/trips/${encodeURIComponent(tripId)}`, {
     method: 'PATCH',
-    body: JSON.stringify({ status, actorId, safetyCode }),
+    body: JSON.stringify({ status, actorId }),
   });
   return readJson<Trip>(response, 'Unable to update trip status');
-}
-
-export async function cancelTrip(tripId: string, reason?: string) {
-  const response = await apiFetch(`/trips/${encodeURIComponent(tripId)}/cancel`, {
-    method: 'PATCH',
-    body: JSON.stringify({ reason }),
-  });
-  return readJson<Trip>(response, 'Unable to cancel trip');
 }
 
 export async function getWalletBalance(userId: string) {
@@ -496,12 +335,8 @@ export async function transferWallet(payload: {
   return readJson<any>(response, 'Insufficient wallet balance');
 }
 
-export async function getRideEstimate(distance = 5, lat?: number, lng?: number) {
-  const params = new URLSearchParams({ distance: String(distance) });
-  if (lat != null) params.set('lat', String(lat));
-  if (lng != null) params.set('lng', String(lng));
-
-  const response = await apiFetch(`/trips/estimate?${params.toString()}`);
+export async function getRideEstimate(distance = 5) {
+  const response = await apiFetch(`/trips/estimate?distance=${distance}`);
   return readJson<RideEstimate>(response, 'Unable to estimate fare');
 }
 
@@ -523,80 +358,13 @@ export async function getRestaurants() {
   return readJson<Restaurant[]>(response, 'Unable to load restaurants');
 }
 
-export async function createRestaurant(payload: {
-  ownerId: string;
-  name: string;
-  description?: string;
-  phone?: string;
-  address: string;
-  cuisineTypes: string[];
-  deliveryRadius?: number;
-  avgPrepMinutes?: number;
-}) {
-  const response = await apiFetch('/food/restaurants', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
-  return readJson<Restaurant>(response, 'Unable to create restaurant');
-}
-
 export async function getRestaurantMenu(restaurantId: string) {
   const response = await apiFetch(`/food/restaurants/${encodeURIComponent(restaurantId)}/menu`);
   return readJson<MenuItem[]>(response, 'Unable to load menu');
 }
 
-export async function addRestaurantMenuItem(
-  restaurantId: string,
-  payload: {
-    name: string;
-    description?: string;
-    price: number;
-    imageUrl?: string;
-    category?: string;
-    isAvailable?: boolean;
-    preparationMin?: number;
-  },
-) {
-  const response = await apiFetch(`/food/restaurants/${encodeURIComponent(restaurantId)}/menu-items`, {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
-  return readJson<MenuItem>(response, 'Unable to add menu item');
-}
-
-export async function updateRestaurantMenuItem(
-  restaurantId: string,
-  itemId: string,
-  payload: Partial<{
-    name: string;
-    description: string;
-    price: number;
-    imageUrl: string;
-    category: string;
-    isAvailable: boolean;
-    preparationMin: number;
-  }>,
-) {
-  const response = await apiFetch(
-    `/food/restaurants/${encodeURIComponent(restaurantId)}/menu-items/${encodeURIComponent(itemId)}`,
-    {
-      method: 'PATCH',
-      body: JSON.stringify(payload),
-    },
-  );
-  return readJson<MenuItem>(response, 'Unable to update menu item');
-}
-
-export async function deleteRestaurantMenuItem(restaurantId: string, itemId: string) {
-  const response = await apiFetch(
-    `/food/restaurants/${encodeURIComponent(restaurantId)}/menu-items/${encodeURIComponent(itemId)}`,
-    { method: 'DELETE' },
-  );
-  return readJson<{ id: string; removed: boolean }>(response, 'Unable to remove menu item');
-}
-
 export async function placeFoodOrder(payload: {
-  riderId: string;
+  customerId: string;
   restaurantId: string;
   items: { menuItemId: string; quantity: number }[];
   deliveryAddress: string;
@@ -606,183 +374,6 @@ export async function placeFoodOrder(payload: {
     body: JSON.stringify(payload),
   });
   return readJson<any>(response, 'Unable to place order');
-}
-
-export async function getFoodOrders(params: { userId?: string; restaurantId?: string } = {}) {
-  const search = new URLSearchParams({ limit: '50' });
-  if (params.userId) search.set('userId', params.userId);
-  if (params.restaurantId) search.set('restaurantId', params.restaurantId);
-
-  const response = await apiFetch(`/food/orders?${search.toString()}`);
-  return readJson<FoodOrder[]>(response, 'Unable to load orders');
-}
-
-export async function updateFoodOrderStatus(
-  orderId: string,
-  status: FoodOrderStatus,
-  actorId?: string,
-) {
-  const response = await apiFetch(`/food/orders/${encodeURIComponent(orderId)}`, {
-    method: 'PATCH',
-    body: JSON.stringify({ status, actorId }),
-  });
-  return readJson<FoodOrder>(response, 'Unable to update order');
-}
-
-export async function updateMyDriverStatus(input: {
-  status: 'ONLINE' | 'OFFLINE';
-  lat?: number;
-  lng?: number;
-}) {
-  const response = await apiFetch('/drivers/me/status', {
-    method: 'PATCH',
-    body: JSON.stringify(input),
-  });
-  return readJson<DriverProfile>(response, 'Unable to update driver availability');
-}
-
-export async function getMyLoyalty() {
-  const response = await apiFetch('/loyalty/me');
-  return readJson<{
-    account: LoyaltyAccount;
-    recentTransactions: LoyaltyTransaction[];
-  }>(response, 'Unable to load loyalty account');
-}
-
-export async function redeemLoyaltyPoints(points: number, reason: string) {
-  const response = await apiFetch('/loyalty/redeem', {
-    method: 'POST',
-    body: JSON.stringify({ points, reason }),
-  });
-  return readJson<LoyaltyAccount>(response, 'Unable to redeem points');
-}
-
-export async function getPromotions() {
-  const response = await apiFetch('/promotions');
-  return readJson<Promotion[]>(response, 'Unable to load promotions');
-}
-
-export async function createPromotion(payload: {
-  code: string;
-  title: string;
-  description?: string;
-  type: 'PERCENTAGE' | 'FIXED_AMOUNT' | 'FREE_DELIVERY' | 'WALLET_CREDIT';
-  scope?: 'RIDES' | 'FOOD' | 'DELIVERY' | 'WALLET' | 'GLOBAL';
-  value: number;
-  startsAt: string;
-  endsAt: string;
-}) {
-  const response = await apiFetch('/promotions', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
-  return readJson<Promotion>(response, 'Unable to create promotion');
-}
-
-export async function redeemPromotion(input: {
-  code: string;
-  userId: string;
-  orderId?: string;
-  tripId?: string;
-  spend?: number;
-}) {
-  const response = await apiFetch('/promotions/redeem', {
-    method: 'POST',
-    body: JSON.stringify(input),
-  });
-  return readJson<{ discount: number }>(response, 'Unable to redeem promotion');
-}
-
-export async function searchPlaces(query: string) {
-  const response = await apiFetch(`/places?q=${encodeURIComponent(query)}&limit=8`);
-  return readJson<PlaceSuggestion[]>(response, 'Unable to search places');
-}
-
-export async function createReview(payload: {
-  authorId: string;
-  targetType: 'DRIVER' | 'RIDER' | 'RESTAURANT';
-  rating: number;
-  comment?: string;
-  tripId?: string;
-  orderId?: string;
-  deliveryId?: string;
-  targetUserId?: string;
-  restaurantId?: string;
-}) {
-  const response = await apiFetch('/reviews', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
-  return readJson<any>(response, 'Unable to submit review');
-}
-
-export async function createSupportTicket(payload: {
-  requesterId: string;
-  category: string;
-  subject: string;
-  description: string;
-  priority?: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
-  metadata?: Record<string, unknown>;
-}) {
-  const response = await apiFetch('/support/tickets', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
-  return readJson<any>(response, 'Unable to submit request');
-}
-
-export async function getMySupportTickets() {
-  const response = await apiFetch('/support/tickets/me');
-  return readJson<SupportTicket[]>(response, 'Unable to load support tickets');
-}
-
-export async function getSavedPlaces() {
-  const raw = await getStoredValue(SAVED_PLACES_KEY);
-  if (!raw) return [] as SavedPlace[];
-  try {
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? (parsed as SavedPlace[]) : [];
-  } catch {
-    return [];
-  }
-}
-
-export async function saveSavedPlaces(places: SavedPlace[]) {
-  await setStoredValue(SAVED_PLACES_KEY, JSON.stringify(places));
-}
-
-export async function addSavedPlace(input: Omit<SavedPlace, 'id'>) {
-  const places = await getSavedPlaces();
-  const nextPlace = { ...input, id: `place:${Date.now()}` };
-  const nextPlaces = [nextPlace, ...places].slice(0, 10);
-  await saveSavedPlaces(nextPlaces);
-  return nextPlace;
-}
-
-export async function removeSavedPlace(placeId: string) {
-  const places = await getSavedPlaces();
-  await saveSavedPlaces(places.filter((place) => place.id !== placeId));
-}
-
-export async function uploadMediaFile(fileUri: string) {
-  const formData = new FormData();
-  const filename = fileUri.split('/').pop() || `media-${Date.now()}.jpg`;
-  const match = /\.(\w+)$/.exec(filename);
-  const ext = match?.[1]?.toLowerCase();
-  const mimeType = ext === 'webp' ? 'image/webp' : `image/${ext || 'jpeg'}`;
-
-  formData.append('file', {
-    uri: fileUri,
-    name: filename,
-    type: mimeType,
-  } as any);
-
-  const response = await apiFetch('/kyc/media', {
-    method: 'POST',
-    body: formData,
-  });
-  const data = await readJson<{ url: string }>(response, 'Unable to upload photo');
-  return data.url.startsWith('http') ? data.url : `${API_URL}${data.url}`;
 }
 
 export async function createDelivery(payload: {

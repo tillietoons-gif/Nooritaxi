@@ -74,8 +74,8 @@ function LoginPageContent() {
         className="w-full max-w-xl relative z-10"
       >
         <div className="mb-8 flex justify-between items-center px-2">
-           <Link href="/" className="group flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors font-bold text-sm">
-             <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" /> Back to Terminal
+           <Link href="/" className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors font-bold text-sm">
+             <ArrowLeft className="h-4 w-4" /> Back to Terminal
            </Link>
            <div className="flex items-center gap-2">
               <ShieldCheck className="h-4 w-4 text-primary" />
@@ -95,12 +95,10 @@ function LoginPageContent() {
           <form onSubmit={submit} className="space-y-6">
             <div className="space-y-2">
               <LabelMd htmlFor="phone" className="text-xs font-black">Mobile Identifier</LabelMd>
-              <div className="relative group">
-                <Phone className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40 transition-colors group-focus-within:text-primary" />
+              <div className="relative">
+                <Phone className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40" />
                 <Input
                   id="phone"
-                  type="tel"
-                  autoComplete="tel"
                   className="h-14 pl-12 rounded-2xl glass border-none focus-visible:ring-primary/30 font-bold"
                   value={phone}
                   onChange={(event) => setPhone(event.target.value)}
@@ -117,11 +115,10 @@ function LoginPageContent() {
                 <LabelMd htmlFor="password" className="text-xs font-black">Security Credential</LabelMd>
                 <Link href="#" className="text-[10px] font-black uppercase text-primary/60 hover:text-primary transition-colors">Forgot Password?</Link>
               </div>
-              <div className="relative group">
-                <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40 transition-colors group-focus-within:text-primary" />
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40" />
                 <Input
                   id="password"
-                  autoComplete="current-password"
                   className="h-14 pl-12 pr-12 rounded-2xl glass border-none focus-visible:ring-primary/30 font-bold"
                   type={showPassword ? "text" : "password"}
                   value={password}

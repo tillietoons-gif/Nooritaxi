@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  Delete,
   Get,
   Param,
   Patch,
@@ -49,27 +48,6 @@ export class FoodController {
   @Roles(UserRole.ADMIN, UserRole.MERCHANT)
   addMenuItem(@Param('restaurantId') restaurantId: string, @Body() body: any) {
     return this.foodService.addMenuItem(restaurantId, body);
-  }
-
-  @Patch('restaurants/:restaurantId/menu-items/:itemId')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.MERCHANT)
-  updateMenuItem(
-    @Param('restaurantId') restaurantId: string,
-    @Param('itemId') itemId: string,
-    @Body() body: any,
-  ) {
-    return this.foodService.updateMenuItem(restaurantId, itemId, body);
-  }
-
-  @Delete('restaurants/:restaurantId/menu-items/:itemId')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.MERCHANT)
-  deleteMenuItem(
-    @Param('restaurantId') restaurantId: string,
-    @Param('itemId') itemId: string,
-  ) {
-    return this.foodService.deleteMenuItem(restaurantId, itemId);
   }
 
   @Post('orders')

@@ -13,6 +13,7 @@ import {
 } from "lucide-react"
 
 import { AuthGate } from "@/components/auth-gate"
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { AdminPageHeader } from "@/components/admin/admin-page-header"

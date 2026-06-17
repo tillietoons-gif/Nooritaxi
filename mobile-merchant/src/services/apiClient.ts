@@ -1,9 +1,7 @@
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 
-const baseURL =
-  process.env.EXPO_PUBLIC_API_URL ||
-  'https://noori-backend-750921372930.asia-south1.run.app/api';
+const baseURL = 'http://localhost:3000/api';
 
 const apiClient = axios.create({
   baseURL,

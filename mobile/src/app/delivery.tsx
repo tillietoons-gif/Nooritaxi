@@ -15,7 +15,6 @@ import {
 } from '../lib/api';
 import { PatternOverlay } from '../components/PatternOverlay';
 import { withSessionGuard } from '../lib/SessionGuard';
-import { safeBack } from '../lib/navigation';
 
 function DeliveryScreen() {
   const { t } = useTranslation();
@@ -83,7 +82,7 @@ function DeliveryScreen() {
       });
 
       Alert.alert('Success', 'Delivery partner has been requested.');
-      safeBack(router);
+      router.back();
     } catch (err) {
       Alert.alert('Error', (err as Error).message);
     } finally {
@@ -120,7 +119,7 @@ function DeliveryScreen() {
         <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
           <View className="px-6 py-6">
             <View className="flex-row items-center mb-8 gap-4">
-              <TouchableOpacity onPress={() => safeBack(router)} className="p-3 bg-card rounded-2xl border border-muted/20 shadow-sm">
+              <TouchableOpacity onPress={() => router.back()} className="p-3 bg-card rounded-2xl border border-muted/20 shadow-sm">
                 <ChevronLeft size={20} color="#006947" />
               </TouchableOpacity>
               <Text className="text-2xl font-bold text-foreground">Assigned Deliveries</Text>
@@ -223,7 +222,7 @@ function DeliveryScreen() {
         <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
           <View className="px-6 py-6">
           <View className="flex-row items-center mb-8 gap-4">
-             <TouchableOpacity onPress={() => safeBack(router)} className="p-3 bg-card rounded-2xl border border-muted/20 shadow-sm">
+             <TouchableOpacity onPress={() => router.back()} className="p-3 bg-card rounded-2xl border border-muted/20 shadow-sm">
                 <ChevronLeft size={20} color="#006947" />
              </TouchableOpacity>
              <Text className="text-2xl font-bold text-foreground">{t('delivery.title')}</Text>

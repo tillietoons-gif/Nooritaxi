@@ -3,31 +3,24 @@ import { View, Text, TouchableOpacity, SafeAreaView, ScrollView, Image, Alert, A
 import { useLocalSearchParams, router } from 'expo-router';
 import { Clock, MapPin, Plus, Minus, ShoppingBag, ArrowLeft } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import { getRestaurantMenu, getRestaurants, placeFoodOrder, Restaurant, getStoredUser, MenuItem } from '../../lib/api';
+import { getRestaurants, placeFoodOrder, Restaurant, getStoredUser } from '../../lib/api';
 import { withSessionGuard } from '../../lib/SessionGuard';
-import { safeBack } from '../../lib/navigation';
 
 function RestaurantScreen() {
   const { id } = useLocalSearchParams();
   const { t } = useTranslation();
   const [restaurant, setRestaurant] = React.useState<Restaurant | null>(null);
-  const [menu, setMenu] = React.useState<MenuItem[]>([]);
   const [cart, setCart] = React.useState<Map<string, number>>(new Map());
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
     async function load() {
       try {
-        const restaurantId = String(id);
-        const [data, menuItems] = await Promise.all([
-          getRestaurants(),
-          getRestaurantMenu(restaurantId),
-        ]);
-        const found = data.find((r: Restaurant) => r.id === restaurantId);
+        const data = await getRestaurants();
+        const found = data.find((r: Restaurant) => r.id === id);
         if (found) {
           setRestaurant(found);
         }
-        setMenu(menuItems.filter((item) => item.isAvailable !== false));
       } catch (err) {
         console.error(err);
       } finally {
@@ -49,9 +42,10 @@ function RestaurantScreen() {
   };
 
   const getCartTotal = () => {
+    if (!restaurant?.menu) return 0;
     let total = 0;
     for (const [itemId, qty] of cart.entries()) {
-      const item = menu.find((i) => i.id === itemId);
+      const item = restaurant.menu.find((i: any) => i.id === itemId);
       total += item ? Number(item.price) * qty : 0;
     }
     return total;
@@ -71,13 +65,13 @@ function RestaurantScreen() {
       }));
 
       const order = await placeFoodOrder({
-        riderId: user.id,
+        customerId: user.id,
         restaurantId: id as string,
         items,
         deliveryAddress: 'Current Location',
       });
       
-      router.push(`/checkout?amount=${order.total ?? getCartTotal()}&orderId=${order.id}&type=FOOD`);
+      router.push(`/checkout?amount=${order.totalAmount}&orderId=${order.id}&type=FOOD`);
     } catch (err) {
       Alert.alert('Error', (err as Error).message);
     }
@@ -96,7 +90,7 @@ function RestaurantScreen() {
     return (
       <SafeAreaView className="flex-1 bg-background justify-center items-center">
         <Text className="text-lg font-bold">{t('restaurant.not_found', 'Restaurant not found')}</Text>
-        <TouchableOpacity onPress={() => safeBack(router, '/(tabs)/food')} className="mt-4 bg-primary px-6 py-2 rounded-xl">
+        <TouchableOpacity onPress={() => router.back()} className="mt-4 bg-primary px-6 py-2 rounded-xl">
           <Text className="text-white font-bold">Go Back</Text>
         </TouchableOpacity>
       </SafeAreaView>
@@ -117,7 +111,7 @@ function RestaurantScreen() {
               </View>
             )}
             <TouchableOpacity
-              onPress={() => safeBack(router, '/(tabs)/food')}
+              onPress={() => router.back()}
               className="absolute top-12 left-4 w-10 h-10 bg-black/30 rounded-full items-center justify-center"
             >
               <ArrowLeft size={24} color="white" />
@@ -138,10 +132,10 @@ function RestaurantScreen() {
             </View>
 
             <Text className="text-xl font-bold mb-4">{t('restaurant.menu', 'Menu')}</Text>
-            {menu.length === 0 ? (
+            {restaurant.menu?.length === 0 ? (
               <Text className="text-muted-foreground italic">No items available at the moment.</Text>
             ) : (
-              menu.map((item) => (
+              restaurant.menu?.map((item: any) => (
                 <View key={item.id} className="flex-row py-4 border-b border-muted/10">
                   <View className="flex-1 pr-4">
                     <Text className="font-bold text-base mb-1 text-foreground">{item.name}</Text>

@@ -24,7 +24,7 @@ export function Header() {
   const { scrollY } = useScroll()
   const [isScrolled, setIsScrolled] = useState(false)
   const [user, setUser] = useState<AuthUser | null>(null)
-  const { i18n, t } = useTranslation()
+  const { i18n } = useTranslation()
 
   useEffect(() => {
     setUser(getStoredUser())
@@ -35,12 +35,10 @@ export function Header() {
   })
 
   const publicNavigation = [
-    { name: t("nav.rides"), href: "/rides" },
-    { name: t("nav.delivery"), href: "/delivery" },
-    { name: t("nav.services"), href: "/services" },
-    { name: t("nav.partners"), href: "/partners" },
-    { name: t("nav.safety"), href: "/safety" },
-    { name: t("nav.about"), href: "/about" },
+    { name: "Services", href: "/services" },
+    { name: "Partners", href: "/partners" },
+    { name: "Safety", href: "/safety" },
+    { name: "About", href: "/about" },
   ]
 
   const adminNavigation = [
@@ -91,7 +89,6 @@ export function Header() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  aria-current={isActive ? "page" : undefined}
                   className={cn(
                     "text-xs font-black uppercase tracking-[0.2em] transition-all relative group focus-visible:text-primary outline-none",
                     isActive ? "text-primary" : "text-muted-foreground hover:text-primary"
@@ -111,13 +108,10 @@ export function Header() {
         <div className="flex items-center space-x-6">
           <div className="hidden items-center space-x-6 md:flex">
              <DropdownMenu>
-                <DropdownMenuTrigger
-                  className="flex items-center gap-1 text-primary/60 hover:text-primary cursor-pointer transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-sm outline-none"
-                  aria-label={t("accessibility.language_switcher_label", { lang: currentLang, defaultValue: `Current language: ${currentLang}. Click to change language.` })}
-                >
-                  <Globe className="h-4 w-4" aria-hidden="true" />
+                <DropdownMenuTrigger className="flex items-center gap-1 text-primary/60 hover:text-primary cursor-pointer transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-sm outline-none">
+                  <Globe className="h-4 w-4" />
                   <span className="text-[10px] font-black uppercase tracking-widest">{currentLang}</span>
-                  <ChevronDown className="h-3 w-3" aria-hidden="true" />
+                  <ChevronDown className="h-3 w-3" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="glass-premium border-none min-w-[120px]">
                   <DropdownMenuItem onClick={() => changeLanguage('en')} className="text-[10px] font-black uppercase cursor-pointer">English</DropdownMenuItem>
@@ -130,20 +124,20 @@ export function Header() {
 
              {user ? (
                <div className="flex items-center gap-4">
-                 <Button asChild variant="ghost" size="sm" className="rounded-full font-black text-[10px] uppercase tracking-widest gap-2">
-                    <Link href={actionHref} aria-label={`Go to ${actionLabel}`}>
+                 <Link href={actionHref}>
+                    <Button variant="ghost" size="sm" className="rounded-full font-black text-[10px] uppercase tracking-widest gap-2">
                        <LayoutDashboard className="h-3.5 w-3.5" /> {actionLabel}
-                    </Link>
-                 </Button>
+                    </Button>
+                 </Link>
                  <div className="h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center text-primary border border-primary/20">
                     <User className="h-4 w-4" />
                  </div>
                </div>
              ) : (
                <>
-                <Link href="/login" className="text-[10px] font-black uppercase tracking-widest hover:text-primary transition-colors">{t("nav.login")}</Link>
+                <Link href="/login" className="text-[10px] font-black uppercase tracking-widest hover:text-primary transition-colors">Log In</Link>
                 <Button size="sm" className="rounded-full px-8 h-10 font-black text-[10px] uppercase tracking-widest shadow-xl shadow-primary/20" asChild>
-                  <Link href="/signup">{t("nav.signup")}</Link>
+                  <Link href="/signup">Establish Access</Link>
                 </Button>
                </>
              )}
@@ -175,7 +169,6 @@ export function Header() {
                         <Link
                           href={item.href}
                           onClick={() => setIsOpen(false)}
-                          aria-current={isActive ? "page" : undefined}
                           className={cn(
                             "text-4xl font-black transition-colors font-heading",
                             isActive ? "text-primary" : "hover:text-primary"
@@ -198,7 +191,7 @@ export function Header() {
                   {user ? (
                     <div className="flex flex-col gap-4">
                        <Button className="w-full h-14 rounded-2xl font-black text-lg" onClick={() => { setIsOpen(false); window.location.href=actionHref }}>
-                         {isAdminUser ? t("nav.admin") : t("nav.dashboard")} 
+                         {actionLabel}
                        </Button>
                        <Button variant="ghost" className="w-full h-14 rounded-2xl font-black text-lg" onClick={() => { clearSession(); setIsOpen(false); window.location.reload() }}>
                          Terminate Session
@@ -207,10 +200,10 @@ export function Header() {
                   ) : (
                     <div className="flex flex-col gap-4">
                       <Button variant="outline" className="w-full h-14 rounded-2xl font-black text-lg glass" asChild>
-                        <Link href="/login" onClick={() => setIsOpen(false)}>{t("nav.login")}</Link>
+                        <Link href="/login" onClick={() => setIsOpen(false)}>Log In</Link>
                       </Button>
                       <Button className="w-full h-14 rounded-2xl font-black text-lg shadow-2xl shadow-primary/30" asChild>
-                        <Link href="/signup" onClick={() => setIsOpen(false)}>{t("nav.signup")}</Link>
+                        <Link href="/signup" onClick={() => setIsOpen(false)}>Establish Access</Link>
                       </Button>
                     </div>
                   )}

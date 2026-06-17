@@ -3,16 +3,19 @@
 import React from "react"
 import { useState, useEffect, useCallback, useMemo } from "react"
 import {
+  ShieldCheck,
   Search,
   RefreshCw,
   Check,
   X,
-  LoaderCircle
+  LoaderCircle,
+  AlertCircle
 } from "lucide-react"
 
 import { AuthGate } from "@/components/auth-gate"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { AdminPageHeader } from "@/components/admin/admin-page-header"
 import { authedFetch } from "@/lib/auth"

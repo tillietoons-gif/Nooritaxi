@@ -26,10 +26,7 @@ describe('LogisticsService', () => {
       providers: [
         LogisticsService,
         { provide: PrismaService, useValue: prisma },
-        {
-          provide: DispatchService,
-          useValue: { findNearestOnlineDriver: jest.fn() },
-        },
+        { provide: DispatchService, useValue: { findNearestOnlineDriver: jest.fn() } },
       ],
     }).compile();
 

@@ -1,13 +1,11 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 import { Tabs } from 'expo-router';
-import { BriefcaseBusiness, Home, Car, UtensilsCrossed, User, Store, ReceiptText } from 'lucide-react-native';
+import { BriefcaseBusiness, Home, Car, UtensilsCrossed, User } from 'lucide-react-native';
 import SessionGuard from '../../lib/SessionGuard';
-import { type AuthUser, getStoredUser, isDriverUser, isMerchantUser } from '../../lib/api';
-import { useTranslation } from 'react-i18next';
+import { type AuthUser, getStoredUser, isDriverUser } from '../../lib/api';
 
 export default function TabsLayout() {
-  const { t } = useTranslation();
   const [user, setUser] = React.useState<AuthUser | null | undefined>(undefined);
 
   React.useEffect(() => {
@@ -31,13 +29,12 @@ export default function TabsLayout() {
   }, []);
 
   const isDriver = isDriverUser(user);
-  const isMerchant = isMerchantUser(user);
 
   return (
     <SessionGuard>
       {user === undefined ? (
         <View className="flex-1 items-center justify-center bg-background px-6">
-          <Text className="text-sm font-bold text-muted-foreground">{t('common.loading')}</Text>
+          <Text className="text-sm font-bold text-muted-foreground">Loading workspace...</Text>
         </View>
       ) : (
         <Tabs
@@ -60,7 +57,7 @@ export default function TabsLayout() {
           <Tabs.Screen
             name="home"
             options={{
-              title: isDriver ? t('home.driver') : isMerchant ? t('home.merchant') : t('home.home'),
+              title: isDriver ? 'Driver' : 'Home',
               tabBarIcon: ({ color, size }) => <Home size={size} color={color} />,
             }}
           />
@@ -68,7 +65,7 @@ export default function TabsLayout() {
             name="work"
             options={isDriver
               ? {
-                  title: t('home.work'),
+                  title: 'Work',
                   tabBarIcon: ({ color, size }) => <BriefcaseBusiness size={size} color={color} />,
                 }
               : {
@@ -77,12 +74,12 @@ export default function TabsLayout() {
           />
           <Tabs.Screen
             name="trips"
-            options={isDriver || isMerchant
+            options={isDriver
               ? {
                   href: null,
                 }
               : {
-                  title: t('trips.title'),
+                  title: 'Trips',
                   tabBarIcon: ({ color, size }) => <Car size={size} color={color} />,
                 }}
           />
@@ -94,41 +91,19 @@ export default function TabsLayout() {
           />
           <Tabs.Screen
             name="food"
-            options={isDriver || isMerchant
+            options={isDriver
               ? {
                   href: null,
                 }
               : {
-                  title: t('food.title'),
+                  title: 'Food',
                   tabBarIcon: ({ color, size }) => <UtensilsCrossed size={size} color={color} />,
-                }}
-          />
-          <Tabs.Screen
-            name="merchant"
-            options={isMerchant
-              ? {
-                  title: t('home.business'),
-                  tabBarIcon: ({ color, size }) => <Store size={size} color={color} />,
-                }
-              : {
-                  href: null,
-                }}
-          />
-          <Tabs.Screen
-            name="orders"
-            options={isMerchant
-              ? {
-                  title: t('profile.orders', 'Orders'),
-                  tabBarIcon: ({ color, size }) => <ReceiptText size={size} color={color} />,
-                }
-              : {
-                  href: null,
                 }}
           />
           <Tabs.Screen
             name="profile"
             options={{
-              title: t('home.profile'),
+              title: 'Profile',
               tabBarIcon: ({ color, size }) => <User size={size} color={color} />,
             }}
           />

@@ -2,7 +2,6 @@ import {
   IsArray,
   IsEnum,
   IsNumber,
-  IsObject,
   IsOptional,
   IsString,
   Min,
@@ -16,7 +15,6 @@ import {
   PromotionScope,
   PromotionType,
   ReviewTargetType,
-  SupportTicketPriority,
   TripStatus,
   VehicleType,
 } from '@prisma/client';
@@ -344,10 +342,6 @@ export class CreatePromotionDto {
   @IsString()
   title: string;
 
-  @IsOptional()
-  @IsString()
-  description?: string;
-
   @IsEnum(PromotionType)
   type: PromotionType;
 
@@ -379,14 +373,6 @@ export class CreateSupportTicketDto {
 
   @IsString()
   description: string;
-
-  @IsOptional()
-  @IsEnum(SupportTicketPriority)
-  priority?: SupportTicketPriority;
-
-  @IsOptional()
-  @IsObject()
-  metadata?: Record<string, unknown>;
 }
 
 export class CreateReviewDto {

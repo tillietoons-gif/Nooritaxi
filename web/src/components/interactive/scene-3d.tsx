@@ -48,27 +48,6 @@ function OcclusionCuller({ children }: { children: React.ReactNode }) {
     return r;
   }, []);
 
-  // Use a local raycaster to avoid mutating the global one from useThree
-  const localRaycaster = React.useMemo(() => {
-    const rc = new THREE.Raycaster();
-    rc.far = 40;
-    return rc;
-  }, []);
-
-  // Use a local memoized raycaster to avoid modifying the one from useThree
-  // This satisfies react-hooks/immutability which prevents mutation of objects from hooks
-  const localRaycaster = React.useMemo(() => {
-    const r = new THREE.Raycaster();
-    r.far = 40;
-    return r;
-  }, []);
-
-  // Use a local raycaster to avoid modifying the shared one from useThree
-  const localRaycaster = React.useMemo(() => {
-    const r = new THREE.Raycaster();
-    r.far = 40;
-    return r;
-  }, []);
 
   useFrame((state) => {
     if (state.clock.elapsedTime - lastCheck < 0.6) return; // throttle ~1.6hz

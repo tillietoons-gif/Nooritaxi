@@ -36,33 +36,9 @@
 
 **Action:** Use `Promise.all` to execute multiple `prisma.model.count()` calls concurrently. This was applied to `SupportService` and `OperationsService` dashboards, resulting in faster page loads for administrative overviews.
 
-## 2025-06-06 - Parallelizing Dashboard Analytics in Fraud and Airport Services
-
-**Learning:** Sequential `await` calls in `FraudService.getDashboardAnalytics` and `AirportService.getAnalytics` for multiple `count` queries were identified as candidates for optimization, consistent with the pattern seen in Support and Operations services.
-
-**Action:** Optimized `FraudService` and `AirportService` analytics methods using `Promise.all` to execute independent Prisma count queries concurrently, further improving administrative dashboard responsiveness across the platform.
-
-## 2025-06-07 - Parallelizing Finance Dashboard Analytics
-
-**Learning:** Sequential `await` calls in `FinanceService.getFinanceAnalytics` for independent aggregation and count queries introduced unnecessary latency in the financial overview dashboard.
-
-**Action:** Applied the `Promise.all` pattern to `FinanceService.getFinanceAnalytics`, parallelizing queries for outstanding receivables, total cash collected, and active refund requests. This maintains consistency with optimizations in other administrative services and reduces API response time for the finance dashboard.
-
-## 2025-06-08 - Parallelizing Live Map Data Retrieval
-
-**Learning:** Sequential `await` calls in `OperationsService.getLiveMapData` for fetching drivers and active trips introduced unnecessary latency, impacting the responsiveness of the mission control map.
-
-**Action:** Optimized `OperationsService.getLiveMapData` using `Promise.all` to execute the independent `findMany` queries for drivers and trips concurrently. This reduces the response time for real-time tracking data, ensuring a smoother experience for operations personnel.
-
 ## Mobile App Performance and Fixes
 - Centralized API calls in `mobile/src/lib/api.ts` to ensure consistent Authorization headers and error handling.
 - Optimized Food and Restaurant screens by reducing redundant fetch calls and improving loading states.
 - Implemented functional Language Switcher and Help/Support pages to replace placeholder alerts.
 - Fixed dead links in Profile tab, redirecting "Safety Center" to the functional Trusted Contacts page.
 - Enhanced Wallet UI with a functional Top Up feature integrated with the backend deposit API.
-
-## 2026-06-16 - Parallelizing Live Map Data Queries
-
-**Learning:** Sequential await calls for independent database queries in high-frequency endpoints like `getLiveMapData` introduce unnecessary latency. In a mocked environment with 50ms query delay, sequential execution takes ~100ms while parallel execution takes ~50ms.
-
-**Action:** Use `Promise.all` to parallelize independent Prisma queries in tracking and dashboard services to reduce API response time by up to 50%.

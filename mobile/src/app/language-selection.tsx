@@ -5,7 +5,6 @@ import { Globe, Check, ArrowLeft } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { saveLanguage, SUPPORTED_LANGUAGES, LanguageCode } from '../lib/i18n';
 import { withSessionGuard } from '../lib/SessionGuard';
-import { safeBack } from '../lib/navigation';
 
 function LanguageSelectionScreen() {
   const { t, i18n } = useTranslation();
@@ -30,7 +29,7 @@ function LanguageSelectionScreen() {
           title: t('profile.language', 'Language'),
           headerShown: true,
           headerLeft: () => (
-            <TouchableOpacity onPress={() => safeBack(router, '/(tabs)/profile')} className="ml-2">
+            <TouchableOpacity onPress={() => router.back()} className="ml-2">
               <ArrowLeft size={24} color="#1b1b1b" />
             </TouchableOpacity>
           ),
@@ -40,9 +39,9 @@ function LanguageSelectionScreen() {
             <View className="bg-primary/10 w-16 h-16 rounded-3xl items-center justify-center mb-4">
               <Globe size={32} color="#006947" />
             </View>
-            <Text className="text-2xl font-bold text-foreground">{t('language.select_title')}</Text>
+            <Text className="text-2xl font-bold text-foreground">Select Language</Text>
             <Text className="text-muted-foreground mt-2">
-              {t('language.select_subtitle')}
+              Choose your preferred language for the Noori app.
             </Text>
           </View>
 
@@ -79,10 +78,10 @@ function LanguageSelectionScreen() {
           </View>
 
           <TouchableOpacity
-            onPress={() => safeBack(router, '/(tabs)/profile')}
+            onPress={() => router.back()}
             className="bg-primary h-14 rounded-xl items-center justify-center mt-10"
           >
-            <Text className="text-white text-lg font-bold">{t('common.done')}</Text>
+            <Text className="text-white text-lg font-bold">Done</Text>
           </TouchableOpacity>
         </ScrollView>
     </SafeAreaView>

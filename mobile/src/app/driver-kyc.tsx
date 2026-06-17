@@ -5,11 +5,8 @@ import { UploadCloud, CheckCircle, ShieldAlert, ArrowLeft } from 'lucide-react-n
 import { uploadKycDocumentFile, getStoredUser } from '../lib/api';
 import * as ImagePicker from 'expo-image-picker';
 import { withSessionGuard } from '../lib/SessionGuard';
-import { safeBack } from '../lib/navigation';
-import { useTranslation } from 'react-i18next';
 
 function DriverKycScreen() {
-  const { t } = useTranslation();
   const [loading, setLoading] = React.useState(false);
   const [status, setStatus] = React.useState<'PENDING' | 'SUCCESS' | 'ERROR'>('PENDING');
   const [message, setMessage] = React.useState('');
@@ -29,7 +26,7 @@ function DriverKycScreen() {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
         setStatus('ERROR');
-        setMessage(t('kyc.media_permission_required'));
+        setMessage('Permission to access media library is required.');
         setLoading(false);
         return;
       }
@@ -49,10 +46,10 @@ function DriverKycScreen() {
       const fileUri = result.assets[0].uri;
       await uploadKycDocumentFile(type, fileUri);
       setStatus('SUCCESS');
-      setMessage(t('kyc.upload_success', { document: t(`kyc.${type}`) }));
+      setMessage(`${type.replace('_', ' ')} uploaded successfully and is pending verification.`);
     } catch (err) {
       setStatus('ERROR');
-      setMessage((err as Error).message || t('kyc.upload_failed'));
+      setMessage((err as Error).message || 'Failed to upload document.');
     } finally {
       setLoading(false);
     }
@@ -62,18 +59,18 @@ function DriverKycScreen() {
     <SafeAreaView className="flex-1 bg-background">
         <View className="px-4 py-6">
           <View className="flex-row items-center mb-8">
-            <TouchableOpacity onPress={() => safeBack(router, '/(tabs)/profile')} className="mr-4">
+            <TouchableOpacity onPress={() => router.back()} className="mr-4">
               <ArrowLeft size={24} color="#1b1b1b" />
             </TouchableOpacity>
-            <Text className="text-2xl font-bold text-foreground">{t('kyc.title')}</Text>
+            <Text className="text-2xl font-bold text-foreground">Driver Verification</Text>
           </View>
 
           <View className="bg-primary/5 p-6 rounded-3xl mb-8 flex-row items-start gap-4 border border-primary/10">
             <ShieldAlert size={28} color="#006947" />
             <View className="flex-1">
-              <Text className="font-bold text-lg mb-1">{t('kyc.required_documents')}</Text>
+              <Text className="font-bold text-lg mb-1">Required Documents</Text>
               <Text className="text-muted-foreground text-sm">
-                {t('kyc.required_documents_subtitle')}
+                To activate your driver account, please upload clear photos of your official documents.
               </Text>
             </View>
           </View>
@@ -93,25 +90,22 @@ function DriverKycScreen() {
 
           <View className="space-y-4">
             <DocumentUploadCard
-              title={t('kyc.ID_CARD')}
+              title="National ID Card (Tazkira)"
               type="ID_CARD"
               onUpload={() => handleUpload('ID_CARD')}
               loading={loading}
-              uploadLabel={t('kyc.tap_upload')}
             />
             <DocumentUploadCard
-              title={t('kyc.DRIVERS_LICENSE')}
+              title="Driver's License"
               type="DRIVERS_LICENSE"
               onUpload={() => handleUpload('DRIVERS_LICENSE')}
               loading={loading}
-              uploadLabel={t('kyc.tap_upload')}
             />
             <DocumentUploadCard
-              title={t('kyc.VEHICLE_REGISTRATION')}
+              title="Vehicle Registration (Jawaz Sair)"
               type="VEHICLE_REGISTRATION"
               onUpload={() => handleUpload('VEHICLE_REGISTRATION')}
               loading={loading}
-              uploadLabel={t('kyc.tap_upload')}
             />
           </View>
         </View>
@@ -121,7 +115,7 @@ function DriverKycScreen() {
 
 export default withSessionGuard(DriverKycScreen);
 
-function DocumentUploadCard({ title, onUpload, loading, uploadLabel }: { title: string, type: string, onUpload: () => void, loading: boolean, uploadLabel: string }) {
+function DocumentUploadCard({ title, type, onUpload, loading }: { title: string, type: string, onUpload: () => void, loading: boolean }) {
   return (
     <TouchableOpacity 
       disabled={loading}
@@ -130,7 +124,7 @@ function DocumentUploadCard({ title, onUpload, loading, uploadLabel }: { title: 
     >
       <View>
         <Text className="font-bold text-base mb-1">{title}</Text>
-        <Text className="text-muted-foreground text-xs">{uploadLabel}</Text>
+        <Text className="text-muted-foreground text-xs">Tap to upload document</Text>
       </View>
       <View className="w-12 h-12 bg-primary/10 rounded-full items-center justify-center">
         {loading ? <ActivityIndicator color="#006947" /> : <UploadCloud size={24} color="#006947" />}

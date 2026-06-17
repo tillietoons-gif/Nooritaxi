@@ -100,6 +100,11 @@ export default function ContactPage() {
               transition={{ duration: 0.6, delay: 0.3 }}
             >
               <GlassSurface variant="premium" className="p-8 md:p-10 bento-shadow border-none relative bg-card/50 backdrop-blur-md">
+                <div aria-live="polite" className="sr-only">
+                  {isSubmitting ? t('contact.submitting', 'Sending...') : ""}
+                  {isSuccess ? t('contact.success_title', 'Message Sent') : ""}
+                </div>
+
                 <AnimatePresence mode="wait">
                   {!isSuccess ? (
                     <motion.form
@@ -112,11 +117,15 @@ export default function ContactPage() {
                     >
                       <div className="grid grid-cols-1 gap-6">
                         <div className="space-y-2">
-                          <LabelMd htmlFor="name" className="text-primary">{t('contact.name_label', 'Name')}</LabelMd>
+                          <LabelMd htmlFor="name" className="text-primary">
+                            {t('contact.name_label', 'Name')}
+                            <span className="text-destructive ml-1" aria-hidden="true">*</span>
+                          </LabelMd>
                           <Input
                             id="name"
                             autoComplete="name"
                             required
+                            aria-required="true"
                             placeholder={t('contact.name_placeholder', 'Your name')}
                             className="h-12 bg-background/50 border-input focus-visible:ring-primary/30 font-bold text-foreground placeholder:text-muted-foreground/50"
                             value={formData.name}
@@ -124,12 +133,16 @@ export default function ContactPage() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <LabelMd htmlFor="email" className="text-primary">{t('contact.email_label', 'Email')}</LabelMd>
+                          <LabelMd htmlFor="email" className="text-primary">
+                            {t('contact.email_label', 'Email')}
+                            <span className="text-destructive ml-1" aria-hidden="true">*</span>
+                          </LabelMd>
                           <Input
                             id="email"
                             type="email"
                             autoComplete="email"
                             required
+                            aria-required="true"
                             placeholder={t('contact.email_placeholder', 'you@example.com')}
                             className="h-12 bg-background/50 border-input focus-visible:ring-primary/30 font-bold text-foreground placeholder:text-muted-foreground/50"
                             value={formData.email}
@@ -138,10 +151,14 @@ export default function ContactPage() {
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <LabelMd htmlFor="message" className="text-primary">{t('contact.message_label', 'Message')}</LabelMd>
+                        <LabelMd htmlFor="message" className="text-primary">
+                          {t('contact.message_label', 'Message')}
+                          <span className="text-destructive ml-1" aria-hidden="true">*</span>
+                        </LabelMd>
                         <Textarea
                           id="message"
                           required
+                          aria-required="true"
                           placeholder={t('contact.message_placeholder', 'How can we help you?')}
                           className="min-h-[160px] bg-background/50 border-input focus-visible:ring-primary/30 font-bold resize-none text-foreground placeholder:text-muted-foreground/50"
                           value={formData.message}

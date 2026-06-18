@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label"
 import { HeadingMd, BodyMd } from "@/components/ui/typography"
 import { MapPin, Navigation, Shield, Clock, Car } from "lucide-react"
 import { authedFetch, getStoredUser, type AuthUser } from "@/lib/auth"
+import { cn } from "@/lib/utils"
 import type { BookingPlace } from "@/components/booking/PlacesBookingMap"
 
 const PlacesBookingMap = dynamic(() => import("@/components/booking/PlacesBookingMap"), {
@@ -50,6 +51,8 @@ export default function BookingPage() {
   const [dropoffPlace, setDropoffPlace] = useState<BookingPlace | null>(null)
   const [pickupSuggestions, setPickupSuggestions] = useState<BookingPlace[]>([])
   const [dropoffSuggestions, setDropoffSuggestions] = useState<BookingPlace[]>([])
+  const [activePickupIndex, setActivePickupIndex] = useState(-1)
+  const [activeDropoffIndex, setActiveDropoffIndex] = useState(-1)
   const [mapPlaces, setMapPlaces] = useState<BookingPlace[]>([])
   const [estimate, setEstimate] = useState<Estimate | null>(null)
   const [isEstimating, setIsEstimating] = useState(false)
@@ -126,12 +129,14 @@ export default function BookingPage() {
   function updatePickupLocation(value: string) {
     setPickupLocation(value)
     setPickupPlace(null)
+    setActivePickupIndex(-1)
     if (!value.trim()) setEstimate(null)
   }
 
   function updateDropoffLocation(value: string) {
     setDropoffLocation(value)
     setDropoffPlace(null)
+    setActiveDropoffIndex(-1)
     if (!value.trim()) setEstimate(null)
   }
 
@@ -139,12 +144,50 @@ export default function BookingPage() {
     setPickupPlace(place)
     setPickupLocation(place.name)
     setPickupSuggestions([])
+    setActivePickupIndex(-1)
   }
 
   function selectDropoff(place: BookingPlace) {
     setDropoffPlace(place)
     setDropoffLocation(place.name)
     setDropoffSuggestions([])
+    setActiveDropoffIndex(-1)
+  }
+
+  const handlePickupKeyDown = (e: React.KeyboardEvent) => {
+    if (pickupSuggestions.length === 0) return
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault()
+      setActivePickupIndex((prev) => (prev < pickupSuggestions.length - 1 ? prev + 1 : prev))
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault()
+      setActivePickupIndex((prev) => (prev > 0 ? prev - 1 : prev))
+    } else if (e.key === "Enter" && activePickupIndex >= 0) {
+      e.preventDefault()
+      selectPickup(pickupSuggestions[activePickupIndex])
+    } else if (e.key === "Escape") {
+      setPickupSuggestions([])
+      setActivePickupIndex(-1)
+    }
+  }
+
+  const handleDropoffKeyDown = (e: React.KeyboardEvent) => {
+    if (dropoffSuggestions.length === 0) return
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault()
+      setActiveDropoffIndex((prev) => (prev < dropoffSuggestions.length - 1 ? prev + 1 : prev))
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault()
+      setActiveDropoffIndex((prev) => (prev > 0 ? prev - 1 : prev))
+    } else if (e.key === "Enter" && activeDropoffIndex >= 0) {
+      e.preventDefault()
+      selectDropoff(dropoffSuggestions[activeDropoffIndex])
+    } else if (e.key === "Escape") {
+      setDropoffSuggestions([])
+      setActiveDropoffIndex(-1)
+    }
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -203,11 +246,39 @@ export default function BookingPage() {
                     <div className="relative">
                       <Label htmlFor="pickup" className="sr-only">Pickup Location</Label>
                       <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
-                      <Input id="pickup" value={pickupLocation} onChange={(event) => updatePickupLocation(event.target.value)} placeholder="Pickup" className="pl-10 h-12 bg-muted/30 border-none" />
+                      <Input
+                        id="pickup"
+                        role="combobox"
+                        aria-autocomplete="list"
+                        aria-expanded={pickupSuggestions.length > 0}
+                        aria-haspopup="listbox"
+                        aria-controls="pickup-listbox"
+                        aria-activedescendant={activePickupIndex >= 0 ? `pickup-option-${activePickupIndex}` : undefined}
+                        value={pickupLocation}
+                        onChange={(event) => updatePickupLocation(event.target.value)}
+                        onKeyDown={handlePickupKeyDown}
+                        placeholder="Pickup"
+                        className="pl-10 h-12 bg-muted/30 border-none"
+                      />
                       {pickupSuggestions.length > 0 ? (
-                        <div className="absolute z-20 mt-2 w-full overflow-hidden rounded-lg border bg-background shadow-lg">
-                          {pickupSuggestions.map((place) => (
-                            <button key={place.id} type="button" className="block w-full px-3 py-2 text-left hover:bg-muted" onClick={() => selectPickup(place)}>
+                        <div
+                          id="pickup-listbox"
+                          role="listbox"
+                          className="absolute z-20 mt-2 w-full overflow-hidden rounded-lg border bg-background shadow-lg"
+                        >
+                          {pickupSuggestions.map((place, index) => (
+                            <button
+                              key={place.id}
+                              id={`pickup-option-${index}`}
+                              role="option"
+                              aria-selected={activePickupIndex === index}
+                              type="button"
+                              className={cn(
+                                "block w-full px-3 py-2 text-left transition-colors",
+                                activePickupIndex === index ? "bg-primary/10 text-primary" : "hover:bg-muted"
+                              )}
+                              onClick={() => selectPickup(place)}
+                            >
                               <span className="block text-sm font-medium">{place.name}</span>
                               <span className="block truncate text-xs text-muted-foreground">{place.address}</span>
                             </button>
@@ -218,11 +289,39 @@ export default function BookingPage() {
                     <div className="relative">
                       <Label htmlFor="destination" className="sr-only">Destination Location</Label>
                       <Navigation className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-accent-foreground" />
-                      <Input id="destination" value={dropoffLocation} onChange={(event) => updateDropoffLocation(event.target.value)} placeholder="Destination" className="pl-10 h-12 bg-muted/30 border-none" />
+                      <Input
+                        id="destination"
+                        role="combobox"
+                        aria-autocomplete="list"
+                        aria-expanded={dropoffSuggestions.length > 0}
+                        aria-haspopup="listbox"
+                        aria-controls="dropoff-listbox"
+                        aria-activedescendant={activeDropoffIndex >= 0 ? `dropoff-option-${activeDropoffIndex}` : undefined}
+                        value={dropoffLocation}
+                        onChange={(event) => updateDropoffLocation(event.target.value)}
+                        onKeyDown={handleDropoffKeyDown}
+                        placeholder="Destination"
+                        className="pl-10 h-12 bg-muted/30 border-none"
+                      />
                       {dropoffSuggestions.length > 0 ? (
-                        <div className="absolute z-20 mt-2 w-full overflow-hidden rounded-lg border bg-background shadow-lg">
-                          {dropoffSuggestions.map((place) => (
-                            <button key={place.id} type="button" className="block w-full px-3 py-2 text-left hover:bg-muted" onClick={() => selectDropoff(place)}>
+                        <div
+                          id="dropoff-listbox"
+                          role="listbox"
+                          className="absolute z-20 mt-2 w-full overflow-hidden rounded-lg border bg-background shadow-lg"
+                        >
+                          {dropoffSuggestions.map((place, index) => (
+                            <button
+                              key={place.id}
+                              id={`dropoff-option-${index}`}
+                              role="option"
+                              aria-selected={activeDropoffIndex === index}
+                              type="button"
+                              className={cn(
+                                "block w-full px-3 py-2 text-left transition-colors",
+                                activeDropoffIndex === index ? "bg-primary/10 text-primary" : "hover:bg-muted"
+                              )}
+                              onClick={() => selectDropoff(place)}
+                            >
                               <span className="block text-sm font-medium">{place.name}</span>
                               <span className="block truncate text-xs text-muted-foreground">{place.address}</span>
                             </button>
@@ -254,7 +353,14 @@ export default function BookingPage() {
                     {error ? <p className="text-sm text-destructive" role="alert">{error}</p> : null}
                     {status ? <p className="text-sm text-primary">{status}</p> : null}
                     {safetyCode ? <div className="rounded-lg bg-primary/10 p-3 text-sm font-semibold text-primary">Safety code: {safetyCode}</div> : null}
-                    <Button size="xl" className="w-full mt-4 h-14 font-bold shadow-lg" disabled={isSubmitting}>{isSubmitting ? "Confirming..." : "Confirm Booking"}</Button>
+                    <Button size="xl" className="w-full mt-4 h-14 font-bold shadow-lg" disabled={isSubmitting}>
+                      {isSubmitting ? (
+                        <div className="flex items-center gap-3">
+                          <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          Confirming...
+                        </div>
+                      ) : "Confirm Booking"}
+                    </Button>
                   </form>
                 </CardContent></Card>
               <Card className="bg-primary/5 border-none shadow-none"><CardContent className="p-4 flex items-center gap-4"><Shield className="h-5 w-5 text-primary" /><BodyMd className="text-xs">Your safety is our priority. Trips are tracked and insured.</BodyMd></CardContent></Card>

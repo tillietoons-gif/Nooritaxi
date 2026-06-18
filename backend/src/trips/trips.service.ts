@@ -47,27 +47,29 @@ export class TripsService {
 
     const { ride, matchedDriverTokens } = await this.prisma.$transaction(
       async (tx) => {
-        const createdRide = await tx.trip.create({
-          data: {
-            ...data,
-            distance,
-            baseFare,
-            fare,
-            surgeMultiplier,
-            safetyCode:
-              data.safetyCode ??
-              Math.floor(1000 + Math.random() * 9000).toString(),
-          },
-        });
-
-        const matchedDriver = data.driverId
-          ? null
-          : await this.dispatch.findNearestOnlineDriver(
-              data.pickupLat,
-              data.pickupLng,
-              10,
-              tx,
-            );
+        // Optimization: Parallelize ride creation and driver dispatch lookup
+        const [createdRide, matchedDriver] = await Promise.all([
+          tx.trip.create({
+            data: {
+              ...data,
+              distance,
+              baseFare,
+              fare,
+              surgeMultiplier,
+              safetyCode:
+                data.safetyCode ??
+                Math.floor(1000 + Math.random() * 9000).toString(),
+            },
+          }),
+          data.driverId
+            ? Promise.resolve(null)
+            : this.dispatch.findNearestOnlineDriver(
+                data.pickupLat,
+                data.pickupLng,
+                10,
+                tx,
+              ),
+        ]);
         const assignedDriverUserId = data.driverId ?? matchedDriver?.userId;
         const assignedVehicleId =
           data.vehicleId ?? matchedDriver?.vehicles[0]?.id;
@@ -75,25 +77,26 @@ export class TripsService {
         if (!assignedDriverUserId)
           return { ride: createdRide, matchedDriverTokens: [] };
 
-        const updatedRide = await tx.trip.update({
-          where: { id: createdRide.id },
-          data: {
-            driverId: assignedDriverUserId,
-            vehicleId: assignedVehicleId,
-            status: TripStatus.ACCEPTED,
-            acceptedAt: new Date(),
-          },
-        });
-
-        await tx.driver.updateMany({
-          where: { userId: assignedDriverUserId },
-          data: { status: DriverStatus.BUSY },
-        });
-
-        const devices = await tx.pushDevice.findMany({
-          where: { userId: assignedDriverUserId, isActive: true },
-          select: { token: true },
-        });
+        // Optimization: Parallelize ride update, driver status update, and notification token retrieval
+        const [updatedRide, , devices] = await Promise.all([
+          tx.trip.update({
+            where: { id: createdRide.id },
+            data: {
+              driverId: assignedDriverUserId,
+              vehicleId: assignedVehicleId,
+              status: TripStatus.ACCEPTED,
+              acceptedAt: new Date(),
+            },
+          }),
+          tx.driver.updateMany({
+            where: { userId: assignedDriverUserId },
+            data: { status: DriverStatus.BUSY },
+          }),
+          tx.pushDevice.findMany({
+            where: { userId: assignedDriverUserId, isActive: true },
+            select: { token: true },
+          }),
+        ]);
 
         return {
           ride: updatedRide,

@@ -18,3 +18,8 @@
 **Learning:** For global accessibility features like "Skip to main content" to function correctly, every major route's primary content container MUST have a stable `id="main-content"`. Additionally, when using Radix-based UI primitives like our `Button`, always use the `asChild` prop when nesting navigation components (like Next.js `Link`) to prevent invalid semantic HTML (nested interactive elements).
 
 **Action:** Ensure all new pages include a `<main id="main-content">` landmark. Standardize `Link`/`Button` nesting using `asChild`.
+
+## 2024-06-15 - Accessible Combobox Pattern for Location Search
+**Learning:** Location search inputs require a full ARIA combobox pattern to be accessible. This includes `role="combobox"`, `aria-autocomplete="list"`, `aria-expanded`, and `aria-activedescendant` linked to a `role="listbox"` suggestion container. Keyboard navigation (ArrowUp/ArrowDown/Enter/Escape) must be manually implemented to manage focus and selection within the virtual list.
+
+**Action:** Apply this pattern to all autocomplete/search inputs in the web application to ensure parity between mouse and keyboard users.

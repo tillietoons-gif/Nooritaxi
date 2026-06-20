@@ -18,3 +18,9 @@
 **Learning:** For global accessibility features like "Skip to main content" to function correctly, every major route's primary content container MUST have a stable `id="main-content"`. Additionally, when using Radix-based UI primitives like our `Button`, always use the `asChild` prop when nesting navigation components (like Next.js `Link`) to prevent invalid semantic HTML (nested interactive elements).
 
 **Action:** Ensure all new pages include a `<main id="main-content">` landmark. Standardize `Link`/`Button` nesting using `asChild`.
+
+## 2025-05-14 - Accessible Combobox & Contextual Icon Feedback
+
+**Learning:** Custom location search inputs require the full WAI-ARIA Combobox pattern (`role="combobox"`, `aria-autocomplete="list"`, `aria-activedescendant`) to be accessible. Keyboard navigation (`ArrowUp`/`ArrowDown`) should be circular and focus should remain on the input while the active item is visually highlighted. Additionally, using `group-focus-within` on input wrappers allows decorative icons to change color (e.g., to `text-gold`) when the input is active, providing clear visual feedback.
+
+**Action:** Implement `handleKeyDown` for all custom dropdowns/comboboxes and use `group-focus-within` for interactive input iconography.

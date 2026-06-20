@@ -201,7 +201,8 @@ export class TripsService {
       if (!before) throw new NotFoundException('Trip not found');
       if (before.status === TripStatus.COMPLETED)
         throw new BadRequestException('Completed trips cannot be cancelled');
-      if (before.status === TripStatus.CANCELLED) return { ride: before, before };
+      if (before.status === TripStatus.CANCELLED)
+        return { ride: before, before };
 
       const isStaff = data.actorRole === UserRole.ADMIN;
       const isTripRider = before.customerId === data.actorId;
@@ -338,26 +339,29 @@ export class TripsService {
       throw new BadRequestException(
         'Cannot settle wallet ride without a positive fare',
       );
-    await this.wallet.transfer(
-      ride.customerId,
-      amount,
-      `Ride payment for ${ride.id}`,
-      `ride:${ride.id}:wallet-payment`,
-      { tx, transactionType: 'RIDE_PAYMENT', tripId: ride.id },
-    );
-    await this.wallet.deposit(
-      ride.driverId,
-      amount,
-      'DRIVER',
-      'AFN',
-      `ride:${ride.id}:driver-payout`,
-      {
-        tx,
-        transactionType: 'DRIVER_PAYOUT',
-        description: `Driver payout for ride ${ride.id}`,
-        tripId: ride.id,
-      },
-    );
+    // Optimization: Parallelize transfer and deposit within transaction to reduce latency
+    await Promise.all([
+      this.wallet.transfer(
+        ride.customerId,
+        amount,
+        `Ride payment for ${ride.id}`,
+        `ride:${ride.id}:wallet-payment`,
+        { tx, transactionType: 'RIDE_PAYMENT', tripId: ride.id },
+      ),
+      this.wallet.deposit(
+        ride.driverId,
+        amount,
+        'DRIVER',
+        'AFN',
+        `ride:${ride.id}:driver-payout`,
+        {
+          tx,
+          transactionType: 'DRIVER_PAYOUT',
+          description: `Driver payout for ride ${ride.id}`,
+          tripId: ride.id,
+        },
+      ),
+    ]);
   }
 
   private async audit(

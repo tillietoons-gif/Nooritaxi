@@ -37,7 +37,9 @@ export class FoodService {
       select: { id: true },
     });
     if (existing) {
-      throw new BadRequestException('Merchant already has a restaurant profile');
+      throw new BadRequestException(
+        'Merchant already has a restaurant profile',
+      );
     }
     const { preventDuplicateOwner, ...restaurantData } = data;
     return this.prisma.restaurant.create({ data: restaurantData });
@@ -345,26 +347,28 @@ export class FoodService {
       );
     }
 
-    await this.wallet.transfer(
-      order.riderId,
-      amount,
-      `Order payment for ${order.id}`,
-      `order:${order.id}:wallet-payment`,
-      { tx, transactionType: 'ORDER_PAYMENT', orderId: order.id },
-    );
-
-    await this.wallet.deposit(
-      order.restaurant.ownerId,
-      amount,
-      'MERCHANT',
-      'AFN',
-      `order:${order.id}:merchant-payout`,
-      {
-        tx,
-        transactionType: 'MERCHANT_PAYOUT',
-        description: `Merchant payout for order ${order.id}`,
-        orderId: order.id,
-      },
-    );
+    // Optimization: Parallelize transfer and deposit within transaction to reduce latency
+    await Promise.all([
+      this.wallet.transfer(
+        order.riderId,
+        amount,
+        `Order payment for ${order.id}`,
+        `order:${order.id}:wallet-payment`,
+        { tx, transactionType: 'ORDER_PAYMENT', orderId: order.id },
+      ),
+      this.wallet.deposit(
+        order.restaurant.ownerId,
+        amount,
+        'MERCHANT',
+        'AFN',
+        `order:${order.id}:merchant-payout`,
+        {
+          tx,
+          transactionType: 'MERCHANT_PAYOUT',
+          description: `Merchant payout for order ${order.id}`,
+          orderId: order.id,
+        },
+      ),
+    ]);
   }
 }

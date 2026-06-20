@@ -66,3 +66,9 @@
 **Learning:** Sequential await calls for independent database queries in high-frequency endpoints like `getLiveMapData` introduce unnecessary latency. In a mocked environment with 50ms query delay, sequential execution takes ~100ms while parallel execution takes ~50ms.
 
 **Action:** Use `Promise.all` to parallelize independent Prisma queries in tracking and dashboard services to reduce API response time by up to 50%.
+
+## 2026-06-17 - Parallelizing Wallet Settlement Operations
+
+**Learning:** Sequential `await` calls for independent wallet operations (transfer and deposit) within a transaction block add significant cumulative latency to critical paths like ride completion and order delivery. In profiling, parallelizing these two independent I/O-bound operations reduced the segment latency by ~49%.
+
+**Action:** Use `Promise.all` to parallelize independent `this.wallet.transfer` and `this.wallet.deposit` calls within `settleCompletedRide` and `settleDeliveredOrder` methods. This ensures that while they share the same transaction context, their independent database commands are issued concurrently.

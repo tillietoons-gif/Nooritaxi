@@ -54,6 +54,12 @@
 
 **Action:** Optimized `OperationsService.getLiveMapData` using `Promise.all` to execute the independent `findMany` queries for drivers and trips concurrently. This reduces the response time for real-time tracking data, ensuring a smoother experience for operations personnel.
 
+## 2026-06-17 - Parallelizing Core Trip Lifecycle Operations
+
+**Learning:** Core trip operations like `createRide` and `settleCompletedRide` involve multiple independent database interactions (creating records, finding drivers, updating status, and processing wallet transactions). Sequential `await` calls for these operations introduce additive latency that can significantly degrade the responsiveness of the ride-hailing flow.
+
+**Action:** Optimized `TripsService` using `Promise.all` to parallelize independent Prisma operations within transactions. In `createRide`, ride creation is parallelized with driver dispatch, and subsequent status updates are parallelized with notification token retrieval. In `settleCompletedRide`, the wallet transfer from rider and deposit to driver are executed concurrently. Profiling showed a potential reduction in `createRide` latency from ~250ms to ~100ms and `settleCompletedRide` from ~100ms to ~50ms (based on 50ms per-query mock).
+
 ## Mobile App Performance and Fixes
 - Centralized API calls in `mobile/src/lib/api.ts` to ensure consistent Authorization headers and error handling.
 - Optimized Food and Restaurant screens by reducing redundant fetch calls and improving loading states.

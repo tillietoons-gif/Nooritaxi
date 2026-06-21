@@ -26,10 +26,10 @@ export interface LabelProps extends React.ComponentPropsWithoutRef<"label"> {
 }
 
 export function LabelMd({ className, children, htmlFor, ...props }: LabelProps) {
-  const Comp = htmlFor ? "label" : ("span" as any)
+  const Comp = (htmlFor ? "label" : "span") as any
   return (
     <Comp
-      htmlFor={htmlFor}
+      {...(htmlFor ? { htmlFor } : {})}
       className={cn("text-sm font-semibold uppercase tracking-widest text-primary/70", className)}
       {...props}
     >
@@ -39,10 +39,10 @@ export function LabelMd({ className, children, htmlFor, ...props }: LabelProps) 
 }
 
 export function LabelSm({ className, children, htmlFor, ...props }: LabelProps) {
-  const Comp = htmlFor ? "label" : ("span" as any)
+  const Comp = (htmlFor ? "label" : "span") as any
   return (
     <Comp
-      htmlFor={htmlFor}
+      {...(htmlFor ? { htmlFor } : {})}
       className={cn("text-xs font-bold uppercase tracking-[0.2em] text-primary/60", className)}
       {...props}
     >

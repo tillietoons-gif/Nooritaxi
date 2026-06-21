@@ -47,27 +47,30 @@ export class TripsService {
 
     const { ride, matchedDriverTokens } = await this.prisma.$transaction(
       async (tx) => {
-        const createdRide = await tx.trip.create({
-          data: {
-            ...data,
-            distance,
-            baseFare,
-            fare,
-            surgeMultiplier,
-            safetyCode:
-              data.safetyCode ??
-              Math.floor(1000 + Math.random() * 9000).toString(),
-          },
-        });
+        // Optimization: Parallelize initial ride creation and driver dispatch
+        const [createdRide, matchedDriver] = await Promise.all([
+          tx.trip.create({
+            data: {
+              ...data,
+              distance,
+              baseFare,
+              fare,
+              surgeMultiplier,
+              safetyCode:
+                data.safetyCode ??
+                Math.floor(1000 + Math.random() * 9000).toString(),
+            },
+          }),
+          data.driverId
+            ? Promise.resolve(null)
+            : this.dispatch.findNearestOnlineDriver(
+                data.pickupLat,
+                data.pickupLng,
+                10,
+                tx,
+              ),
+        ]);
 
-        const matchedDriver = data.driverId
-          ? null
-          : await this.dispatch.findNearestOnlineDriver(
-              data.pickupLat,
-              data.pickupLng,
-              10,
-              tx,
-            );
         const assignedDriverUserId = data.driverId ?? matchedDriver?.userId;
         const assignedVehicleId =
           data.vehicleId ?? matchedDriver?.vehicles[0]?.id;
@@ -75,25 +78,26 @@ export class TripsService {
         if (!assignedDriverUserId)
           return { ride: createdRide, matchedDriverTokens: [] };
 
-        const updatedRide = await tx.trip.update({
-          where: { id: createdRide.id },
-          data: {
-            driverId: assignedDriverUserId,
-            vehicleId: assignedVehicleId,
-            status: TripStatus.ACCEPTED,
-            acceptedAt: new Date(),
-          },
-        });
-
-        await tx.driver.updateMany({
-          where: { userId: assignedDriverUserId },
-          data: { status: DriverStatus.BUSY },
-        });
-
-        const devices = await tx.pushDevice.findMany({
-          where: { userId: assignedDriverUserId, isActive: true },
-          select: { token: true },
-        });
+        // Optimization: Parallelize ride update, driver status update, and device token retrieval
+        const [updatedRide, , devices] = await Promise.all([
+          tx.trip.update({
+            where: { id: createdRide.id },
+            data: {
+              driverId: assignedDriverUserId,
+              vehicleId: assignedVehicleId,
+              status: TripStatus.ACCEPTED,
+              acceptedAt: new Date(),
+            },
+          }),
+          tx.driver.updateMany({
+            where: { userId: assignedDriverUserId },
+            data: { status: DriverStatus.BUSY },
+          }),
+          tx.pushDevice.findMany({
+            where: { userId: assignedDriverUserId, isActive: true },
+            select: { token: true },
+          }),
+        ]);
 
         return {
           ride: updatedRide,
@@ -201,7 +205,8 @@ export class TripsService {
       if (!before) throw new NotFoundException('Trip not found');
       if (before.status === TripStatus.COMPLETED)
         throw new BadRequestException('Completed trips cannot be cancelled');
-      if (before.status === TripStatus.CANCELLED) return { ride: before, before };
+      if (before.status === TripStatus.CANCELLED)
+        return { ride: before, before };
 
       const isStaff = data.actorRole === UserRole.ADMIN;
       const isTripRider = before.customerId === data.actorId;
@@ -338,26 +343,29 @@ export class TripsService {
       throw new BadRequestException(
         'Cannot settle wallet ride without a positive fare',
       );
-    await this.wallet.transfer(
-      ride.customerId,
-      amount,
-      `Ride payment for ${ride.id}`,
-      `ride:${ride.id}:wallet-payment`,
-      { tx, transactionType: 'RIDE_PAYMENT', tripId: ride.id },
-    );
-    await this.wallet.deposit(
-      ride.driverId,
-      amount,
-      'DRIVER',
-      'AFN',
-      `ride:${ride.id}:driver-payout`,
-      {
-        tx,
-        transactionType: 'DRIVER_PAYOUT',
-        description: `Driver payout for ride ${ride.id}`,
-        tripId: ride.id,
-      },
-    );
+    // Optimization: Parallelize wallet transfer and deposit to reduce settlement latency
+    await Promise.all([
+      this.wallet.transfer(
+        ride.customerId,
+        amount,
+        `Ride payment for ${ride.id}`,
+        `ride:${ride.id}:wallet-payment`,
+        { tx, transactionType: 'RIDE_PAYMENT', tripId: ride.id },
+      ),
+      this.wallet.deposit(
+        ride.driverId,
+        amount,
+        'DRIVER',
+        'AFN',
+        `ride:${ride.id}:driver-payout`,
+        {
+          tx,
+          transactionType: 'DRIVER_PAYOUT',
+          description: `Driver payout for ride ${ride.id}`,
+          tripId: ride.id,
+        },
+      ),
+    ]);
   }
 
   private async audit(

@@ -184,7 +184,12 @@ export class AdminController {
     @Body('status') status: string,
     @CurrentUser() actor: any,
   ) {
-    return this.admin.updateMerchantDocumentStatus(id, docId, status, actor?.id);
+    return this.admin.updateMerchantDocumentStatus(
+      id,
+      docId,
+      status,
+      actor?.id,
+    );
   }
 
   @Patch('deliveries/:id/status')

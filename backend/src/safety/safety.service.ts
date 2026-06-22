@@ -93,8 +93,7 @@ export class SafetyService {
         },
         select: { id: true, safetyCode: true },
       });
-      if (!trip)
-        throw new ForbiddenException('Trip is not assigned to this user');
+      if (!trip) throw new ForbiddenException('Trip is not assigned to this user');
       resolvedTripId = trip.id;
       safetyCode = trip.safetyCode ?? undefined;
     }
@@ -109,15 +108,24 @@ export class SafetyService {
       },
     });
 
-    // Notify trusted contacts via push (SMS provider not configured yet — log instead).
-    const contacts = await this.prisma.trustedContact.findMany({
-      where: { userId, notifyOnSos: true },
-    });
-
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { name: true, phone: true },
-    });
+    // Optimization: Parallelize non-blocking metadata lookups, notifications, and logging to reduce latency
+    // while ensuring SOS record is created first for reliability.
+    const [contacts, user, adminDevices] = await Promise.all([
+      this.prisma.trustedContact.findMany({
+        where: { userId, notifyOnSos: true },
+      }),
+      this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { name: true, phone: true },
+      }),
+      this.prisma.pushDevice.findMany({
+        where: {
+          isActive: true,
+          user: { role: { in: ['ADMIN', 'SUPPORT'] as any } },
+        },
+        select: { token: true },
+      }),
+    ]);
 
     const shareUrl = safetyCode ? this.buildShareUrl(safetyCode) : null;
     const title = 'SOS triggered';
@@ -132,43 +140,38 @@ export class SafetyService {
       );
     }
 
-    // Push the alert to any admin/support dashboards listening.
-    // (Reuses the existing socket gateway if connected; falls through silently if not.)
-    try {
-      const adminDevices = await this.prisma.pushDevice.findMany({
-        where: {
-          isActive: true,
-          user: { role: { in: ['ADMIN', 'SUPPORT'] as any } },
+    // Parallelize push dispatch and audit logging
+    await Promise.all([
+      (async () => {
+        if (adminDevices.length) {
+          try {
+            await this.push.sendToTokens(
+              adminDevices.map((d) => d.token),
+              title,
+              body,
+              {
+                type: 'SOS',
+                alertId: alert.id,
+                ...(resolvedTripId ? { tripId: resolvedTripId } : {}),
+              },
+            );
+          } catch (err) {
+            this.logger.error(
+              `Failed to notify admins of SOS ${alert.id}: ${(err as Error).message}`,
+            );
+          }
+        }
+      })(),
+      this.prisma.auditLog.create({
+        data: {
+          action: 'SOS_RAISED',
+          entityType: 'SosAlert',
+          entityId: alert.id,
+          actorId: userId,
+          after: { tripId: resolvedTripId, lat: data.lat, lng: data.lng },
         },
-        select: { token: true },
-      });
-      if (adminDevices.length) {
-        await this.push.sendToTokens(
-          adminDevices.map((d) => d.token),
-          title,
-          body,
-          {
-            type: 'SOS',
-            alertId: alert.id,
-            ...(resolvedTripId ? { tripId: resolvedTripId } : {}),
-          },
-        );
-      }
-    } catch (err) {
-      this.logger.error(
-        `Failed to notify admins of SOS ${alert.id}: ${(err as Error).message}`,
-      );
-    }
-
-    await this.prisma.auditLog.create({
-      data: {
-        action: 'SOS_RAISED',
-        entityType: 'SosAlert',
-        entityId: alert.id,
-        actorId: userId,
-        after: { tripId: resolvedTripId, lat: data.lat, lng: data.lng },
-      },
-    });
+      }),
+    ]);
 
     return { alert, notifiedContacts: contacts.length, shareUrl };
   }

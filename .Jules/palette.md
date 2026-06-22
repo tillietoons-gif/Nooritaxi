@@ -18,3 +18,8 @@
 **Learning:** For global accessibility features like "Skip to main content" to function correctly, every major route's primary content container MUST have a stable `id="main-content"`. Additionally, when using Radix-based UI primitives like our `Button`, always use the `asChild` prop when nesting navigation components (like Next.js `Link`) to prevent invalid semantic HTML (nested interactive elements).
 
 **Action:** Ensure all new pages include a `<main id="main-content">` landmark. Standardize `Link`/`Button` nesting using `asChild`.
+
+## 2024-06-13 - Contact Detail Micro-interactions
+**Learning:** Adding a 'Copy to Clipboard' feature to contact details (email, phone) reduces user friction. Using a transient success state (icon swap from `Copy` to `Check`) provides immediate visual confirmation without cluttering the UI with persistent messages.
+
+**Action:** When displaying critical support identifiers, implement a copy button with an `aria-label` that reflects the current state (e.g., "Copy email" -> "Copied email").

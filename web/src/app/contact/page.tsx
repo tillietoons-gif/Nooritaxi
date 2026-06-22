@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Mail, Send, CheckCircle2, ArrowRight } from "lucide-react"
+import { Mail, Send, CheckCircle2, ArrowRight, Copy, Check } from "lucide-react"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { Button } from "@/components/ui/button"
@@ -17,11 +17,22 @@ export default function ContactPage() {
   const { t } = useTranslation()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
+  const [copiedField, setCopiedField] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     message: ""
   })
+
+  const copyToClipboard = async (text: string, field: string) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopiedField(field)
+      setTimeout(() => setCopiedField(null), 2000)
+    } catch (err) {
+      console.error("Failed to copy: ", err)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -73,16 +84,36 @@ export default function ContactPage() {
               <GlassSurface variant="premium" className="p-8 space-y-8 relative overflow-hidden bg-card/50 backdrop-blur-md">
                 <PatternOverlay opacity={0.03} />
                 <div>
-                  <LabelMd className="mb-4 block text-primary" htmlFor="">Headquarters</LabelMd>
+                  <LabelMd className="mb-4 block text-primary">Headquarters</LabelMd>
                   <p className="text-sm font-bold leading-relaxed text-foreground">
                     Kart-e-Char, District 3<br />
                     Kabul, Afghanistan
                   </p>
                 </div>
-                <div>
-                  <LabelMd className="mb-4 block text-primary" htmlFor="">Inquiries</LabelMd>
-                  <p className="text-sm font-bold text-foreground">support@noori.af</p>
-                  <p className="text-sm font-bold text-foreground">+93 700 000 000</p>
+                <div className="space-y-4">
+                  <LabelMd className="block text-primary">Inquiries</LabelMd>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between group/item">
+                      <p className="text-sm font-bold text-foreground">support@noori.af</p>
+                      <button
+                        onClick={() => copyToClipboard("support@noori.af", "email")}
+                        className="p-2 rounded-lg bg-primary/5 text-primary/40 hover:text-primary hover:bg-primary/10 transition-all focus-visible:ring-2 ring-primary/30 outline-none"
+                        aria-label={copiedField === "email" ? "Copied email" : "Copy email to clipboard"}
+                      >
+                        {copiedField === "email" ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                      </button>
+                    </div>
+                    <div className="flex items-center justify-between group/item">
+                      <p className="text-sm font-bold text-foreground">+93 700 000 000</p>
+                      <button
+                        onClick={() => copyToClipboard("+93 700 000 000", "phone")}
+                        className="p-2 rounded-lg bg-primary/5 text-primary/40 hover:text-primary hover:bg-primary/10 transition-all focus-visible:ring-2 ring-primary/30 outline-none"
+                        aria-label={copiedField === "phone" ? "Copied phone number" : "Copy phone number to clipboard"}
+                      >
+                        {copiedField === "phone" ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  </div>
                 </div>
                 <div className="pt-4 border-t border-primary/10">
                   <p className="text-[10px] font-black uppercase tracking-widest text-primary">

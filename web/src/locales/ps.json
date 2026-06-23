@@ -56,6 +56,23 @@
   "accessibility": {
     "skip_to_content": "اصلی منړپانګې ته لاړ شئ"
   },
+  "login": {
+    "back_to_terminal": "اصلي پاڼې ته ستنېدل",
+    "secure_channel": "۲۵۶-بیتي خوندي چینل",
+    "authorized_access": "مجاز لاسرسی",
+    "subtitle": "خپل نوري اکوسیستم ته ننوځئ",
+    "phone_label": "د موبایل پېژندونکی",
+    "password_label": "امنیتي اعتبار",
+    "forgot_password": "پټ نوم هیر شوی؟",
+    "authenticating": "د هویت تصدیق روان دی...",
+    "submit": "ننوتل",
+    "new_member": "د بیړۍ نوی غړی؟",
+    "establish_account": "حساب جوړ کړئ",
+    "copyright": "© ۲۰۲۴ نوري د حرکت سیسټمونه • کابل • نړیوال",
+    "error_auth_failed": "د هویت تصدیق ناکام شو. مهرباني وکړئ خپل اسناد وګورئ.",
+    "error_driver_mobile": "چلوونکي باید د موبایل اپلیکیشن له لارې ننوځي.",
+    "error_connection": "د قوماندې مرکز سره د خوندي اړیکې ټینګولو توان نشته."
+  },
   "signup": {
     "badge": "لومړيتوب لرونکی ثبت فعال دی",
     "title": "اکوسیستم سره یوځای شئ",
@@ -92,6 +109,10 @@
     "terms_notice": "د حساب په جوړولو سره، تاسو د خدمت شرطونه او د محرمیت اصول منئ.",
     "establish": "حساب جوړ کړئ",
     "verify_continue": "تایید او ادامه",
+    "synchronizing": "همغږي کول روان دي...",
+    "role_selection_label": "خپل د نوم لیکنې رول غوره کړئ",
+    "registration_failed": "د نوم لیکنې پروتوکول ناکام شو.",
+    "connection_error": "د نوم لیکنې ادارې سره اړیکه پرې شوه.",
     "already_connected": "مخکې وصل یاست؟",
     "return_login": "ننوتلو ته ستنېدل"
   },

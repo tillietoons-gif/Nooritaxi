@@ -57,6 +57,23 @@
     "skip_to_content": "Skip to main content",
     "language_switcher_label": "Current language: {{lang}}. Click to change language."
   },
+  "login": {
+    "back_to_terminal": "Back to Terminal",
+    "secure_channel": "Secure Channel 256-bit",
+    "authorized_access": "Authorized Access",
+    "subtitle": "Sign in to your Noori ecosystem",
+    "phone_label": "Mobile Identifier",
+    "password_label": "Security Credential",
+    "forgot_password": "Forgot Password?",
+    "authenticating": "Authenticating...",
+    "submit": "Initialize Access",
+    "new_member": "New Fleet Member?",
+    "establish_account": "Establish Account",
+    "copyright": "© 2024 NOORI MOBILITY SYSTEMS • KABUL • GLOBAL",
+    "error_auth_failed": "Authentication failed. Please verify your credentials.",
+    "error_driver_mobile": "Drivers must sign in through the mobile app.",
+    "error_connection": "Unable to establish a secure connection to the command center."
+  },
   "signup": {
     "badge": "Priority Enrollment Active",
     "title": "Join the Ecosystem",
@@ -93,6 +110,10 @@
     "terms_notice": "By initializing this session, you agree to our encrypted terms of service and privacy protocols.",
     "establish": "Establish Account",
     "verify_continue": "Verify & Continue",
+    "synchronizing": "Synchronizing...",
+    "role_selection_label": "Select your registration role",
+    "registration_failed": "Registration protocol failed.",
+    "connection_error": "Connection to registration authority timed out.",
     "already_connected": "Already connected?",
     "return_login": "Return to Login"
   },

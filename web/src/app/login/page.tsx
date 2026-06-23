@@ -5,6 +5,7 @@ import { Suspense, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { motion } from "framer-motion"
 import { Lock, Phone, Eye, EyeOff, ShieldCheck, ArrowLeft } from "lucide-react"
+import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import { GlassSurface } from "@/components/ui/glass-surface"
 import { Input } from "@/components/ui/input"
@@ -13,6 +14,7 @@ import { NooriLogo } from "@/components/ui/noori-logo"
 import { apiUrl, canAccessWebPortal, clearSession, getPostAuthRedirect, saveSession, WEB_MOBILE_ONLY_REASON } from "@/lib/auth"
 
 function LoginPageContent() {
+  const { t } = useTranslation()
   const searchParams = useSearchParams()
   const [phone, setPhone] = useState("")
   const [password, setPassword] = useState("")
@@ -20,7 +22,7 @@ function LoginPageContent() {
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const accessReason = searchParams.get("reason")
-  const resolvedMessage = message || (accessReason === WEB_MOBILE_ONLY_REASON ? "Drivers must sign in through the mobile app." : "")
+  const resolvedMessage = message || (accessReason === WEB_MOBILE_ONLY_REASON ? t("login.error_driver_mobile", "Drivers must sign in through the mobile app.") : "")
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -39,13 +41,13 @@ function LoginPageContent() {
       const data = await response.json()
 
       if (!response.ok) {
-        setMessage(data.message ?? "Authentication failed. Please verify your credentials.")
+        setMessage(data.message ?? t("login.error_auth_failed", "Authentication failed. Please verify your credentials."))
         return
       }
 
       if (!canAccessWebPortal(data.user?.role)) {
         clearSession()
-        setMessage("Drivers must sign in through the mobile app.")
+        setMessage(t("login.error_driver_mobile", "Drivers must sign in through the mobile app."))
         return
       }
 
@@ -53,7 +55,7 @@ function LoginPageContent() {
       const next = new URLSearchParams(window.location.search).get("next")
       window.location.href = getPostAuthRedirect(data.user, next)
     } catch {
-      setMessage("Unable to establish a secure connection to the command center.")
+      setMessage(t("login.error_connection", "Unable to establish a secure connection to the command center."))
     } finally {
       setIsLoading(false)
     }
@@ -75,11 +77,11 @@ function LoginPageContent() {
       >
         <div className="mb-8 flex justify-between items-center px-2">
            <Link href="/" className="group flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors font-bold text-sm">
-             <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" /> Back to Terminal
+             <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" /> {t("login.back_to_terminal", "Back to Terminal")}
            </Link>
            <div className="flex items-center gap-2">
               <ShieldCheck className="h-4 w-4 text-primary" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-primary">Secure Channel 256-bit</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-primary">{t("login.secure_channel", "Secure Channel 256-bit")}</span>
            </div>
         </div>
 
@@ -88,13 +90,16 @@ function LoginPageContent() {
             <div className="h-20 w-20 bg-primary/5 rounded-3xl flex items-center justify-center mb-6 border border-primary/10">
               <NooriLogo size={40} className="text-primary" />
             </div>
-            <HeadingMd className="mb-2 font-black">Authorized Access</HeadingMd>
-            <BodyMd className="text-muted-foreground">Sign in to your Noori ecosystem</BodyMd>
+            <HeadingMd className="mb-2 font-black">{t("login.authorized_access", "Authorized Access")}</HeadingMd>
+            <BodyMd className="text-muted-foreground">{t("login.subtitle", "Sign in to your Noori ecosystem")}</BodyMd>
           </div>
 
           <form onSubmit={submit} className="space-y-6">
             <div className="space-y-2">
-              <LabelMd htmlFor="phone" className="text-xs font-black">Mobile Identifier</LabelMd>
+              <LabelMd htmlFor="phone" className="text-xs font-black">
+                {t("login.phone_label", "Mobile Identifier")}
+                <span className="text-destructive ml-1" aria-hidden="true">*</span>
+              </LabelMd>
               <div className="relative group">
                 <Phone className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40 transition-colors group-focus-within:text-primary" />
                 <Input
@@ -106,6 +111,7 @@ function LoginPageContent() {
                   onChange={(event) => setPhone(event.target.value)}
                   placeholder="+93 7XX XXX XXX"
                   required
+                  aria-required="true"
                   aria-invalid={!!resolvedMessage}
                   aria-describedby={resolvedMessage ? "login-error" : undefined}
                 />
@@ -114,8 +120,11 @@ function LoginPageContent() {
 
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <LabelMd htmlFor="password" className="text-xs font-black">Security Credential</LabelMd>
-                <Link href="#" className="text-[10px] font-black uppercase text-primary/60 hover:text-primary transition-colors">Forgot Password?</Link>
+                <LabelMd htmlFor="password" className="text-xs font-black">
+                  {t("login.password_label", "Security Credential")}
+                  <span className="text-destructive ml-1" aria-hidden="true">*</span>
+                </LabelMd>
+                <Link href="#" className="text-[10px] font-black uppercase text-primary/60 hover:text-primary transition-colors">{t("login.forgot_password", "Forgot Password?")}</Link>
               </div>
               <div className="relative group">
                 <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40 transition-colors group-focus-within:text-primary" />
@@ -128,6 +137,7 @@ function LoginPageContent() {
                   onChange={(event) => setPassword(event.target.value)}
                   placeholder="••••••••"
                   required
+                  aria-required="true"
                   aria-invalid={!!resolvedMessage}
                   aria-describedby={resolvedMessage ? "login-error" : undefined}
                 />
@@ -162,21 +172,21 @@ function LoginPageContent() {
               {isLoading ? (
                 <div className="flex items-center gap-3">
                   <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Authenticating...
+                  {t("login.authenticating", "Authenticating...")}
                 </div>
-              ) : "Initialize Access"}
+              ) : t("login.submit", "Initialize Access")}
             </Button>
           </form>
 
           <div className="mt-12 pt-8 border-t border-border/50 text-center">
             <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">
-              New Fleet Member? <Link className="text-primary hover:underline" href="/signup">Establish Account</Link>
+              {t("login.new_member", "New Fleet Member?")} <Link className="text-primary hover:underline" href="/signup">{t("login.establish_account", "Establish Account")}</Link>
             </p>
           </div>
         </GlassSurface>
 
         <div className="mt-8 text-center text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/40">
-          © 2024 NOORI MOBILITY SYSTEMS • KABUL • GLOBAL
+          {t("login.copyright", "© 2024 NOORI MOBILITY SYSTEMS • KABUL • GLOBAL")}
         </div>
       </motion.div>
     </main>

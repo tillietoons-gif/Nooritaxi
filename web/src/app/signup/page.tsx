@@ -64,7 +64,7 @@ export default function SignupPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        setMessage(data.message ?? "Registration protocol failed.")
+        setMessage(data.message ?? t("signup.registration_failed", "Registration protocol failed."))
         return
       }
 
@@ -78,7 +78,7 @@ export default function SignupPage() {
       setMessageTone("success")
       setMessage(t("signup.code_sent", "Account created. Enter the verification code sent to your phone."))
     } catch {
-      setMessage("Connection to registration authority timed out.")
+      setMessage(t("signup.connection_error", "Connection to registration authority timed out."))
     } finally {
       setIsLoading(false)
     }
@@ -224,7 +224,10 @@ export default function SignupPage() {
               </div>
             ) : (
               <>
-            <div className="grid grid-cols-3 gap-3">
+            <LabelMd id="role-selection-label" className="sr-only">
+              {t("signup.role_selection_label", "Select your registration role")}
+            </LabelMd>
+            <div className="grid grid-cols-3 gap-3" role="group" aria-labelledby="role-selection-label">
               {signupRoles.map((option) => {
                 const Icon = option.icon
                 const isSelected = role === option.value
@@ -250,7 +253,10 @@ export default function SignupPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <LabelMd htmlFor="name" className="text-xs font-black">{t("signup.name_label", "Legal Identity")}</LabelMd>
+                <LabelMd htmlFor="name" className="text-xs font-black">
+                  {t("signup.name_label", "Legal Identity")}
+                  <span className="text-destructive ml-1" aria-hidden="true">*</span>
+                </LabelMd>
                 <div className="relative group">
                   <User className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40 transition-colors group-focus-within:text-primary" />
                   <Input
@@ -261,6 +267,7 @@ export default function SignupPage() {
                     onChange={(event) => setName(event.target.value)}
                     placeholder={t("signup.name_placeholder", "Full Name")}
                     required
+                    aria-required="true"
                     aria-invalid={!!message}
                     aria-describedby={message ? "signup-message" : undefined}
                   />
@@ -268,7 +275,10 @@ export default function SignupPage() {
               </div>
 
               <div className="space-y-2">
-                <LabelMd htmlFor="phone" className="text-xs font-black">{t("signup.phone_label", "Communication Node")}</LabelMd>
+                <LabelMd htmlFor="phone" className="text-xs font-black">
+                  {t("signup.phone_label", "Communication Node")}
+                  <span className="text-destructive ml-1" aria-hidden="true">*</span>
+                </LabelMd>
                 <div className="relative group">
                   <Phone className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40 transition-colors group-focus-within:text-primary" />
                   <Input
@@ -280,6 +290,7 @@ export default function SignupPage() {
                     onChange={(event) => setPhone(event.target.value)}
                     placeholder="+93 7XX XXX XXX"
                     required
+                    aria-required="true"
                     aria-invalid={!!message}
                     aria-describedby={message ? "signup-message" : undefined}
                   />
@@ -288,7 +299,10 @@ export default function SignupPage() {
             </div>
 
             <div className="space-y-2">
-              <LabelMd htmlFor="password" className="text-xs font-black">{t("signup.password_label", "Security Protocol")}</LabelMd>
+              <LabelMd htmlFor="password" className="text-xs font-black">
+                {t("signup.password_label", "Security Protocol")}
+                <span className="text-destructive ml-1" aria-hidden="true">*</span>
+              </LabelMd>
               <div className="relative group">
                 <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40 transition-colors group-focus-within:text-primary" />
                 <Input
@@ -301,6 +315,7 @@ export default function SignupPage() {
                   placeholder={t("signup.password_placeholder", "Min. 8 characters")}
                   minLength={8}
                   required
+                  aria-required="true"
                   aria-invalid={!!message}
                   aria-describedby={message ? "signup-message" : "password-hint"}
                 />
@@ -328,7 +343,10 @@ export default function SignupPage() {
             {role === "MERCHANT" && (
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div className="space-y-2">
-                  <LabelMd htmlFor="restaurantName" className="text-xs font-black">{t("signup.store_name", "Store Name")}</LabelMd>
+                  <LabelMd htmlFor="restaurantName" className="text-xs font-black">
+                    {t("signup.store_name", "Store Name")}
+                    <span className="text-destructive ml-1" aria-hidden="true">*</span>
+                  </LabelMd>
                   <div className="relative group">
                     <Store className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40 transition-colors group-focus-within:text-primary" />
                     <Input
@@ -338,6 +356,7 @@ export default function SignupPage() {
                       onChange={(event) => setRestaurantName(event.target.value)}
                       placeholder={t("signup.store_name_placeholder", "Restaurant or shop")}
                       required={role === "MERCHANT"}
+                      aria-required={role === "MERCHANT"}
                       aria-invalid={!!message && role === "MERCHANT"}
                       aria-describedby={message ? "signup-message" : undefined}
                     />
@@ -361,7 +380,10 @@ export default function SignupPage() {
                 </div>
 
                 <div className="space-y-2 md:col-span-2">
-                  <LabelMd htmlFor="restaurantAddress" className="text-xs font-black">{t("signup.store_address", "Store Address")}</LabelMd>
+                  <LabelMd htmlFor="restaurantAddress" className="text-xs font-black">
+                    {t("signup.store_address", "Store Address")}
+                    <span className="text-destructive ml-1" aria-hidden="true">*</span>
+                  </LabelMd>
                   <Input
                     id="restaurantAddress"
                     className="h-14 rounded-2xl glass border-none focus-visible:ring-primary/30 font-bold"
@@ -369,6 +391,7 @@ export default function SignupPage() {
                     onChange={(event) => setRestaurantAddress(event.target.value)}
                     placeholder={t("signup.store_address_placeholder", "Street, district, city")}
                     required={role === "MERCHANT"}
+                    aria-required={role === "MERCHANT"}
                     aria-invalid={!!message && role === "MERCHANT"}
                     aria-describedby={message ? "signup-message" : undefined}
                   />
@@ -459,7 +482,7 @@ export default function SignupPage() {
               {isLoading ? (
                 <div className="flex items-center gap-3">
                   <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Synchronizing...
+                  {t("signup.synchronizing", "Synchronizing...")}
                 </div>
               ) : pendingSession ? t("signup.verify_continue", "Verify & Continue") : t("signup.establish", "Establish Account")}
             </Button>

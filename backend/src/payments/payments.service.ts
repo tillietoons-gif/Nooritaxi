@@ -48,8 +48,8 @@ export class PaymentsService {
       throw new BadRequestException('Payment amount must be positive');
     }
 
-    // Upsert user CUSTOMER wallet so it exists
-    await this.prisma.wallet.upsert({
+    // Optimization: Use the returned wallet from upsert directly to save a DB round trip
+    const wallet = await this.prisma.wallet.upsert({
       where: { userId_type_currency: { userId, type: 'CUSTOMER', currency } },
       update: {},
       create: { userId, type: 'CUSTOMER', currency, balance: 0 },
@@ -57,10 +57,6 @@ export class PaymentsService {
 
     const idempotencyKey = `intent:${provider}:${userId}:${Date.now()}-${randomUUID().slice(0, 8)}`;
     const clientSecret = `cs_${idempotencyKey}`;
-
-    const wallet = await this.prisma.wallet.findUniqueOrThrow({
-      where: { userId_type_currency: { userId, type: 'CUSTOMER', currency } },
-    });
 
     const transaction = await this.prisma.transaction.create({
       data: {
@@ -102,16 +98,16 @@ export class PaymentsService {
     providerRef?: string,
     actorId?: string,
   ) {
+    // Optimization: Include the associated wallet in the initial lookup to reduce DB round trips
     const transaction = await this.prisma.transaction.findUnique({
       where: { id: intentId },
+      include: { wallet: true },
     });
     if (!transaction) throw new NotFoundException('Payment intent not found');
     if (transaction.status === 'COMPLETED')
       return { success: true, transaction };
 
-    const wallet = await this.prisma.wallet.findUniqueOrThrow({
-      where: { id: transaction.walletId },
-    });
+    const wallet = transaction.wallet;
     const resolvedProviderRef =
       providerRef ?? transaction.providerRef ?? undefined;
 
@@ -179,13 +175,13 @@ export class PaymentsService {
   }
 
   async refundPayment(intentId: string, amount?: number) {
+    // Optimization: Include the associated wallet in the initial lookup to reduce DB round trips
     const transaction = await this.prisma.transaction.findUnique({
       where: { id: intentId },
+      include: { wallet: true },
     });
     if (!transaction) throw new NotFoundException('Transaction not found');
-    const wallet = await this.prisma.wallet.findUniqueOrThrow({
-      where: { id: transaction.walletId },
-    });
+    const wallet = transaction.wallet;
     const refundAmount = amount ?? Number(transaction.amount);
     this.logger.log(`Refund ${intentId} amount=${refundAmount}`);
     return this.wallet.deposit(

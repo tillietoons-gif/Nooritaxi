@@ -66,3 +66,9 @@
 **Learning:** Sequential await calls for independent database queries in high-frequency endpoints like `getLiveMapData` introduce unnecessary latency. In a mocked environment with 50ms query delay, sequential execution takes ~100ms while parallel execution takes ~50ms.
 
 **Action:** Use `Promise.all` to parallelize independent Prisma queries in tracking and dashboard services to reduce API response time by up to 50%.
+
+## 2026-06-23 - Reducing Redundant Database Lookups in Payments
+
+**Learning:** Re-fetching a record that was just returned by an `upsert` or failing to use Prisma's `include` for mandatory relations leads to unnecessary database round trips.
+
+**Action:** Capture and reuse the returned object from `upsert` operations and use `include` to fetch associated records (like `wallet` for a `transaction`) in a single query to minimize latency in critical paths like payment processing.

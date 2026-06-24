@@ -57,7 +57,27 @@
     "skip_to_content": "Skip to main content",
     "language_switcher_label": "Current language: {{lang}}. Click to change language."
   },
+  "login": {
+    "back_to_terminal": "Back to Terminal",
+    "secure_channel": "Secure Channel 256-bit",
+    "title": "Authorized Access",
+    "subtitle": "Sign in to your Noori ecosystem",
+    "phone_label": "Mobile Identifier",
+    "phone_placeholder": "+93 7XX XXX XXX",
+    "password_label": "Security Credential",
+    "forgot_password": "Forgot Password?",
+    "password_placeholder": "••••••••",
+    "error_drivers": "Drivers must sign in through the mobile app.",
+    "error_failed": "Authentication failed. Please verify your credentials.",
+    "error_connection": "Unable to establish a secure connection to the command center.",
+    "authenticating": "Authenticating...",
+    "initialize": "Initialize Access",
+    "new_member": "New Fleet Member?",
+    "establish_account": "Establish Account",
+    "copyright": "© 2024 NOORI MOBILITY SYSTEMS • KABUL • GLOBAL"
+  },
   "signup": {
+    "role_selection_label": "Select your role",
     "badge": "Priority Enrollment Active",
     "title": "Join the Ecosystem",
     "subtitle": "Establish your unique identifier to access world-class mobility and logistics.",

@@ -56,7 +56,27 @@
   "accessibility": {
     "skip_to_content": "اصلی منړپانګې ته لاړ شئ"
   },
+  "login": {
+    "back_to_terminal": "ټرمینل ته بیرته ستنیدل",
+    "secure_channel": "۲۵۶ بټه خوندي چینل",
+    "title": "مجاز لاسرسی",
+    "subtitle": "خپل نوري اکوسیستم ته ننوځئ",
+    "phone_label": "د موبایل پیژندونکی",
+    "phone_placeholder": "+93 7XX XXX XXX",
+    "password_label": "امنیتي اعتبار",
+    "forgot_password": "پټ نوم مو هیر شوی؟",
+    "password_placeholder": "••••••••",
+    "error_drivers": "چلوونکي باید د موبایل اپلیکیشن له لارې ننوځي.",
+    "error_failed": "د هویت تایید ناکام شو. مهرباني وکړئ خپل اعتبارونه وګورئ.",
+    "error_connection": "د قوماندې مرکز سره د خوندي اړیکې ټینګولو توان نلری.",
+    "authenticating": "د هویت تایید روان دی...",
+    "initialize": "لاسرسی پیل کړئ",
+    "new_member": "د بیړۍ نوی غړی؟",
+    "establish_account": "حساب جوړ کړئ",
+    "copyright": "© ۲۰۲۴ نوري تحرک سیسټمونه • کابل • نړیوال"
+  },
   "signup": {
+    "role_selection_label": "خپل رول غوره کړئ",
     "badge": "لومړيتوب لرونکی ثبت فعال دی",
     "title": "اکوسیستم سره یوځای شئ",
     "subtitle": "د نوري ترانسپورت او لوژستیک ته د لاسرسي لپاره خپل حساب جوړ کړئ.",

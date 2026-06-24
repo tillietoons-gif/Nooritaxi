@@ -18,3 +18,8 @@
 **Learning:** For global accessibility features like "Skip to main content" to function correctly, every major route's primary content container MUST have a stable `id="main-content"`. Additionally, when using Radix-based UI primitives like our `Button`, always use the `asChild` prop when nesting navigation components (like Next.js `Link`) to prevent invalid semantic HTML (nested interactive elements).
 
 **Action:** Ensure all new pages include a `<main id="main-content">` landmark. Standardize `Link`/`Button` nesting using `asChild`.
+
+## 2024-06-24 - Accessible Form Grouping & Mandatory Field Patterns
+**Learning:** To semantically group multiple related interactive elements (like role selection buttons), wrap them in a container with `role="group"` and `aria-labelledby` pointing to a visually hidden (`sr-only`) label. For mandatory fields, the project follows a dual-indicator pattern: a red visual asterisk `<span className="text-destructive ml-1" aria-hidden="true">*</span>` and the semantic `aria-required="true"` attribute on the input.
+
+**Action:** Apply `role="group"` to custom selection grids. Use the dual-indicator pattern for all mandatory form inputs to ensure both visual and screen reader clarity.

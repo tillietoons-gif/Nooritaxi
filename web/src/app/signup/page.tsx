@@ -224,33 +224,41 @@ export default function SignupPage() {
               </div>
             ) : (
               <>
-            <div className="grid grid-cols-3 gap-3">
-              {signupRoles.map((option) => {
-                const Icon = option.icon
-                const isSelected = role === option.value
-                return (
-                  <button
-                    key={option.value}
-                    type="button"
-                    onClick={() => setRole(option.value)}
-                    className={cn(
-                      "flex h-16 items-center justify-center gap-2 rounded-2xl border text-xs font-black uppercase tracking-wider transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
-                      isSelected
-                        ? "border-primary bg-primary text-primary-foreground shadow-lg shadow-primary/20"
-                        : "border-primary/10 bg-background/70 text-muted-foreground hover:border-primary/30 hover:text-foreground"
-                    )}
-                    aria-pressed={isSelected}
-                  >
-                    <Icon className="h-4 w-4" />
-                    <span>{t(`signup.roles.${option.value.toLowerCase()}`, option.value)}</span>
-                  </button>
-                )
-              })}
+            <div className="space-y-3">
+              <span id="role-selection-label" className="sr-only">
+                {t("signup.role_selection_label", "Select your role")}
+              </span>
+              <div className="grid grid-cols-3 gap-3" role="group" aria-labelledby="role-selection-label">
+                {signupRoles.map((option) => {
+                  const Icon = option.icon
+                  const isSelected = role === option.value
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setRole(option.value)}
+                      className={cn(
+                        "flex h-16 items-center justify-center gap-2 rounded-2xl border text-xs font-black uppercase tracking-wider transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
+                        isSelected
+                          ? "border-primary bg-primary text-primary-foreground shadow-lg shadow-primary/20"
+                          : "border-primary/10 bg-background/70 text-muted-foreground hover:border-primary/30 hover:text-foreground"
+                      )}
+                      aria-pressed={isSelected}
+                    >
+                      <Icon className="h-4 w-4" />
+                      <span>{t(`signup.roles.${option.value.toLowerCase()}`, option.value)}</span>
+                    </button>
+                  )
+                })}
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <LabelMd htmlFor="name" className="text-xs font-black">{t("signup.name_label", "Legal Identity")}</LabelMd>
+                <LabelMd htmlFor="name" className="text-xs font-black">
+                  {t("signup.name_label", "Legal Identity")}
+                  <span className="text-destructive ml-1" aria-hidden="true">*</span>
+                </LabelMd>
                 <div className="relative group">
                   <User className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40 transition-colors group-focus-within:text-primary" />
                   <Input
@@ -261,6 +269,7 @@ export default function SignupPage() {
                     onChange={(event) => setName(event.target.value)}
                     placeholder={t("signup.name_placeholder", "Full Name")}
                     required
+                    aria-required="true"
                     aria-invalid={!!message}
                     aria-describedby={message ? "signup-message" : undefined}
                   />
@@ -268,7 +277,10 @@ export default function SignupPage() {
               </div>
 
               <div className="space-y-2">
-                <LabelMd htmlFor="phone" className="text-xs font-black">{t("signup.phone_label", "Communication Node")}</LabelMd>
+                <LabelMd htmlFor="phone" className="text-xs font-black">
+                  {t("signup.phone_label", "Communication Node")}
+                  <span className="text-destructive ml-1" aria-hidden="true">*</span>
+                </LabelMd>
                 <div className="relative group">
                   <Phone className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40 transition-colors group-focus-within:text-primary" />
                   <Input
@@ -280,6 +292,7 @@ export default function SignupPage() {
                     onChange={(event) => setPhone(event.target.value)}
                     placeholder="+93 7XX XXX XXX"
                     required
+                    aria-required="true"
                     aria-invalid={!!message}
                     aria-describedby={message ? "signup-message" : undefined}
                   />
@@ -288,7 +301,10 @@ export default function SignupPage() {
             </div>
 
             <div className="space-y-2">
-              <LabelMd htmlFor="password" className="text-xs font-black">{t("signup.password_label", "Security Protocol")}</LabelMd>
+              <LabelMd htmlFor="password" className="text-xs font-black">
+                {t("signup.password_label", "Security Protocol")}
+                <span className="text-destructive ml-1" aria-hidden="true">*</span>
+              </LabelMd>
               <div className="relative group">
                 <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40 transition-colors group-focus-within:text-primary" />
                 <Input
@@ -301,6 +317,7 @@ export default function SignupPage() {
                   placeholder={t("signup.password_placeholder", "Min. 8 characters")}
                   minLength={8}
                   required
+                  aria-required="true"
                   aria-invalid={!!message}
                   aria-describedby={message ? "signup-message" : "password-hint"}
                 />
@@ -328,7 +345,10 @@ export default function SignupPage() {
             {role === "MERCHANT" && (
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div className="space-y-2">
-                  <LabelMd htmlFor="restaurantName" className="text-xs font-black">{t("signup.store_name", "Store Name")}</LabelMd>
+                  <LabelMd htmlFor="restaurantName" className="text-xs font-black">
+                    {t("signup.store_name", "Store Name")}
+                    <span className="text-destructive ml-1" aria-hidden="true">*</span>
+                  </LabelMd>
                   <div className="relative group">
                     <Store className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40 transition-colors group-focus-within:text-primary" />
                     <Input
@@ -338,6 +358,7 @@ export default function SignupPage() {
                       onChange={(event) => setRestaurantName(event.target.value)}
                       placeholder={t("signup.store_name_placeholder", "Restaurant or shop")}
                       required={role === "MERCHANT"}
+                      aria-required={role === "MERCHANT" ? "true" : "false"}
                       aria-invalid={!!message && role === "MERCHANT"}
                       aria-describedby={message ? "signup-message" : undefined}
                     />
@@ -361,7 +382,10 @@ export default function SignupPage() {
                 </div>
 
                 <div className="space-y-2 md:col-span-2">
-                  <LabelMd htmlFor="restaurantAddress" className="text-xs font-black">{t("signup.store_address", "Store Address")}</LabelMd>
+                  <LabelMd htmlFor="restaurantAddress" className="text-xs font-black">
+                    {t("signup.store_address", "Store Address")}
+                    <span className="text-destructive ml-1" aria-hidden="true">*</span>
+                  </LabelMd>
                   <Input
                     id="restaurantAddress"
                     className="h-14 rounded-2xl glass border-none focus-visible:ring-primary/30 font-bold"
@@ -369,6 +393,7 @@ export default function SignupPage() {
                     onChange={(event) => setRestaurantAddress(event.target.value)}
                     placeholder={t("signup.store_address_placeholder", "Street, district, city")}
                     required={role === "MERCHANT"}
+                    aria-required={role === "MERCHANT" ? "true" : "false"}
                     aria-invalid={!!message && role === "MERCHANT"}
                     aria-describedby={message ? "signup-message" : undefined}
                   />

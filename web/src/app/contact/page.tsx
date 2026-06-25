@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Mail, Send, CheckCircle2, ArrowRight } from "lucide-react"
+import { Mail, Send, CheckCircle2, ArrowRight, Copy, Check } from "lucide-react"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { Button } from "@/components/ui/button"
@@ -22,6 +22,17 @@ export default function ContactPage() {
     email: "",
     message: ""
   })
+  const [copiedId, setCopiedId] = useState<string | null>(null)
+
+  const handleCopy = async (text: string, id: string) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopiedId(id)
+      setTimeout(() => setCopiedId(null), 2000)
+    } catch (err) {
+      console.error("Failed to copy text: ", err)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -72,18 +83,53 @@ export default function ContactPage() {
             >
               <GlassSurface variant="premium" className="p-8 space-y-8 relative overflow-hidden bg-card/50 backdrop-blur-md">
                 <PatternOverlay opacity={0.03} />
-                <div>
-                  <LabelMd className="mb-4 block text-primary" htmlFor="">Headquarters</LabelMd>
+                <div aria-live="polite" className="sr-only">
+                  {copiedId ? t('contact.copied', 'Copied to clipboard') : ""}
+                </div>
+
+                <div className="group/item relative">
+                  <div className="flex items-center justify-between mb-4">
+                    <LabelMd className="block text-primary">Headquarters</LabelMd>
+                    <button
+                      onClick={() => handleCopy("Kart-e-Char, District 3, Kabul, Afghanistan", "address")}
+                      className="p-2 hover:bg-primary/10 rounded-lg transition-colors text-primary/40 hover:text-primary focus-visible:ring-2 ring-primary/30 outline-none"
+                      aria-label={t('contact.copy_address', 'Copy address to clipboard')}
+                    >
+                      {copiedId === "address" ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                    </button>
+                  </div>
                   <p className="text-sm font-bold leading-relaxed text-foreground">
                     Kart-e-Char, District 3<br />
                     Kabul, Afghanistan
                   </p>
                 </div>
-                <div>
-                  <LabelMd className="mb-4 block text-primary" htmlFor="">Inquiries</LabelMd>
-                  <p className="text-sm font-bold text-foreground">support@noori.af</p>
-                  <p className="text-sm font-bold text-foreground">+93 700 000 000</p>
+
+                <div className="space-y-6">
+                  <LabelMd className="block text-primary">Inquiries</LabelMd>
+
+                  <div className="flex items-center justify-between group/item">
+                    <p className="text-sm font-bold text-foreground">support@noori.af</p>
+                    <button
+                      onClick={() => handleCopy("support@noori.af", "email-info")}
+                      className="p-2 hover:bg-primary/10 rounded-lg transition-colors text-primary/40 hover:text-primary focus-visible:ring-2 ring-primary/30 outline-none"
+                      aria-label={t('contact.copy_email', 'Copy email to clipboard')}
+                    >
+                      {copiedId === "email-info" ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                    </button>
+                  </div>
+
+                  <div className="flex items-center justify-between group/item">
+                    <p className="text-sm font-bold text-foreground">+93 700 000 000</p>
+                    <button
+                      onClick={() => handleCopy("+93 700 000 000", "phone-info")}
+                      className="p-2 hover:bg-primary/10 rounded-lg transition-colors text-primary/40 hover:text-primary focus-visible:ring-2 ring-primary/30 outline-none"
+                      aria-label={t('contact.copy_phone', 'Copy phone number to clipboard')}
+                    >
+                      {copiedId === "phone-info" ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                    </button>
+                  </div>
                 </div>
+
                 <div className="pt-4 border-t border-primary/10">
                   <p className="text-[10px] font-black uppercase tracking-widest text-primary">
                     Average Response Time: &lt; 2 Hours

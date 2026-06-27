@@ -49,7 +49,8 @@ export class PaymentsService {
     }
 
     // Upsert user CUSTOMER wallet so it exists
-    await this.prisma.wallet.upsert({
+    // Optimization: Reuse the returned wallet object to avoid a redundant findUnique call
+    const wallet = await this.prisma.wallet.upsert({
       where: { userId_type_currency: { userId, type: 'CUSTOMER', currency } },
       update: {},
       create: { userId, type: 'CUSTOMER', currency, balance: 0 },
@@ -57,10 +58,6 @@ export class PaymentsService {
 
     const idempotencyKey = `intent:${provider}:${userId}:${Date.now()}-${randomUUID().slice(0, 8)}`;
     const clientSecret = `cs_${idempotencyKey}`;
-
-    const wallet = await this.prisma.wallet.findUniqueOrThrow({
-      where: { userId_type_currency: { userId, type: 'CUSTOMER', currency } },
-    });
 
     const transaction = await this.prisma.transaction.create({
       data: {
@@ -102,16 +99,18 @@ export class PaymentsService {
     providerRef?: string,
     actorId?: string,
   ) {
+    // Optimization: Use include to fetch wallet in the same query as transaction
     const transaction = await this.prisma.transaction.findUnique({
       where: { id: intentId },
+      include: { wallet: true },
     });
     if (!transaction) throw new NotFoundException('Payment intent not found');
     if (transaction.status === 'COMPLETED')
       return { success: true, transaction };
 
-    const wallet = await this.prisma.wallet.findUniqueOrThrow({
-      where: { id: transaction.walletId },
-    });
+    const wallet = (transaction as any).wallet;
+    if (!wallet) throw new NotFoundException('Wallet not found for transaction');
+
     const resolvedProviderRef =
       providerRef ?? transaction.providerRef ?? undefined;
 
@@ -137,21 +136,23 @@ export class PaymentsService {
       },
     );
 
-    // Mark original PENDING transaction completed
-    await this.prisma.transaction.update({
-      where: { id: intentId },
-      data: { status: 'COMPLETED', providerRef: resolvedProviderRef },
-    });
-
-    await this.prisma.auditLog.create({
-      data: {
-        action: 'PAYMENT_VERIFIED',
-        entityType: 'Transaction',
-        entityId: intentId,
-        actorId,
-        after: { providerRef: resolvedProviderRef, status: 'COMPLETED' },
-      },
-    });
+    // Optimization: Parallelize transaction update and audit log creation
+    await Promise.all([
+      // Mark original PENDING transaction completed
+      this.prisma.transaction.update({
+        where: { id: intentId },
+        data: { status: 'COMPLETED', providerRef: resolvedProviderRef },
+      }),
+      this.prisma.auditLog.create({
+        data: {
+          action: 'PAYMENT_VERIFIED',
+          entityType: 'Transaction',
+          entityId: intentId,
+          actorId,
+          after: { providerRef: resolvedProviderRef, status: 'COMPLETED' },
+        },
+      }),
+    ]);
 
     return {
       success: true,
@@ -162,7 +163,8 @@ export class PaymentsService {
   async listTransactions(userId: string, page = 1, limit = 25) {
     const safePage = Math.max(page, 1);
     const safeLimit = Math.min(Math.max(limit, 1), 100);
-    const [items, total] = await this.prisma.$transaction([
+    // Optimization: Use Promise.all for independent read queries instead of $transaction
+    const [items, total] = await Promise.all([
       this.prisma.transaction.findMany({
         where: { wallet: { userId } },
         orderBy: { createdAt: 'desc' },

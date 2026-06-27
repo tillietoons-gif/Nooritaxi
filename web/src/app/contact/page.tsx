@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Mail, Send, CheckCircle2, ArrowRight } from "lucide-react"
+import { Mail, Send, CheckCircle2, ArrowRight, Copy, Check, Phone } from "lucide-react"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { Button } from "@/components/ui/button"
@@ -22,6 +22,17 @@ export default function ContactPage() {
     email: "",
     message: ""
   })
+  const [copiedField, setCopiedField] = useState<string | null>(null)
+
+  const handleCopy = async (text: string, field: string) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopiedField(field)
+      setTimeout(() => setCopiedField(null), 2000)
+    } catch (err) {
+      console.error("Failed to copy text: ", err)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -72,17 +83,54 @@ export default function ContactPage() {
             >
               <GlassSurface variant="premium" className="p-8 space-y-8 relative overflow-hidden bg-card/50 backdrop-blur-md">
                 <PatternOverlay opacity={0.03} />
+                <div className="sr-only" aria-live="polite">
+                  {copiedField ? t('contact.copied', 'Copied to clipboard') : ""}
+                </div>
                 <div>
-                  <LabelMd className="mb-4 block text-primary" htmlFor="">Headquarters</LabelMd>
+                  <LabelMd className="mb-4 block text-primary">Headquarters</LabelMd>
                   <p className="text-sm font-bold leading-relaxed text-foreground">
                     Kart-e-Char, District 3<br />
                     Kabul, Afghanistan
                   </p>
                 </div>
-                <div>
-                  <LabelMd className="mb-4 block text-primary" htmlFor="">Inquiries</LabelMd>
-                  <p className="text-sm font-bold text-foreground">support@noori.af</p>
-                  <p className="text-sm font-bold text-foreground">+93 700 000 000</p>
+                <div className="space-y-4">
+                  <LabelMd className="block text-primary">Inquiries</LabelMd>
+                  <div className="flex items-center justify-between group/item">
+                    <div className="flex items-center gap-3">
+                      <Mail className="h-4 w-4 text-primary/40" />
+                      <p className="text-sm font-bold text-foreground">support@noori.af</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleCopy("support@noori.af", "email")}
+                      className="p-2 hover:bg-primary/10 rounded-lg transition-colors focus-visible:ring-2 focus-visible:ring-primary outline-none"
+                      aria-label={t('contact.copy_email', 'Copy email address')}
+                    >
+                      {copiedField === "email" ? (
+                        <Check className="h-4 w-4 text-primary" />
+                      ) : (
+                        <Copy className="h-4 w-4 text-primary/40 group-hover/item:text-primary transition-colors" />
+                      )}
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between group/item">
+                    <div className="flex items-center gap-3">
+                      <Phone className="h-4 w-4 text-primary/40" />
+                      <p className="text-sm font-bold text-foreground">+93 700 000 000</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleCopy("+93 700 000 000", "phone")}
+                      className="p-2 hover:bg-primary/10 rounded-lg transition-colors focus-visible:ring-2 focus-visible:ring-primary outline-none"
+                      aria-label={t('contact.copy_phone', 'Copy phone number')}
+                    >
+                      {copiedField === "phone" ? (
+                        <Check className="h-4 w-4 text-primary" />
+                      ) : (
+                        <Copy className="h-4 w-4 text-primary/40 group-hover/item:text-primary transition-colors" />
+                      )}
+                    </button>
+                  </div>
                 </div>
                 <div className="pt-4 border-t border-primary/10">
                   <p className="text-[10px] font-black uppercase tracking-widest text-primary">

@@ -243,7 +243,7 @@ export default function AdminPage() {
   return (
     <AuthGate roles={["ADMIN", "SUPPORT"]}>
       <div className="flex flex-1 flex-col">
-        <main className="flex-1 px-4 py-8 md:px-8">
+        <main id="main-content" className="flex-1 px-4 py-8 md:px-8">
           <div className="mx-auto max-w-7xl space-y-10">
             {/* Header */}
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">

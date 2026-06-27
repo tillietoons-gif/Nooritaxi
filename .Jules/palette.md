@@ -18,3 +18,8 @@
 **Learning:** For global accessibility features like "Skip to main content" to function correctly, every major route's primary content container MUST have a stable `id="main-content"`. Additionally, when using Radix-based UI primitives like our `Button`, always use the `asChild` prop when nesting navigation components (like Next.js `Link`) to prevent invalid semantic HTML (nested interactive elements).
 
 **Action:** Ensure all new pages include a `<main id="main-content">` landmark. Standardize `Link`/`Button` nesting using `asChild`.
+
+## 2026-06-27 - Clipboard Feedback & Live Regions
+**Learning:** When implementing "Copy to Clipboard" interactions, visual feedback (icon swaps) must be paired with an `aria-live="polite"` region to ensure the success state is perceptible to screen reader users. Additionally, our typography components (`LabelMd`, `LabelSm`) must never receive an empty `htmlFor=""` prop, as they dynamically switch to a `<span>` when it's missing, and an empty string can cause invalid HTML or unexpected behavior.
+
+**Action:** Always include a hidden `aria-live` announcement for clipboard actions. Omit `htmlFor` entirely on `Label` components when they are used as descriptive text rather than form labels.

@@ -25,17 +25,17 @@ describe("ContactPage", () => {
   it("renders correctly", () => {
     render(<ContactPage />)
     expect(screen.getByText("Contact Us")).toBeInTheDocument()
-    expect(screen.getByLabelText(/Name/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/Email/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/Message/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/^Name/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/^Email/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/^Message/i)).toBeInTheDocument()
   })
 
   it("shows success state after submission", async () => {
     render(<ContactPage />)
 
-    fireEvent.change(screen.getByLabelText(/Name/i), { target: { value: "John Doe" } })
-    fireEvent.change(screen.getByLabelText(/Email/i), { target: { value: "john@example.com" } })
-    fireEvent.change(screen.getByLabelText(/Message/i), { target: { value: "Hello" } })
+    fireEvent.change(screen.getByLabelText(/^Name/i), { target: { value: "John Doe" } })
+    fireEvent.change(screen.getByLabelText(/^Email/i), { target: { value: "john@example.com" } })
+    fireEvent.change(screen.getByLabelText(/^Message/i), { target: { value: "Hello" } })
 
     fireEvent.click(screen.getByRole("button", { name: /Send Message/i }))
 
@@ -44,5 +44,43 @@ describe("ContactPage", () => {
     await waitFor(() => {
       expect(screen.getAllByText(/Message Sent/i)[0]).toBeInTheDocument()
     }, { timeout: 2000 })
+  })
+
+  it("copies email to clipboard and shows success state", async () => {
+    const writeTextMock = vi.fn().mockImplementation(() => Promise.resolve())
+    Object.assign(navigator, {
+      clipboard: {
+        writeText: writeTextMock,
+      },
+    })
+
+    render(<ContactPage />)
+
+    const copyEmailBtn = screen.getByLabelText(/Copy email address/i)
+    fireEvent.click(copyEmailBtn)
+
+    expect(writeTextMock).toHaveBeenCalledWith("support@noori.af")
+    await waitFor(() => {
+      expect(screen.getByText(/Copied to clipboard/i)).toBeInTheDocument()
+    })
+  })
+
+  it("copies phone to clipboard and shows success state", async () => {
+    const writeTextMock = vi.fn().mockImplementation(() => Promise.resolve())
+    Object.assign(navigator, {
+      clipboard: {
+        writeText: writeTextMock,
+      },
+    })
+
+    render(<ContactPage />)
+
+    const copyPhoneBtn = screen.getByLabelText(/Copy phone number/i)
+    fireEvent.click(copyPhoneBtn)
+
+    expect(writeTextMock).toHaveBeenCalledWith("+93 700 000 000")
+    await waitFor(() => {
+      expect(screen.getByText(/Copied to clipboard/i)).toBeInTheDocument()
+    })
   })
 })

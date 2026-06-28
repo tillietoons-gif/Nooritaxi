@@ -224,28 +224,33 @@ export default function SignupPage() {
               </div>
             ) : (
               <>
-            <div className="grid grid-cols-3 gap-3">
-              {signupRoles.map((option) => {
-                const Icon = option.icon
-                const isSelected = role === option.value
-                return (
-                  <button
-                    key={option.value}
-                    type="button"
-                    onClick={() => setRole(option.value)}
-                    className={cn(
-                      "flex h-16 items-center justify-center gap-2 rounded-2xl border text-xs font-black uppercase tracking-wider transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
-                      isSelected
-                        ? "border-primary bg-primary text-primary-foreground shadow-lg shadow-primary/20"
-                        : "border-primary/10 bg-background/70 text-muted-foreground hover:border-primary/30 hover:text-foreground"
-                    )}
-                    aria-pressed={isSelected}
-                  >
-                    <Icon className="h-4 w-4" />
-                    <span>{t(`signup.roles.${option.value.toLowerCase()}`, option.value)}</span>
-                  </button>
-                )
-              })}
+            <div className="space-y-3">
+              <span id="role-selection-label" className="sr-only">
+                {t("signup.role_selection_label", "Select your role in the ecosystem")}
+              </span>
+              <div className="grid grid-cols-3 gap-3" role="group" aria-labelledby="role-selection-label">
+                {signupRoles.map((option) => {
+                  const Icon = option.icon
+                  const isSelected = role === option.value
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setRole(option.value)}
+                      className={cn(
+                        "flex h-16 items-center justify-center gap-2 rounded-2xl border text-xs font-black uppercase tracking-wider transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
+                        isSelected
+                          ? "border-primary bg-primary text-primary-foreground shadow-lg shadow-primary/20"
+                          : "border-primary/10 bg-background/70 text-muted-foreground hover:border-primary/30 hover:text-foreground"
+                      )}
+                      aria-pressed={isSelected}
+                    >
+                      <Icon className="h-4 w-4" />
+                      <span>{t(`signup.roles.${option.value.toLowerCase()}`, option.value)}</span>
+                    </button>
+                  )
+                })}
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

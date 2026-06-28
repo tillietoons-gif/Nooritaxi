@@ -61,6 +61,7 @@
     "badge": "Priority Enrollment Active",
     "title": "Join the Ecosystem",
     "subtitle": "Establish your unique identifier to access world-class mobility and logistics.",
+    "role_selection_label": "Select your role in the ecosystem",
     "roles": {
       "rider": "Rider",
       "driver": "Driver",

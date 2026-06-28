@@ -73,14 +73,14 @@ export default function ContactPage() {
               <GlassSurface variant="premium" className="p-8 space-y-8 relative overflow-hidden bg-card/50 backdrop-blur-md">
                 <PatternOverlay opacity={0.03} />
                 <div>
-                  <LabelMd className="mb-4 block text-primary" htmlFor="">Headquarters</LabelMd>
+                  <LabelMd className="mb-4 block text-primary">Headquarters</LabelMd>
                   <p className="text-sm font-bold leading-relaxed text-foreground">
                     Kart-e-Char, District 3<br />
                     Kabul, Afghanistan
                   </p>
                 </div>
                 <div>
-                  <LabelMd className="mb-4 block text-primary" htmlFor="">Inquiries</LabelMd>
+                  <LabelMd className="mb-4 block text-primary">Inquiries</LabelMd>
                   <p className="text-sm font-bold text-foreground">support@noori.af</p>
                   <p className="text-sm font-bold text-foreground">+93 700 000 000</p>
                 </div>

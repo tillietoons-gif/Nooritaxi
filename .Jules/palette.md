@@ -18,3 +18,8 @@
 **Learning:** For global accessibility features like "Skip to main content" to function correctly, every major route's primary content container MUST have a stable `id="main-content"`. Additionally, when using Radix-based UI primitives like our `Button`, always use the `asChild` prop when nesting navigation components (like Next.js `Link`) to prevent invalid semantic HTML (nested interactive elements).
 
 **Action:** Ensure all new pages include a `<main id="main-content">` landmark. Standardize `Link`/`Button` nesting using `asChild`.
+
+## 2024-05-24 - Role Selection Accessibility & Form Transitions
+**Learning:** For multi-option role selectors, wrapping buttons in a `role="group"` with an `aria-labelledby` reference provides essential context for screen reader users. Additionally, using `framer-motion`'s `AnimatePresence` for conditional form fields prevents "layout jumping" and reduces cognitive load by providing visual continuity.
+
+**Action:** Group related interactive selection components semantically. Use smooth height/opacity transitions for conditional form sections.

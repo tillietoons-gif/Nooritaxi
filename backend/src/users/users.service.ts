@@ -90,9 +90,7 @@ export class UsersService {
       });
       const verifiedTypes = new Set(verifiedDocs.map((doc) => doc.type));
 
-      if (
-        REQUIRED_DRIVER_DOCUMENTS.every((type) => verifiedTypes.has(type))
-      ) {
+      if (REQUIRED_DRIVER_DOCUMENTS.every((type) => verifiedTypes.has(type))) {
         await this.prisma.driver.update({
           where: { userId: document.driverId },
           data: { status: 'ONLINE' }, // Automatically activate driver if all docs are verified

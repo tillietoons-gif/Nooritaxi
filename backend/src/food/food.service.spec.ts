@@ -11,7 +11,11 @@ describe('FoodService', () => {
     $transaction: jest.Mock;
     auditLog: { create: jest.Mock };
     menuItem: { create: jest.Mock; findFirst: jest.Mock; update: jest.Mock };
-    restaurant: { create: jest.Mock; findFirst: jest.Mock; findUnique: jest.Mock };
+    restaurant: {
+      create: jest.Mock;
+      findFirst: jest.Mock;
+      findUnique: jest.Mock;
+    };
   };
 
   beforeEach(async () => {
@@ -67,7 +71,9 @@ describe('FoodService', () => {
   });
 
   it('prevents duplicate restaurant profiles for a merchant owner', async () => {
-    prisma.restaurant.findFirst.mockResolvedValue({ id: 'existing-restaurant' });
+    prisma.restaurant.findFirst.mockResolvedValue({
+      id: 'existing-restaurant',
+    });
 
     await expect(
       service.createRestaurant({

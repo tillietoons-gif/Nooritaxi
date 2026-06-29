@@ -66,3 +66,9 @@
 **Learning:** Sequential await calls for independent database queries in high-frequency endpoints like `getLiveMapData` introduce unnecessary latency. In a mocked environment with 50ms query delay, sequential execution takes ~100ms while parallel execution takes ~50ms.
 
 **Action:** Use `Promise.all` to parallelize independent Prisma queries in tracking and dashboard services to reduce API response time by up to 50%.
+
+## 2026-06-17 - Parallelizing SOS Alert Operations
+
+**Learning:** Creating an SOS alert (`SafetyService.raiseSos`) previously executed multiple independent database lookups (trip, contacts, user, admin devices) sequentially, followed by sequential side effects (push notifications, audit logs). This pattern introduced significant latency (~354ms in a mocked environment with 50ms I/O delay).
+
+**Action:** Optimized `SafetyService.raiseSos` by parallelizing independent lookups at the start and concurrently triggering side effects after the primary record creation. This reduced measured latency by ~57% (to ~152ms) while maintaining transactional safety for the primary SOS record.

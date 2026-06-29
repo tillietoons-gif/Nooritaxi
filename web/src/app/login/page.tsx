@@ -75,10 +75,10 @@ function LoginPageContent() {
       >
         <div className="mb-8 flex justify-between items-center px-2">
            <Link href="/" className="group flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors font-bold text-sm">
-             <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" /> Back to Terminal
+             <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" aria-hidden="true" /> Back to Terminal
            </Link>
            <div className="flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-primary" />
+              <ShieldCheck className="h-4 w-4 text-primary" aria-hidden="true" />
               <span className="text-[10px] font-black uppercase tracking-widest text-primary">Secure Channel 256-bit</span>
            </div>
         </div>
@@ -86,7 +86,7 @@ function LoginPageContent() {
         <GlassSurface variant="premium" className="p-8 md:p-12 bento-shadow border-none">
           <div className="flex flex-col items-center mb-10 text-center">
             <div className="h-20 w-20 bg-primary/5 rounded-3xl flex items-center justify-center mb-6 border border-primary/10">
-              <NooriLogo size={40} className="text-primary" />
+              <NooriLogo size={40} className="text-primary" aria-hidden="true" />
             </div>
             <HeadingMd className="mb-2 font-black">Authorized Access</HeadingMd>
             <BodyMd className="text-muted-foreground">Sign in to your Noori ecosystem</BodyMd>
@@ -96,7 +96,7 @@ function LoginPageContent() {
             <div className="space-y-2">
               <LabelMd htmlFor="phone" className="text-xs font-black">Mobile Identifier</LabelMd>
               <div className="relative group">
-                <Phone className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40 transition-colors group-focus-within:text-primary" />
+                <Phone className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40 transition-colors group-focus-within:text-primary" aria-hidden="true" />
                 <Input
                   id="phone"
                   type="tel"
@@ -118,7 +118,7 @@ function LoginPageContent() {
                 <Link href="#" className="text-[10px] font-black uppercase text-primary/60 hover:text-primary transition-colors">Forgot Password?</Link>
               </div>
               <div className="relative group">
-                <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40 transition-colors group-focus-within:text-primary" />
+                <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40 transition-colors group-focus-within:text-primary" aria-hidden="true" />
                 <Input
                   id="password"
                   autoComplete="current-password"

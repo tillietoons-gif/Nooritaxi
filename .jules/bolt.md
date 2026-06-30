@@ -66,3 +66,9 @@
 **Learning:** Sequential await calls for independent database queries in high-frequency endpoints like `getLiveMapData` introduce unnecessary latency. In a mocked environment with 50ms query delay, sequential execution takes ~100ms while parallel execution takes ~50ms.
 
 **Action:** Use `Promise.all` to parallelize independent Prisma queries in tracking and dashboard services to reduce API response time by up to 50%.
+
+## 2026-06-17 - Merging Related Queries with Prisma Include
+
+**Learning:** Fetching a parent record and its related children sequentially (e.g., `loyaltyAccount` and its `recentTransactions`) creates unnecessary database round-trips. In a profiled scenario with 50ms per query, sequential execution takes ~100ms.
+
+**Action:** Use Prisma's `include` feature within the initial query (like `upsert` or `findUnique`) to fetch related entities in a single round-trip. This was applied to `LoyaltyService.getUserLoyalty`, reducing profiled latency from 101ms to 50ms (~50% reduction).

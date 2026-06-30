@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
-import { LoyaltyTransactionType, Prisma } from '@prisma/client';
+import { LoyaltyTransactionType } from '@prisma/client';
 
 @Injectable()
 export class LoyaltyService {
@@ -94,18 +94,22 @@ export class LoyaltyService {
   }
 
   async getUserLoyalty(userId: string) {
-    const account = await this.prisma.loyaltyAccount.upsert({
+    // Optimization: Fetch the account and recent transactions in a single database round-trip
+    // by using Prisma's 'include' feature within the upsert operation.
+    const accountWithTransactions = await this.prisma.loyaltyAccount.upsert({
       where: { userId },
       update: {},
       create: { userId, points: 0, lifetime: 0 },
-    });
-    const recentTransactions = await this.prisma.loyaltyTransaction.findMany({
-      where: { loyaltyAccountId: account.id },
-      orderBy: { createdAt: 'desc' },
-      take: 20,
+      include: {
+        transactions: {
+          orderBy: { createdAt: 'desc' },
+          take: 20,
+        },
+      },
     });
 
-    return { account, recentTransactions };
+    const { transactions, ...account } = accountWithTransactions;
+    return { account, recentTransactions: transactions };
   }
 
   async getAdminSummary() {

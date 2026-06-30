@@ -66,6 +66,7 @@
       "driver": "Driver",
       "merchant": "Merchant"
     },
+    "role_selection_label": "Select your role",
     "name_label": "Legal Identity",
     "name_placeholder": "Full Name",
     "phone_label": "Communication Node",

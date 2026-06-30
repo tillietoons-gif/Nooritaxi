@@ -66,6 +66,7 @@
       "driver": "راننده",
       "merchant": "فروشنده"
     },
+    "role_selection_label": "نقش خود را انتخاب کنید",
     "name_label": "هویت قانونی",
     "name_placeholder": "نام کامل",
     "phone_label": "شماره تماس",

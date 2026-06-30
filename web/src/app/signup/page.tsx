@@ -224,7 +224,10 @@ export default function SignupPage() {
               </div>
             ) : (
               <>
-            <div className="grid grid-cols-3 gap-3">
+            <div role="group" aria-labelledby="role-selection-label" className="grid grid-cols-3 gap-3">
+              <span id="role-selection-label" className="sr-only">
+                {t("signup.role_selection_label", "Select your role")}
+              </span>
               {signupRoles.map((option) => {
                 const Icon = option.icon
                 const isSelected = role === option.value
@@ -241,7 +244,7 @@ export default function SignupPage() {
                     )}
                     aria-pressed={isSelected}
                   >
-                    <Icon className="h-4 w-4" />
+                    <Icon className="h-4 w-4" aria-hidden="true" />
                     <span>{t(`signup.roles.${option.value.toLowerCase()}`, option.value)}</span>
                   </button>
                 )
@@ -250,7 +253,10 @@ export default function SignupPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <LabelMd htmlFor="name" className="text-xs font-black">{t("signup.name_label", "Legal Identity")}</LabelMd>
+                <LabelMd htmlFor="name" className="text-xs font-black">
+                  {t("signup.name_label", "Legal Identity")}
+                  <span className="text-destructive ml-1" aria-hidden="true">*</span>
+                </LabelMd>
                 <div className="relative group">
                   <User className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40 transition-colors group-focus-within:text-primary" />
                   <Input
@@ -261,6 +267,7 @@ export default function SignupPage() {
                     onChange={(event) => setName(event.target.value)}
                     placeholder={t("signup.name_placeholder", "Full Name")}
                     required
+                    aria-required="true"
                     aria-invalid={!!message}
                     aria-describedby={message ? "signup-message" : undefined}
                   />
@@ -268,7 +275,10 @@ export default function SignupPage() {
               </div>
 
               <div className="space-y-2">
-                <LabelMd htmlFor="phone" className="text-xs font-black">{t("signup.phone_label", "Communication Node")}</LabelMd>
+                <LabelMd htmlFor="phone" className="text-xs font-black">
+                  {t("signup.phone_label", "Communication Node")}
+                  <span className="text-destructive ml-1" aria-hidden="true">*</span>
+                </LabelMd>
                 <div className="relative group">
                   <Phone className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40 transition-colors group-focus-within:text-primary" />
                   <Input
@@ -280,6 +290,7 @@ export default function SignupPage() {
                     onChange={(event) => setPhone(event.target.value)}
                     placeholder="+93 7XX XXX XXX"
                     required
+                    aria-required="true"
                     aria-invalid={!!message}
                     aria-describedby={message ? "signup-message" : undefined}
                   />
@@ -288,7 +299,10 @@ export default function SignupPage() {
             </div>
 
             <div className="space-y-2">
-              <LabelMd htmlFor="password" className="text-xs font-black">{t("signup.password_label", "Security Protocol")}</LabelMd>
+              <LabelMd htmlFor="password" className="text-xs font-black">
+                {t("signup.password_label", "Security Protocol")}
+                <span className="text-destructive ml-1" aria-hidden="true">*</span>
+              </LabelMd>
               <div className="relative group">
                 <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40 transition-colors group-focus-within:text-primary" />
                 <Input
@@ -301,8 +315,12 @@ export default function SignupPage() {
                   placeholder={t("signup.password_placeholder", "Min. 8 characters")}
                   minLength={8}
                   required
+                  aria-required="true"
                   aria-invalid={!!message}
-                  aria-describedby={message ? "signup-message" : "password-hint"}
+                  aria-describedby={cn(
+                    "password-hint",
+                    message ? "signup-message" : undefined
+                  )}
                 />
                 <button
                   type="button"
@@ -325,101 +343,119 @@ export default function SignupPage() {
               </LabelSm>
             </div>
 
-            {role === "MERCHANT" && (
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                <div className="space-y-2">
-                  <LabelMd htmlFor="restaurantName" className="text-xs font-black">{t("signup.store_name", "Store Name")}</LabelMd>
-                  <div className="relative group">
-                    <Store className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40 transition-colors group-focus-within:text-primary" />
-                    <Input
-                      id="restaurantName"
-                      className="h-14 pl-12 rounded-2xl glass border-none focus-visible:ring-primary/30 font-bold"
-                      value={restaurantName}
-                      onChange={(event) => setRestaurantName(event.target.value)}
-                      placeholder={t("signup.store_name_placeholder", "Restaurant or shop")}
-                      required={role === "MERCHANT"}
-                      aria-invalid={!!message && role === "MERCHANT"}
-                      aria-describedby={message ? "signup-message" : undefined}
-                    />
+            <AnimatePresence>
+              {role === "MERCHANT" && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.3, ease: "easeInOut" }}
+                  className="overflow-hidden"
+                >
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2 pt-2 pb-6">
+                    <div className="space-y-2">
+                      <LabelMd htmlFor="restaurantName" className="text-xs font-black">
+                        {t("signup.store_name", "Store Name")}
+                        <span className="text-destructive ml-1" aria-hidden="true">*</span>
+                      </LabelMd>
+                      <div className="relative group">
+                        <Store className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40 transition-colors group-focus-within:text-primary" />
+                        <Input
+                          id="restaurantName"
+                          className="h-14 pl-12 rounded-2xl glass border-none focus-visible:ring-primary/30 font-bold"
+                          value={restaurantName}
+                          onChange={(event) => setRestaurantName(event.target.value)}
+                          placeholder={t("signup.store_name_placeholder", "Restaurant or shop")}
+                          required={role === "MERCHANT"}
+                          aria-required={role === "MERCHANT"}
+                          aria-invalid={!!message && role === "MERCHANT"}
+                          aria-describedby={message ? "signup-message" : undefined}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <LabelMd htmlFor="restaurantPhone" className="text-xs font-black">{t("signup.store_phone", "Store Phone")}</LabelMd>
+                      <div className="relative group">
+                        <Phone className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40 transition-colors group-focus-within:text-primary" />
+                        <Input
+                          id="restaurantPhone"
+                          type="tel"
+                          autoComplete="tel"
+                          className="h-14 pl-12 rounded-2xl glass border-none focus-visible:ring-primary/30 font-bold"
+                          value={restaurantPhone}
+                          onChange={(event) => setRestaurantPhone(event.target.value)}
+                          placeholder={t("signup.store_phone_placeholder", "Defaults to account phone")}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 md:col-span-2">
+                      <LabelMd htmlFor="restaurantAddress" className="text-xs font-black">
+                        {t("signup.store_address", "Store Address")}
+                        <span className="text-destructive ml-1" aria-hidden="true">*</span>
+                      </LabelMd>
+                      <Input
+                        id="restaurantAddress"
+                        className="h-14 rounded-2xl glass border-none focus-visible:ring-primary/30 font-bold"
+                        value={restaurantAddress}
+                        onChange={(event) => setRestaurantAddress(event.target.value)}
+                        placeholder={t("signup.store_address_placeholder", "Street, district, city")}
+                        required={role === "MERCHANT"}
+                        aria-required={role === "MERCHANT"}
+                        aria-invalid={!!message && role === "MERCHANT"}
+                        aria-describedby={message ? "signup-message" : undefined}
+                      />
+                    </div>
+
+                    <div className="space-y-2 md:col-span-2">
+                      <LabelMd htmlFor="cuisineTypes" className="text-xs font-black">{t("signup.categories", "Categories")}</LabelMd>
+                      <Input
+                        id="cuisineTypes"
+                        className="h-14 rounded-2xl glass border-none focus-visible:ring-primary/30 font-bold"
+                        value={cuisineTypes}
+                        onChange={(event) => setCuisineTypes(event.target.value)}
+                        placeholder={t("signup.categories_placeholder", "Afghan, grill, bakery")}
+                      />
+                    </div>
+
+                    <div className="space-y-2 md:col-span-2">
+                      <LabelMd htmlFor="businessLicenseUrl" className="text-xs font-black">{t("signup.business_license", "Business License URL")}</LabelMd>
+                      <Input
+                        id="businessLicenseUrl"
+                        className="h-14 rounded-2xl glass border-none focus-visible:ring-primary/30 font-bold"
+                        value={businessLicenseUrl}
+                        onChange={(event) => setBusinessLicenseUrl(event.target.value)}
+                        placeholder="https://..."
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <LabelMd htmlFor="ownerIdUrl" className="text-xs font-black">{t("signup.owner_id", "Owner ID URL")}</LabelMd>
+                      <Input
+                        id="ownerIdUrl"
+                        className="h-14 rounded-2xl glass border-none focus-visible:ring-primary/30 font-bold"
+                        value={ownerIdUrl}
+                        onChange={(event) => setOwnerIdUrl(event.target.value)}
+                        placeholder="https://..."
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <LabelMd htmlFor="payoutContact" className="text-xs font-black">{t("signup.payout_contact", "Payout Contact")}</LabelMd>
+                      <Input
+                        id="payoutContact"
+                        type="tel"
+                        className="h-14 rounded-2xl glass border-none focus-visible:ring-primary/30 font-bold"
+                        value={payoutContact}
+                        onChange={(event) => setPayoutContact(event.target.value)}
+                        placeholder="+93 7XX XXX XXX"
+                      />
+                    </div>
                   </div>
-                </div>
-
-                <div className="space-y-2">
-                  <LabelMd htmlFor="restaurantPhone" className="text-xs font-black">{t("signup.store_phone", "Store Phone")}</LabelMd>
-                  <div className="relative group">
-                    <Phone className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40 transition-colors group-focus-within:text-primary" />
-                    <Input
-                      id="restaurantPhone"
-                      type="tel"
-                      autoComplete="tel"
-                      className="h-14 pl-12 rounded-2xl glass border-none focus-visible:ring-primary/30 font-bold"
-                      value={restaurantPhone}
-                      onChange={(event) => setRestaurantPhone(event.target.value)}
-                      placeholder={t("signup.store_phone_placeholder", "Defaults to account phone")}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2 md:col-span-2">
-                  <LabelMd htmlFor="restaurantAddress" className="text-xs font-black">{t("signup.store_address", "Store Address")}</LabelMd>
-                  <Input
-                    id="restaurantAddress"
-                    className="h-14 rounded-2xl glass border-none focus-visible:ring-primary/30 font-bold"
-                    value={restaurantAddress}
-                    onChange={(event) => setRestaurantAddress(event.target.value)}
-                    placeholder={t("signup.store_address_placeholder", "Street, district, city")}
-                    required={role === "MERCHANT"}
-                    aria-invalid={!!message && role === "MERCHANT"}
-                    aria-describedby={message ? "signup-message" : undefined}
-                  />
-                </div>
-
-                <div className="space-y-2 md:col-span-2">
-                  <LabelMd htmlFor="cuisineTypes" className="text-xs font-black">{t("signup.categories", "Categories")}</LabelMd>
-                  <Input
-                    id="cuisineTypes"
-                    className="h-14 rounded-2xl glass border-none focus-visible:ring-primary/30 font-bold"
-                    value={cuisineTypes}
-                    onChange={(event) => setCuisineTypes(event.target.value)}
-                    placeholder={t("signup.categories_placeholder", "Afghan, grill, bakery")}
-                  />
-                </div>
-
-                <div className="space-y-2 md:col-span-2">
-                  <LabelMd htmlFor="businessLicenseUrl" className="text-xs font-black">{t("signup.business_license", "Business License URL")}</LabelMd>
-                  <Input
-                    id="businessLicenseUrl"
-                    className="h-14 rounded-2xl glass border-none focus-visible:ring-primary/30 font-bold"
-                    value={businessLicenseUrl}
-                    onChange={(event) => setBusinessLicenseUrl(event.target.value)}
-                    placeholder="https://..."
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <LabelMd htmlFor="ownerIdUrl" className="text-xs font-black">{t("signup.owner_id", "Owner ID URL")}</LabelMd>
-                  <Input
-                    id="ownerIdUrl"
-                    className="h-14 rounded-2xl glass border-none focus-visible:ring-primary/30 font-bold"
-                    value={ownerIdUrl}
-                    onChange={(event) => setOwnerIdUrl(event.target.value)}
-                    placeholder="https://..."
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <LabelMd htmlFor="payoutContact" className="text-xs font-black">{t("signup.payout_contact", "Payout Contact")}</LabelMd>
-                  <Input
-                    id="payoutContact"
-                    type="tel"
-                    className="h-14 rounded-2xl glass border-none focus-visible:ring-primary/30 font-bold"
-                    value={payoutContact}
-                    onChange={(event) => setPayoutContact(event.target.value)}
-                    placeholder="+93 7XX XXX XXX"
-                  />
-                </div>
-              </div>
-            )}
+                </motion.div>
+              )}
+            </AnimatePresence>
               </>
             )}
 

@@ -65,6 +65,7 @@
       "driver": "چلوونکی",
       "merchant": "سوداګر"
     },
+    "role_selection_label": "خپل رول غوره کړئ",
     "name_label": "قانوني نوم",
     "name_placeholder": "بشپړ نوم",
     "phone_label": "د اړیکې شمېره",

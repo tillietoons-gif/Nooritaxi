@@ -23,33 +23,34 @@ export class LoyaltyService {
       return;
     }
 
-    await this.prisma.$transaction(async (tx) => {
-      const loyaltyAccount = await tx.loyaltyAccount.upsert({
-        where: { userId },
-        update: {
-          points: {
-            increment: pointsToAdd,
+    // Performance Optimization: Merged upsert and transaction creation to reduce database round trips
+    await this.prisma.loyaltyAccount.upsert({
+      where: { userId },
+      update: {
+        points: { increment: pointsToAdd },
+        lifetime: { increment: pointsToAdd },
+        transactions: {
+          create: {
+            tripId,
+            type: LoyaltyTransactionType.CREDIT,
+            amount: pointsToAdd,
+            description: `Points earned from trip #${tripId.substring(0, 8)}`,
           },
-          lifetime: {
-            increment: pointsToAdd,
+        },
+      },
+      create: {
+        userId,
+        points: pointsToAdd,
+        lifetime: pointsToAdd,
+        transactions: {
+          create: {
+            tripId,
+            type: LoyaltyTransactionType.CREDIT,
+            amount: pointsToAdd,
+            description: `Points earned from trip #${tripId.substring(0, 8)}`,
           },
         },
-        create: {
-          userId,
-          points: pointsToAdd,
-          lifetime: pointsToAdd,
-        },
-      });
-
-      await tx.loyaltyTransaction.create({
-        data: {
-          loyaltyAccountId: loyaltyAccount.id,
-          tripId: tripId,
-          type: LoyaltyTransactionType.CREDIT,
-          amount: pointsToAdd,
-          description: `Points earned from trip #${tripId.substring(0, 8)}`,
-        },
-      });
+      },
     });
   }
 
@@ -94,18 +95,21 @@ export class LoyaltyService {
   }
 
   async getUserLoyalty(userId: string) {
+    // Performance Optimization: Merged account retrieval/creation and transaction fetching to reduce database round trips
     const account = await this.prisma.loyaltyAccount.upsert({
       where: { userId },
       update: {},
       create: { userId, points: 0, lifetime: 0 },
-    });
-    const recentTransactions = await this.prisma.loyaltyTransaction.findMany({
-      where: { loyaltyAccountId: account.id },
-      orderBy: { createdAt: 'desc' },
-      take: 20,
+      include: {
+        transactions: {
+          orderBy: { createdAt: 'desc' },
+          take: 20,
+        },
+      },
     });
 
-    return { account, recentTransactions };
+    const { transactions: recentTransactions, ...accountData } = account;
+    return { account: accountData, recentTransactions };
   }
 
   async getAdminSummary() {

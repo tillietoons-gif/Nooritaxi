@@ -26,7 +26,11 @@ export function AdminPageHeader({
       <div>
         <h1 className="text-3xl font-black">{title}</h1>
         {subtitle && (
-          <div className="text-sm font-medium text-muted-foreground mt-1">
+          <div
+            className="text-sm font-medium text-muted-foreground mt-1"
+            aria-live="polite"
+            aria-atomic="true"
+          >
             {subtitle}
           </div>
         )}

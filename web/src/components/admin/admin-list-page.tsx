@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { Input } from "@/components/ui/input"
@@ -11,6 +11,7 @@ import { authedFetch } from "@/lib/auth"
 import { AdminPageHeader } from "@/components/admin/admin-page-header"
 import { useTranslation } from "react-i18next"
 import { FilterX, LoaderCircle, Search } from "lucide-react"
+import { LabelMd } from "@/components/ui/typography"
 
 const PAGE_SIZE = 25
 
@@ -46,6 +47,7 @@ export function AdminListPage<T>({
 }: AdminListPageProps<T>) {
   const { t } = useTranslation()
   const router = useRouter()
+  const searchInputRef = useRef<HTMLInputElement>(null)
   const [items, setItems] = useState<T[]>([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -89,6 +91,18 @@ export function AdminListPage<T>({
   }, [load])
 
   useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "/" && document.activeElement?.tagName !== "INPUT" && document.activeElement?.tagName !== "TEXTAREA") {
+        e.preventDefault()
+        searchInputRef.current?.focus()
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [])
+
+  useEffect(() => {
     const handlePageShow = (event: PageTransitionEvent) => {
       if (event.persisted) void load()
     }
@@ -112,13 +126,17 @@ export function AdminListPage<T>({
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
           <GlassSurface variant="premium" className="flex flex-col gap-3 p-4 md:flex-row md:items-end">
             <div className="flex-1 relative">
-              <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1 block">{t("admin.search_query", "Search Query")}</label>
-              <div className="relative">
-                <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <LabelMd htmlFor="admin-search-input" className="mb-1 block">
+                {t("admin.search_query", "Search Query")}
+              </LabelMd>
+              <div className="relative group">
+                <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
                 <Input
+                  id="admin-search-input"
+                  ref={searchInputRef}
                   placeholder={defaultSearchPlaceholder}
                   value={q}
-                  className="bg-background/80 backdrop-blur-sm border-primary/20 focus-visible:ring-primary ps-9"
+                  className="bg-background/80 backdrop-blur-sm border-primary/20 focus-visible:ring-primary ps-9 pe-10"
                   onChange={(e) => setQ(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
@@ -127,12 +145,20 @@ export function AdminListPage<T>({
                     }
                   }}
                 />
+                <div className="absolute end-3 top-1/2 -translate-y-1/2 pointer-events-none hidden md:block">
+                  <kbd className="h-5 min-w-[20px] items-center justify-center rounded border border-primary/20 bg-primary/5 px-1.5 font-mono text-[10px] font-black text-primary/40">
+                    /
+                  </kbd>
+                </div>
               </div>
             </div>
             {statusOptions ? (
               <div className="w-full md:w-48">
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1 block">{t("admin.status_filter", "Status Filter")}</label>
+                <LabelMd htmlFor="admin-status-filter" className="mb-1 block">
+                  {t("admin.status_filter", "Status Filter")}
+                </LabelMd>
                 <select
+                  id="admin-status-filter"
                   value={status}
                   onChange={(e) => {
                     setPage(1)

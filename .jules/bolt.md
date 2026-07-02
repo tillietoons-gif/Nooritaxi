@@ -66,3 +66,9 @@
 **Learning:** Sequential await calls for independent database queries in high-frequency endpoints like `getLiveMapData` introduce unnecessary latency. In a mocked environment with 50ms query delay, sequential execution takes ~100ms while parallel execution takes ~50ms.
 
 **Action:** Use `Promise.all` to parallelize independent Prisma queries in tracking and dashboard services to reduce API response time by up to 50%.
+
+## 2026-06-17 - Single-Query Retrieval via Prisma 'include'
+
+**Learning:** Sequential database operations, such as an `upsert` followed by a `findMany` to fetch related records, introduce multiple round-trips to the database. Even for independent lookups, merging these into a single query using Prisma's `include` feature is more efficient than `Promise.all`.
+
+**Action:** Refactor sequential read/write operations to use Prisma's `include` or nested `create`/`connect` wherever possible. Applied to `LoyaltyService.getUserLoyalty`, reducing latency from ~100ms to ~50ms (measured in a 50ms-latency mock environment).

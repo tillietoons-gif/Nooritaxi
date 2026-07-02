@@ -49,7 +49,9 @@ export default function BookingPage() {
   const [pickupPlace, setPickupPlace] = useState<BookingPlace | null>(null)
   const [dropoffPlace, setDropoffPlace] = useState<BookingPlace | null>(null)
   const [pickupSuggestions, setPickupSuggestions] = useState<BookingPlace[]>([])
+  const [pickupIndex, setPickupIndex] = useState(-1)
   const [dropoffSuggestions, setDropoffSuggestions] = useState<BookingPlace[]>([])
+  const [dropoffIndex, setDropoffIndex] = useState(-1)
   const [mapPlaces, setMapPlaces] = useState<BookingPlace[]>([])
   const [estimate, setEstimate] = useState<Estimate | null>(null)
   const [isEstimating, setIsEstimating] = useState(false)
@@ -97,13 +99,20 @@ export default function BookingPage() {
     const query = pickupLocation.trim()
     if (pickupPlace?.name === pickupLocation || query.length < 2) {
       setPickupSuggestions([])
+      setPickupIndex(-1)
       return
     }
     const timeout = window.setTimeout(() => {
       authedFetch(`/places?q=${encodeURIComponent(query)}&limit=6`)
         .then((res) => (res.ok ? res.json() : []))
-        .then((places: BookingPlace[]) => setPickupSuggestions(places))
-        .catch(() => setPickupSuggestions([]))
+        .then((places: BookingPlace[]) => {
+          setPickupSuggestions(places)
+          setPickupIndex(-1)
+        })
+        .catch(() => {
+          setPickupSuggestions([])
+          setPickupIndex(-1)
+        })
     }, 250)
     return () => window.clearTimeout(timeout)
   }, [pickupLocation, pickupPlace])
@@ -112,13 +121,20 @@ export default function BookingPage() {
     const query = dropoffLocation.trim()
     if (dropoffPlace?.name === dropoffLocation || query.length < 2) {
       setDropoffSuggestions([])
+      setDropoffIndex(-1)
       return
     }
     const timeout = window.setTimeout(() => {
       authedFetch(`/places?q=${encodeURIComponent(query)}&limit=6`)
         .then((res) => (res.ok ? res.json() : []))
-        .then((places: BookingPlace[]) => setDropoffSuggestions(places))
-        .catch(() => setDropoffSuggestions([]))
+        .then((places: BookingPlace[]) => {
+          setDropoffSuggestions(places)
+          setDropoffIndex(-1)
+        })
+        .catch(() => {
+          setDropoffSuggestions([])
+          setDropoffIndex(-1)
+        })
     }, 250)
     return () => window.clearTimeout(timeout)
   }, [dropoffLocation, dropoffPlace])
@@ -139,12 +155,46 @@ export default function BookingPage() {
     setPickupPlace(place)
     setPickupLocation(place.name)
     setPickupSuggestions([])
+    setPickupIndex(-1)
   }
 
   function selectDropoff(place: BookingPlace) {
     setDropoffPlace(place)
     setDropoffLocation(place.name)
     setDropoffSuggestions([])
+    setDropoffIndex(-1)
+  }
+
+  function handleKeyDown(
+    e: React.KeyboardEvent,
+    suggestions: BookingPlace[],
+    index: number,
+    setIndex: (i: number) => void,
+    onSelect: (p: BookingPlace) => void,
+    onClose: () => void
+  ) {
+    if (suggestions.length === 0) return
+
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault()
+        setIndex(index >= suggestions.length - 1 ? 0 : index + 1)
+        break
+      case "ArrowUp":
+        e.preventDefault()
+        setIndex(index <= 0 ? suggestions.length - 1 : index - 1)
+        break
+      case "Enter":
+        if (index >= 0 && index < suggestions.length) {
+          e.preventDefault()
+          onSelect(suggestions[index])
+        }
+        break
+      case "Escape":
+        e.preventDefault()
+        onClose()
+        break
+    }
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -200,14 +250,40 @@ export default function BookingPage() {
               <Card className="border-none shadow-sm"><CardContent className="p-6 space-y-6">
                   <HeadingMd>Book a Ride</HeadingMd>
                   <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="relative">
+                    <div className="relative group">
                       <Label htmlFor="pickup" className="sr-only">Pickup Location</Label>
-                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
-                      <Input id="pickup" value={pickupLocation} onChange={(event) => updatePickupLocation(event.target.value)} placeholder="Pickup" className="pl-10 h-12 bg-muted/30 border-none" />
+                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary group-focus-within:text-gold transition-colors" />
+                      <Input
+                        id="pickup"
+                        value={pickupLocation}
+                        onChange={(event) => updatePickupLocation(event.target.value)}
+                        onKeyDown={(e) => handleKeyDown(e, pickupSuggestions, pickupIndex, setPickupIndex, selectPickup, () => setPickupSuggestions([]))}
+                        placeholder="Pickup"
+                        className="pl-10 h-12 bg-muted/30"
+                        role="combobox"
+                        aria-autocomplete="list"
+                        aria-expanded={pickupSuggestions.length > 0}
+                        aria-haspopup="listbox"
+                        aria-controls="pickup-suggestions"
+                        aria-activedescendant={pickupIndex >= 0 ? `pickup-option-${pickupIndex}` : undefined}
+                      />
                       {pickupSuggestions.length > 0 ? (
-                        <div className="absolute z-20 mt-2 w-full overflow-hidden rounded-lg border bg-background shadow-lg">
-                          {pickupSuggestions.map((place) => (
-                            <button key={place.id} type="button" className="block w-full px-3 py-2 text-left hover:bg-muted" onClick={() => selectPickup(place)}>
+                        <div
+                          id="pickup-suggestions"
+                          role="listbox"
+                          className="absolute z-20 mt-2 w-full overflow-hidden rounded-lg border bg-background shadow-lg"
+                        >
+                          {pickupSuggestions.map((place, index) => (
+                            <button
+                              id={`pickup-option-${index}`}
+                              key={place.id}
+                              type="button"
+                              role="option"
+                              aria-selected={pickupIndex === index}
+                              className={`block w-full px-3 py-2 text-left hover:bg-muted transition-colors ${pickupIndex === index ? "bg-muted" : ""}`}
+                              onClick={() => selectPickup(place)}
+                              tabIndex={-1}
+                            >
                               <span className="block text-sm font-medium">{place.name}</span>
                               <span className="block truncate text-xs text-muted-foreground">{place.address}</span>
                             </button>
@@ -215,14 +291,40 @@ export default function BookingPage() {
                         </div>
                       ) : null}
                     </div>
-                    <div className="relative">
+                    <div className="relative group">
                       <Label htmlFor="destination" className="sr-only">Destination Location</Label>
-                      <Navigation className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-accent-foreground" />
-                      <Input id="destination" value={dropoffLocation} onChange={(event) => updateDropoffLocation(event.target.value)} placeholder="Destination" className="pl-10 h-12 bg-muted/30 border-none" />
+                      <Navigation className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-accent-foreground group-focus-within:text-gold transition-colors" />
+                      <Input
+                        id="destination"
+                        value={dropoffLocation}
+                        onChange={(event) => updateDropoffLocation(event.target.value)}
+                        onKeyDown={(e) => handleKeyDown(e, dropoffSuggestions, dropoffIndex, setDropoffIndex, selectDropoff, () => setDropoffSuggestions([]))}
+                        placeholder="Destination"
+                        className="pl-10 h-12 bg-muted/30"
+                        role="combobox"
+                        aria-autocomplete="list"
+                        aria-expanded={dropoffSuggestions.length > 0}
+                        aria-haspopup="listbox"
+                        aria-controls="destination-suggestions"
+                        aria-activedescendant={dropoffIndex >= 0 ? `destination-option-${dropoffIndex}` : undefined}
+                      />
                       {dropoffSuggestions.length > 0 ? (
-                        <div className="absolute z-20 mt-2 w-full overflow-hidden rounded-lg border bg-background shadow-lg">
-                          {dropoffSuggestions.map((place) => (
-                            <button key={place.id} type="button" className="block w-full px-3 py-2 text-left hover:bg-muted" onClick={() => selectDropoff(place)}>
+                        <div
+                          id="destination-suggestions"
+                          role="listbox"
+                          className="absolute z-20 mt-2 w-full overflow-hidden rounded-lg border bg-background shadow-lg"
+                        >
+                          {dropoffSuggestions.map((place, index) => (
+                            <button
+                              id={`destination-option-${index}`}
+                              key={place.id}
+                              type="button"
+                              role="option"
+                              aria-selected={dropoffIndex === index}
+                              className={`block w-full px-3 py-2 text-left hover:bg-muted transition-colors ${dropoffIndex === index ? "bg-muted" : ""}`}
+                              onClick={() => selectDropoff(place)}
+                              tabIndex={-1}
+                            >
                               <span className="block text-sm font-medium">{place.name}</span>
                               <span className="block truncate text-xs text-muted-foreground">{place.address}</span>
                             </button>

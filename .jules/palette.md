@@ -8,3 +8,8 @@
   - Maintained high contrast for text (white on emerald, foreground on off-white).
   - Used large touch targets (14-16px height for primary buttons) to accommodate one-handed mobile use.
   - Consistent RTL-ready layout structures.
+
+## 2025-07-03 - Accessible Combobox Pattern
+**Learning:** Location search suggestions often lack keyboard support and ARIA semantics, making them unusable for power users and assistive technology. Implementing the ARIA combobox pattern with `aria-activedescendant` provides a seamless, accessible experience.
+
+**Action:** Use a shared `handleKeyDown` function for listbox-based suggestions. Ensure inputs have `role="combobox"`, `aria-autocomplete="list"`, and `aria-activedescendant` pointing to the selected `role="option"`.

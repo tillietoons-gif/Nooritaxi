@@ -12,6 +12,7 @@ import { GlassSurface } from "@/components/ui/glass-surface"
 import { LabelMd, HeadingMd, BodyMd } from "@/components/ui/typography"
 import { PatternOverlay } from "@/components/ui/pattern-overlay"
 import { useTranslation } from "react-i18next"
+import { cn } from "@/lib/utils"
 
 export default function ContactPage() {
   const { t } = useTranslation()
@@ -73,14 +74,14 @@ export default function ContactPage() {
               <GlassSurface variant="premium" className="p-8 space-y-8 relative overflow-hidden bg-card/50 backdrop-blur-md">
                 <PatternOverlay opacity={0.03} />
                 <div>
-                  <LabelMd className="mb-4 block text-primary" htmlFor="">Headquarters</LabelMd>
+                  <LabelMd className="mb-4 block text-primary">Headquarters</LabelMd>
                   <p className="text-sm font-bold leading-relaxed text-foreground">
                     Kart-e-Char, District 3<br />
                     Kabul, Afghanistan
                   </p>
                 </div>
                 <div>
-                  <LabelMd className="mb-4 block text-primary" htmlFor="">Inquiries</LabelMd>
+                  <LabelMd className="mb-4 block text-primary">Inquiries</LabelMd>
                   <p className="text-sm font-bold text-foreground">support@noori.af</p>
                   <p className="text-sm font-bold text-foreground">+93 700 000 000</p>
                 </div>
@@ -151,18 +152,31 @@ export default function ContactPage() {
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <LabelMd htmlFor="message" className="text-primary">
-                          {t('contact.message_label', 'Message')}
-                          <span className="text-destructive ml-1" aria-hidden="true">*</span>
-                        </LabelMd>
+                        <div className="flex justify-between items-end">
+                          <LabelMd htmlFor="message" className="text-primary">
+                            {t('contact.message_label', 'Message')}
+                            <span className="text-destructive ml-1" aria-hidden="true">*</span>
+                          </LabelMd>
+                          <span
+                            id="message-counter"
+                            className={cn(
+                              "text-[10px] font-black tabular-nums transition-colors",
+                              formData.message.length >= 1000 ? "text-destructive" : "text-primary/40"
+                            )}
+                            aria-live="polite"
+                          >
+                            {formData.message.length}/1000
+                          </span>
+                        </div>
                         <Textarea
                           id="message"
                           required
                           aria-required="true"
+                          aria-describedby="message-counter"
                           placeholder={t('contact.message_placeholder', 'How can we help you?')}
                           className="min-h-[160px] bg-background/50 border-input focus-visible:ring-primary/30 font-bold resize-none text-foreground placeholder:text-muted-foreground/50"
                           value={formData.message}
-                          onChange={e => setFormData({...formData, message: e.target.value})}
+                          onChange={e => setFormData({...formData, message: e.target.value.slice(0, 1000)})}
                         />
                       </div>
                       <Button

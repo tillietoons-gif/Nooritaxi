@@ -94,18 +94,21 @@ export class LoyaltyService {
   }
 
   async getUserLoyalty(userId: string) {
-    const account = await this.prisma.loyaltyAccount.upsert({
+    // Optimization: Use 'include' to fetch recent transactions in the same round-trip as the upsert
+    const account = (await this.prisma.loyaltyAccount.upsert({
       where: { userId },
       update: {},
       create: { userId, points: 0, lifetime: 0 },
-    });
-    const recentTransactions = await this.prisma.loyaltyTransaction.findMany({
-      where: { loyaltyAccountId: account.id },
-      orderBy: { createdAt: 'desc' },
-      take: 20,
-    });
+      include: {
+        transactions: {
+          orderBy: { createdAt: 'desc' },
+          take: 20,
+        },
+      },
+    })) as any;
 
-    return { account, recentTransactions };
+    const { transactions, ...accountData } = account;
+    return { account: accountData, recentTransactions: transactions || [] };
   }
 
   async getAdminSummary() {

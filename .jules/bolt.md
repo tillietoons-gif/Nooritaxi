@@ -66,3 +66,11 @@
 **Learning:** Sequential await calls for independent database queries in high-frequency endpoints like `getLiveMapData` introduce unnecessary latency. In a mocked environment with 50ms query delay, sequential execution takes ~100ms while parallel execution takes ~50ms.
 
 **Action:** Use `Promise.all` to parallelize independent Prisma queries in tracking and dashboard services to reduce API response time by up to 50%.
+
+## 2026-06-17 - Consolidation of Sequential Prisma Operations
+
+**Learning:** Sequential calls to `upsert`, `create`, and `findMany` on related models (like `LoyaltyAccount` and `LoyaltyTransaction`) introduce unnecessary database round trips. These can often be consolidated into a single atomic operation using Prisma's `include` and nested `create` features.
+
+**Action:**
+1. Use `include` in `upsert` or `findUnique` to fetch related records in the same query instead of a follow-up `findMany`.
+2. Use nested `create` within an `upsert` or `update` to perform parent-child writes in a single atomic round trip, replacing explicit `$transaction` blocks where possible.

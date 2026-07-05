@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef, useId } from "react"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { Input } from "@/components/ui/input"
@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { GlassSurface } from "@/components/ui/glass-surface"
 import { authedFetch } from "@/lib/auth"
 import { AdminPageHeader } from "@/components/admin/admin-page-header"
+import { LabelMd } from "@/components/ui/typography"
 import { useTranslation } from "react-i18next"
 import { FilterX, LoaderCircle, Search } from "lucide-react"
 
@@ -46,6 +47,8 @@ export function AdminListPage<T>({
 }: AdminListPageProps<T>) {
   const { t } = useTranslation()
   const router = useRouter()
+  const searchId = useId()
+  const searchRef = useRef<HTMLInputElement>(null)
   const [items, setItems] = useState<T[]>([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -89,6 +92,17 @@ export function AdminListPage<T>({
   }, [load])
 
   useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "/" && document.activeElement?.tagName !== "INPUT" && document.activeElement?.tagName !== "TEXTAREA") {
+        e.preventDefault()
+        searchRef.current?.focus()
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [])
+
+  useEffect(() => {
     const handlePageShow = (event: PageTransitionEvent) => {
       if (event.persisted) void load()
     }
@@ -100,7 +114,7 @@ export function AdminListPage<T>({
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
   return (
-    <main className="flex-1 px-4 py-8 md:px-8 relative overflow-hidden">
+    <main id="main-content" className="flex-1 px-4 py-8 md:px-8 relative overflow-hidden">
       <div className="mx-auto max-w-7xl space-y-6 relative z-10">
         <AdminPageHeader
           title={title}
@@ -112,13 +126,15 @@ export function AdminListPage<T>({
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
           <GlassSurface variant="premium" className="flex flex-col gap-3 p-4 md:flex-row md:items-end">
             <div className="flex-1 relative">
-              <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1 block">{t("admin.search_query", "Search Query")}</label>
+              <LabelMd htmlFor={searchId} className="mb-1 block">{t("admin.search_query", "Search Query")}</LabelMd>
               <div className="relative">
                 <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
+                  id={searchId}
+                  ref={searchRef}
                   placeholder={defaultSearchPlaceholder}
                   value={q}
-                  className="bg-background/80 backdrop-blur-sm border-primary/20 focus-visible:ring-primary ps-9"
+                  className="bg-background/80 backdrop-blur-sm border-primary/20 focus-visible:ring-primary ps-9 pe-10"
                   onChange={(e) => setQ(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
@@ -127,6 +143,11 @@ export function AdminListPage<T>({
                     }
                   }}
                 />
+                <div className="pointer-events-none absolute inset-y-0 end-3 flex items-center">
+                  <kbd className="hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100 sm:flex">
+                    <span className="text-xs">/</span>
+                  </kbd>
+                </div>
               </div>
             </div>
             {statusOptions ? (

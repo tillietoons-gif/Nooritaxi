@@ -109,7 +109,8 @@
     "submitting": "Sending...",
     "success_title": "Message Sent",
     "success_message": "Your message has been received. We will get back to you shortly.",
-    "send_another": "Send Another Message"
+    "send_another": "Send Another Message",
+    "characters_remaining": "{{count}} characters remaining"
   },
   "nav": {
     "rides": "Rides",

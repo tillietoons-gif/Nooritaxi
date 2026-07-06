@@ -108,7 +108,8 @@
     "submitting": "د لیړلو په حال کې...",
     "success_title": "پیغام واستول شو",
     "success_message": "ستاسو پیغام ترلاسه شو. موړ به ډیر ژر له تاسو سره اړیکه ونیسو.",
-    "send_another": "بل پیغام واستوې"
+    "send_another": "بل پیغام واستوې",
+    "characters_remaining": "{{count}} توري پاتې دي"
   },
   "nav": {
     "rides": "سفرونه",

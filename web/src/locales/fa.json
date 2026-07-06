@@ -109,7 +109,8 @@
     "submitting": "در حال ارسال...",
     "success_title": "پیام ارسال شد",
     "success_message": "پیام شما دریافت شد. ما به زودی با شما تماس خواهیم گرفت.",
-    "send_another": "ارسال پیام دیگر"
+    "send_another": "ارسال پیام دیگر",
+    "characters_remaining": "{{count}} کاراکتر باقی‌مانده"
   },
   "nav": {
     "rides": "سفرها",

@@ -66,3 +66,15 @@
 **Learning:** Sequential await calls for independent database queries in high-frequency endpoints like `getLiveMapData` introduce unnecessary latency. In a mocked environment with 50ms query delay, sequential execution takes ~100ms while parallel execution takes ~50ms.
 
 **Action:** Use `Promise.all` to parallelize independent Prisma queries in tracking and dashboard services to reduce API response time by up to 50%.
+
+## 2026-06-17 - Read-only Pagination Query Optimization
+
+**Learning:** Using Prisma's `$transaction` for independent read-only queries (like `findMany` and `count` for pagination) executes them sequentially and adds unnecessary database transaction overhead.
+
+**Action:** Replace sequential read-only `$transaction` calls with `Promise.all` to allow concurrent execution and eliminate transaction overhead in read-heavy endpoints like `PaymentsService.listTransactions`.
+
+## 2026-06-17 - Shared Transaction Concurrency Anti-pattern
+
+**Learning:** Attempting to parallelize database operations using `Promise.all` while sharing a single Prisma interactive transaction object (`tx`) is an anti-pattern. Most database drivers queue these requests or throw errors because a transaction is bound to a single connection, resulting in zero performance gain or runtime instability.
+
+**Action:** Maintain sequential execution (using `await`) for operations within the same database transaction unless the driver specifically supports concurrent queries on a single transaction connection.

@@ -162,7 +162,10 @@ export class PaymentsService {
   async listTransactions(userId: string, page = 1, limit = 25) {
     const safePage = Math.max(page, 1);
     const safeLimit = Math.min(Math.max(limit, 1), 100);
-    const [items, total] = await this.prisma.$transaction([
+
+    // Performance Optimization: Use Promise.all instead of Prisma.$transaction
+    // for independent read-only queries to avoid unnecessary transaction overhead.
+    const [items, total] = await Promise.all([
       this.prisma.transaction.findMany({
         where: { wallet: { userId } },
         orderBy: { createdAt: 'desc' },

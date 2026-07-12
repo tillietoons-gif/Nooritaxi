@@ -6,27 +6,28 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        background: '#040806', // Velvet obsidian deep dark background
-        foreground: '#F1F4F2', // Crisp luxury white
-        card: '#0A120E', // Dark glass obsidian card background
+        // Luxury Ivory Light theme as default
+        background: '#F8FAF9', // Breathtaking ivory/sage off-white
+        foreground: '#0A120E', // Velvet charcoal emerald-black
+        card: '#ffffff', // Glistening white cards
         primary: {
           DEFAULT: '#006947', // Deep imperial emerald green
           dark: '#004A2F',
           light: '#009962',
         },
-        secondary: '#111E18', // Sleek forest-deep neutral
+        secondary: '#F0F4F1', // Premium pale forest neutral
         accent: {
           DEFAULT: '#D4AF37', // Luxurious glowing gold
           glow: '#F3E9D2',
           metallic: '#C5A028',
         },
         muted: {
-          DEFAULT: '#0D1813',
+          DEFAULT: '#E2EAE5',
           foreground: '#7C8E84', // Subtle emerald-gray text
         },
         destructive: '#E53E3E',
         success: '#00C853',
-        border: '#162C24', // Delicate metallic-emerald border
+        border: '#E2EAE5', // Delicate emerald-sage border line
       },
       fontFamily: {
         heading: ['Geist-Bold', 'System'],
@@ -39,9 +40,9 @@ module.exports = {
         '5xl': '40px',
       },
       boxShadow: {
-        'premium': '0 20px 50px rgba(212, 175, 55, 0.15)', // Luxury gold shadow
-        'emerald-glow': '0 8px 32px rgba(0, 105, 71, 0.25)', // Glowing emerald shadow
-        'bento': '0 8px 32px rgba(0, 0, 0, 0.4)',
+        'premium': '0 12px 40px rgba(0, 105, 71, 0.06)', // Elegant light drop shadow
+        'premium-dark': '0 20px 50px rgba(212, 175, 55, 0.15)', // Luxurious gold shadow
+        'bento': '0 8px 32px rgba(0, 0, 0, 0.05)',
       }
     },
   },

@@ -4,25 +4,27 @@
 
 @layer base {
   .glass-premium {
-    background-color: rgba(10, 18, 14, 0.7);
+    background-color: rgba(255, 255, 255, 0.85);
     border-width: 1px;
-    border-color: rgba(212, 175, 55, 0.15);
+    border-color: rgba(0, 105, 71, 0.08);
     backdrop-filter: blur(24px);
+  }
+
+  .dark .glass-premium {
+    background-color: rgba(10, 18, 14, 0.7);
+    border-color: rgba(212, 175, 55, 0.15);
   }
 
   .glow-gold {
     shadow-color: #D4AF37;
     shadow-offset: { width: 0, height: 12 };
-    shadow-opacity: 0.25;
-    shadow-radius: 24px;
-    elevation: 10;
+    shadow-opacity: 0.15;
+    shadow-radius: 20px;
+    elevation: 6;
   }
 
-  .glow-emerald {
-    shadow-color: #006947;
-    shadow-offset: { width: 0, height: 12 };
-    shadow-opacity: 0.25;
-    shadow-radius: 24px;
-    elevation: 10;
+  .dark .glow-gold {
+    shadow-opacity: 0.35;
+    shadow-radius: 32px;
   }
 }

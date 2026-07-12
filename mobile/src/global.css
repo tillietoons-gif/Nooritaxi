@@ -3,13 +3,26 @@
 @tailwind utilities;
 
 @layer base {
-  .glass {
-    background-color: rgba(255, 255, 255, 0.6);
-    backdrop-filter: blur(20px);
+  .glass-premium {
+    background-color: rgba(10, 18, 14, 0.7);
+    border-width: 1px;
+    border-color: rgba(212, 175, 55, 0.15);
+    backdrop-filter: blur(24px);
   }
 
-  .dark .glass {
-    background-color: rgba(0, 12, 8, 0.6);
-    backdrop-filter: blur(20px);
+  .glow-gold {
+    shadow-color: #D4AF37;
+    shadow-offset: { width: 0, height: 12 };
+    shadow-opacity: 0.25;
+    shadow-radius: 24px;
+    elevation: 10;
+  }
+
+  .glow-emerald {
+    shadow-color: #006947;
+    shadow-offset: { width: 0, height: 12 };
+    shadow-opacity: 0.25;
+    shadow-radius: 24px;
+    elevation: 10;
   }
 }

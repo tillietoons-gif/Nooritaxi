@@ -38,69 +38,69 @@ export default function FoodScreen() {
       <ScrollView className="flex-1" ref={scrollRef} showsVerticalScrollIndicator={false}>
         <View className="px-6 py-6">
           <View className="flex-row items-center justify-between mb-6">
-            <Text className="text-2xl font-bold text-foreground">{t('food.title', 'Food Delivery')}</Text>
+            <Text className="text-2xl font-black text-foreground uppercase tracking-wider">{t('food.title', 'Food Delivery')}</Text>
             <View className="flex-row gap-2">
               <TouchableOpacity
                 onPress={() => router.push('/food-orders')}
-                className="p-3 bg-card border border-muted/20 rounded-full shadow-sm"
+                className="p-3 bg-card border border-border rounded-full shadow-premium"
               >
-                <ReceiptText size={20} color="#006947" />
+                <ReceiptText size={20} color="#D4AF37" />
               </TouchableOpacity>
-              <TouchableOpacity className="p-3 bg-card border border-muted/20 rounded-full shadow-sm">
-                <Search size={20} color="#006947" />
+              <TouchableOpacity className="p-3 bg-card border border-border rounded-full shadow-premium">
+                <Search size={20} color="#D4AF37" />
               </TouchableOpacity>
             </View>
           </View>
 
           {/* High-Tech Promo Card */}
-          <View className="bg-primary p-8 rounded-4xl shadow-high-tech mb-8 relative overflow-hidden">
-            <PatternOverlay color="#ffffff" opacity={0.1} />
+          <View className="bg-card p-8 rounded-4xl shadow-premium mb-8 relative overflow-hidden border border-accent/20">
+            <PatternOverlay color="#D4AF37" opacity={0.03} />
             <View className="relative z-10 w-2/3">
-              <Text className="text-white/70 text-[10px] font-bold uppercase tracking-widest mb-1">Promo</Text>
-              <Text className="text-2xl font-bold text-white mb-2">{t('food.hero_heading', 'Hungry?')}</Text>
-              <Text className="text-white/70 text-xs mb-6 leading-5">{t('food.hero_subtitle', 'Order from the best restaurants in town.')}</Text>
+              <Text className="text-accent text-[10px] font-black uppercase tracking-widest mb-1.5">Promo</Text>
+              <Text className="text-3xl font-black text-foreground mb-3 uppercase tracking-wide leading-8">{t('food.hero_heading', 'Hungry?')}</Text>
+              <Text className="text-muted-foreground text-xs mb-6 leading-5 font-semibold">{t('food.hero_subtitle', 'Order from the best restaurants in town.')}</Text>
               <TouchableOpacity
-                className="bg-accent px-6 py-3 rounded-2xl self-start shadow-sm"
+                className="bg-primary px-6 py-3.5 rounded-2xl self-start border border-accent/15 shadow-premium"
                 onPress={scrollToRestaurants}
               >
-                <Text className="text-primary-dark font-bold">{t('food.order_now', 'Order Now')}</Text>
+                <Text className="text-white font-extrabold uppercase tracking-wider text-xs">{t('food.order_now', 'Order Now')}</Text>
               </TouchableOpacity>
             </View>
-            <View className="absolute -right-10 -bottom-10 opacity-10">
-              <UtensilsCrossed size={200} color="white" />
+            <View className="absolute -right-10 -bottom-10 opacity-5">
+              <UtensilsCrossed size={200} color="#D4AF37" />
             </View>
           </View>
 
-          <View className="flex-row items-center justify-between mb-4">
-            <Text className="text-lg font-bold text-foreground">{t('food.featured_restaurants', 'Restaurants')}</Text>
+          <View className="flex-row items-center justify-between mb-5">
+            <Text className="text-lg font-black text-foreground uppercase tracking-widest">{t('food.featured_restaurants', 'Restaurants')}</Text>
             <TouchableOpacity onPress={scrollToRestaurants}>
-              <Text className="text-primary font-bold text-sm">{t('food.see_all', 'See All')}</Text>
+              <Text className="text-accent font-extrabold text-xs uppercase tracking-wider">{t('food.see_all', 'See All')}</Text>
             </TouchableOpacity>
           </View>
 
           {loading ? (
             <View className="py-20">
-              <ActivityIndicator color="#006947" />
+              <ActivityIndicator color="#D4AF37" />
             </View>
           ) : restaurants.length === 0 ? (
-            <View className="items-center py-16 bg-card rounded-3xl border border-muted/10">
-              <UtensilsCrossed size={40} color="#6d7a71" />
-              <Text className="mt-4 font-bold text-muted-foreground">{t('food.no_restaurants', 'No restaurants available')}</Text>
+            <View className="items-center py-20 bg-card rounded-4xl border border-border border-dashed shadow-premium">
+              <UtensilsCrossed size={40} color="#7C8E84" />
+              <Text className="mt-4 font-black text-muted-foreground uppercase tracking-widest text-sm">{t('food.no_restaurants', 'No restaurants available')}</Text>
             </View>
           ) : (
             restaurants.map((restaurant) => (
               <TouchableOpacity
                 key={restaurant.id}
                 onPress={() => router.push(`/restaurant/${restaurant.id}` as any)}
-                className="bg-card rounded-4xl overflow-hidden border border-muted/10 shadow-sm mb-6"
+                className="bg-card rounded-4xl overflow-hidden border border-border shadow-premium mb-6"
               >
-                <View className="h-48 bg-primary/5 items-center justify-center relative">
+                <View className="h-48 bg-secondary/20 items-center justify-center relative">
                   {restaurant.imageUrl ? (
                     <Image source={{ uri: restaurant.imageUrl }} className="w-full h-full" resizeMode="cover" />
                   ) : (
-                    <UtensilsCrossed size={48} color="#006947" opacity={0.2} />
+                    <UtensilsCrossed size={48} color="#D4AF37" opacity={0.15} />
                   )}
-                  <View className="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-2xl flex-row items-center gap-1.5 shadow-sm border border-white/50">
+                  <View className="absolute top-4 right-4 bg-card/90 backdrop-blur-md px-3.5 py-1.5 rounded-2xl flex-row items-center gap-1.5 shadow-premium border border-accent/20">
                     <Star size={14} color="#D4AF37" fill="#D4AF37" />
                     <Text className="text-xs font-black text-foreground">{restaurant.ratingAverage.toFixed(1)}</Text>
                   </View>
@@ -108,21 +108,21 @@ export default function FoodScreen() {
                 <View className="p-6">
                   <View className="flex-row justify-between items-start mb-2">
                     <View className="flex-1 pr-2">
-                      <Text className="font-bold text-xl text-foreground" numberOfLines={1}>{restaurant.name}</Text>
-                      <Text className="text-muted-foreground text-xs mt-0.5">{restaurant.cuisineTypes.join(' • ')}</Text>
+                      <Text className="font-extrabold text-xl text-foreground uppercase tracking-wide" numberOfLines={1}>{restaurant.name}</Text>
+                      <Text className="text-muted-foreground text-xs mt-1.5 font-bold">{restaurant.cuisineTypes.join(' • ')}</Text>
                     </View>
-                    <View className="bg-primary/10 p-2 rounded-xl">
-                       <ChevronRight size={18} color="#006947" />
+                    <View className="bg-[#040806] p-2.5 rounded-xl border border-border shadow-premium">
+                       <ChevronRight size={18} color="#D4AF37" />
                     </View>
                   </View>
 
-                  <View className="flex-row items-center gap-3 mt-2">
-                    <View className="flex-row items-center gap-1.5 bg-muted/20 px-3 py-2 rounded-2xl">
-                      <Clock size={14} color="#6d7a71" />
+                  <View className="flex-row items-center gap-3 mt-4">
+                    <View className="flex-row items-center gap-1.5 bg-secondary px-3.5 py-2 rounded-2xl border border-border">
+                      <Clock size={14} color="#7C8E84" />
                       <Text className="text-xs font-bold text-muted-foreground">{restaurant.avgPrepMinutes ?? 25} min</Text>
                     </View>
-                    <View className="flex-row items-center gap-1.5 bg-success/10 px-3 py-2 rounded-2xl border border-success/10">
-                      <Text className="text-xs font-bold text-success uppercase">{t('food.free_delivery', 'Free Delivery')}</Text>
+                    <View className="flex-row items-center gap-1.5 bg-primary/10 px-3.5 py-2 rounded-2xl border border-accent/10">
+                      <Text className="text-xs font-black text-accent uppercase tracking-wider">{t('food.free_delivery', 'Free Delivery')}</Text>
                     </View>
                   </View>
                 </View>

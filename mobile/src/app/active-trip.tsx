@@ -46,6 +46,70 @@ import {
 } from '../lib/api';
 import { withSessionGuard } from '../lib/SessionGuard';
 
+// Premium dark/gold custom map styles
+const PREMIUM_MAP_STYLE = [
+  {
+    "elementType": "geometry",
+    "stylers": [
+      { "color": "#040806" }
+    ]
+  },
+  {
+    "elementType": "labels.text.fill",
+    "stylers": [
+      { "color": "#7C8E84" }
+    ]
+  },
+  {
+    "elementType": "labels.text.stroke",
+    "stylers": [
+      { "color": "#040806" }
+    ]
+  },
+  {
+    "featureType": "administrative",
+    "elementType": "geometry",
+    "stylers": [
+      { "color": "#162C24" }
+    ]
+  },
+  {
+    "featureType": "poi",
+    "stylers": [
+      { "visibility": "off" }
+    ]
+  },
+  {
+    "featureType": "road",
+    "elementType": "geometry",
+    "stylers": [
+      { "color": "#0D1813" }
+    ]
+  },
+  {
+    "featureType": "road.highway",
+    "elementType": "geometry",
+    "stylers": [
+      { "color": "#162C24" }
+    ]
+  },
+  {
+    "featureType": "road.highway",
+    "elementType": "geometry.stroke",
+    "stylers": [
+      { "color": "#D4AF37" },
+      { "weight": 1 }
+    ]
+  },
+  {
+    "featureType": "water",
+    "elementType": "geometry",
+    "stylers": [
+      { "color": "#002114" }
+    ]
+  }
+];
+
 type DriverLocation = {
   lat: number;
   lng: number;
@@ -401,7 +465,7 @@ function ActiveTripScreen() {
   }, [contactPhone, openContactUrl, t]);
 
   const mapBody = MapView ? (
-    <MapView style={{ flex: 1 }} region={region}>
+    <MapView style={{ flex: 1 }} region={region} customMapStyle={PREMIUM_MAP_STYLE}>
       {pickupCoords && Marker ? (
         <Marker
           coordinate={{ latitude: pickupCoords.lat, longitude: pickupCoords.lng }}

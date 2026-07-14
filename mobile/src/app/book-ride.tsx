@@ -44,6 +44,70 @@ import { withSessionGuard } from '../lib/SessionGuard';
 const KABUL_COORDS = { lat: 34.5553, lng: 69.2075 };
 const RECENT_DESTINATIONS_KEY = 'noori_recent_destinations';
 
+// Premium dark/gold custom map styles
+const PREMIUM_MAP_STYLE = [
+  {
+    "elementType": "geometry",
+    "stylers": [
+      { "color": "#040806" }
+    ]
+  },
+  {
+    "elementType": "labels.text.fill",
+    "stylers": [
+      { "color": "#7C8E84" }
+    ]
+  },
+  {
+    "elementType": "labels.text.stroke",
+    "stylers": [
+      { "color": "#040806" }
+    ]
+  },
+  {
+    "featureType": "administrative",
+    "elementType": "geometry",
+    "stylers": [
+      { "color": "#162C24" }
+    ]
+  },
+  {
+    "featureType": "poi",
+    "stylers": [
+      { "visibility": "off" }
+    ]
+  },
+  {
+    "featureType": "road",
+    "elementType": "geometry",
+    "stylers": [
+      { "color": "#0D1813" }
+    ]
+  },
+  {
+    "featureType": "road.highway",
+    "elementType": "geometry",
+    "stylers": [
+      { "color": "#162C24" }
+    ]
+  },
+  {
+    "featureType": "road.highway",
+    "elementType": "geometry.stroke",
+    "stylers": [
+      { "color": "#D4AF37" },
+      { "weight": 1 }
+    ]
+  },
+  {
+    "featureType": "water",
+    "elementType": "geometry",
+    "stylers": [
+      { "color": "#002114" }
+    ]
+  }
+];
+
 type Coords = { lat: number; lng: number };
 type RideType = {
   id: 'economy' | 'comfort' | 'women' | 'xl';
@@ -379,7 +443,7 @@ function BookRideScreen() {
 
           <View className="h-80 rounded-3xl overflow-hidden border border-border shadow-premium bg-[#040806] relative">
             {MapView ? (
-              <MapView style={{ flex: 1 }} region={mapRegion} showsUserLocation onPress={handleMapPress}>
+              <MapView style={{ flex: 1 }} region={mapRegion} showsUserLocation onPress={handleMapPress} customMapStyle={PREMIUM_MAP_STYLE}>
                 {driverMarkers.map((driver) => Marker ? (
                   <Marker key={driver.id} coordinate={{ latitude: driver.lat, longitude: driver.lng }} title={t('book_ride.nearby_driver')}>
                     <View className="w-9 h-9 rounded-full bg-card border border-border items-center justify-center shadow-premium">

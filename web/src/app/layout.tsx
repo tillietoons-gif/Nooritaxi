@@ -4,7 +4,6 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { I18nProvider } from "@/components/i18n-provider";
 import { UserBehaviorProvider } from "@/components/user-behavior-provider";
-import { SkipToContent } from "@/components/layout/skip-to-content";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -32,14 +31,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${inter.variable} ${geistSans.variable} ${geistMono.variable} min-h-screen bg-background font-sans antialiased`}>
         <a
           href="#main-content"
-          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-white focus:rounded-md"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-6 focus:py-3 focus:bg-primary focus:text-primary-foreground focus:rounded-xl focus:font-black focus:text-xs focus:uppercase focus:tracking-widest focus:shadow-2xl focus:shadow-primary/40 focus:outline-none focus:ring-2 focus:ring-white/20 transition-all"
         >
           Skip to main content
         </a>
         <I18nProvider>
           <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
             <UserBehaviorProvider>
-              <SkipToContent />
               {children}
             </UserBehaviorProvider>
           </ThemeProvider>

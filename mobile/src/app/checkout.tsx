@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, SafeAreaView, ScrollView, Alert, ActivityIndicator, TextInput } from 'react-native';
 import { useLocalSearchParams, router, Stack } from 'expo-router';
-import { Banknote, ShieldCheck, ArrowLeft } from 'lucide-react-native';
+import { Banknote, ShieldCheck, ChevronLeft } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { getStoredUser, redeemPromotion } from '../lib/api';
 import { withSessionGuard } from '../lib/SessionGuard';
@@ -58,72 +58,73 @@ function CheckoutScreen() {
           headerShown: true,
           title: t('checkout.title', 'Checkout'),
           headerLeft: () => (
-            <TouchableOpacity onPress={() => safeBack(router)} className="ml-2">
-              <ArrowLeft size={24} color="#1b1b1b" />
+            <TouchableOpacity onPress={() => safeBack(router)} className="p-3 bg-card rounded-2xl border border-border shadow-premium ml-4">
+              <ChevronLeft size={20} color="#D4AF37" />
             </TouchableOpacity>
           ),
         }} />
-        <ScrollView className="px-4 py-6">
-          <View className="items-center mb-10 mt-6">
-            <Text className="text-muted-foreground text-base mb-2">{t('checkout.total_amount', 'Total Amount')}</Text>
-            <Text className="text-4xl font-bold text-primary">{amountDue.toLocaleString()} {currency}</Text>
+        <ScrollView className="px-6 py-6" showsVerticalScrollIndicator={false}>
+          <View className="items-center mb-10 mt-6 bg-card p-6 rounded-4xl border border-accent/20 shadow-premium">
+            <Text className="text-accent text-xs font-black uppercase tracking-widest mb-2">{t('checkout.total_amount', 'Total Amount')}</Text>
+            <Text className="text-4xl font-black text-foreground tracking-wider">{amountDue.toLocaleString()} {currency}</Text>
             {discount > 0 ? (
-              <Text className="text-success font-bold mt-2">Saved {discount.toLocaleString()} {currency}</Text>
+              <Text className="text-success font-black mt-2 text-xs uppercase tracking-widest">Saved {discount.toLocaleString()} {currency}</Text>
             ) : null}
           </View>
 
-          <View className="bg-card rounded-2xl border border-muted/20 p-4 mb-6">
-            <Text className="font-bold text-foreground mb-3">Promotion</Text>
+          <View className="bg-card rounded-3xl border border-border p-5 mb-6 shadow-premium">
+            <Text className="font-extrabold text-foreground uppercase tracking-widest text-xs mb-3">Promotion</Text>
             <View className="flex-row gap-2">
               <TextInput
                 value={promoCode}
                 onChangeText={setPromoCode}
                 autoCapitalize="characters"
                 placeholder="Promo code"
-                className="flex-1 h-12 rounded-xl border border-muted/20 px-3 font-bold text-foreground"
+                placeholderTextColor="#7C8E84"
+                className="flex-1 h-12 rounded-xl border border-border px-3 font-bold text-foreground bg-[#040806]"
               />
               <TouchableOpacity
                 onPress={applyPromo}
                 disabled={applyingPromo || !promoCode.trim() || discount > 0}
-                className={`h-12 px-5 rounded-xl items-center justify-center ${applyingPromo || discount > 0 ? 'bg-muted' : 'bg-primary'}`}
+                className={`h-12 px-5 rounded-xl items-center justify-center border border-accent/20 ${applyingPromo || discount > 0 ? 'bg-muted' : 'bg-primary'}`}
               >
-                <Text className="text-white font-bold">{applyingPromo ? '...' : 'Apply'}</Text>
+                <Text className="text-white font-extrabold uppercase tracking-wider text-xs">{applyingPromo ? '...' : 'Apply'}</Text>
               </TouchableOpacity>
             </View>
           </View>
 
-          <Text className="font-bold text-lg mb-4">{t('checkout.payment_method', 'Payment Method')}</Text>
+          <Text className="font-black text-foreground uppercase tracking-widest text-base mb-4">{t('checkout.payment_method', 'Payment Method')}</Text>
 
           <View className="space-y-3">
-            <View className="flex-row items-center p-4 rounded-2xl border border-primary bg-primary/5">
-              <View className="w-12 h-12 bg-orange-500/10 rounded-full items-center justify-center mr-4">
-                <Banknote size={24} color="#f97316" />
+            <View className="flex-row items-center p-5 rounded-3xl border border-accent/30 bg-primary/10 shadow-premium">
+              <View className="w-12 h-12 bg-primary/15 rounded-2xl items-center justify-center mr-4 border border-primary/20 shadow-premium">
+                <Banknote size={24} color="#D4AF37" />
               </View>
               <View className="flex-1">
-                <Text className="font-bold text-base text-foreground">{t('checkout.cash', 'Cash')}</Text>
-                <Text className="text-xs text-muted-foreground">{t('checkout.pay_physical_cash', 'Pay cash to the partner')}</Text>
-                {discount > 0 ? <Text className="text-xs text-success font-bold mt-1">Discount already applied</Text> : null}
+                <Text className="font-black text-base text-foreground uppercase tracking-wide">{t('checkout.cash', 'Cash')}</Text>
+                <Text className="text-xs text-muted-foreground mt-1 font-semibold leading-4">{t('checkout.pay_physical_cash', 'Pay cash to the partner')}</Text>
+                {discount > 0 ? <Text className="text-xs text-accent font-black uppercase tracking-wider mt-1.5">Discount already applied</Text> : null}
               </View>
-              <View className="w-6 h-6 rounded-full border-2 border-primary items-center justify-center">
-                <View className="w-3 h-3 rounded-full bg-primary" />
+              <View className="w-6 h-6 rounded-full border-2 border-accent items-center justify-center">
+                <View className="w-3 h-3 rounded-full bg-accent" />
               </View>
             </View>
           </View>
 
-          <View className="flex-row items-center gap-2 mt-8 justify-center opacity-60">
-            <ShieldCheck size={16} color="#6d7a71" />
-            <Text className="text-xs text-center">{t('checkout.secure_payment', 'All payments are encrypted and secure.')}</Text>
+          <View className="flex-row items-center gap-2 mt-8 justify-center opacity-70 mb-4">
+            <ShieldCheck size={16} color="#D4AF37" />
+            <Text className="text-[10px] text-center font-bold text-muted-foreground uppercase tracking-widest">{t('checkout.secure_payment', 'All payments are encrypted and secure.')}</Text>
           </View>
 
           <TouchableOpacity
             onPress={processPayment}
             disabled={loading}
-            className="bg-primary h-14 rounded-xl items-center justify-center mt-8 mb-6 shadow-md shadow-primary/20"
+            className="bg-primary h-16 rounded-3xl items-center justify-center mt-6 mb-12 border border-accent/20 shadow-premium"
           >
             {loading ? (
               <ActivityIndicator color="white" />
             ) : (
-              <Text className="text-white text-lg font-bold">{t('checkout.pay', 'Confirm Cash Payment')}</Text>
+              <Text className="text-white text-base font-black uppercase tracking-widest">{t('checkout.pay', 'Confirm Cash Payment')}</Text>
             )}
           </TouchableOpacity>
         </ScrollView>

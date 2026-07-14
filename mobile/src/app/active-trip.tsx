@@ -46,6 +46,70 @@ import {
 } from '../lib/api';
 import { withSessionGuard } from '../lib/SessionGuard';
 
+// Premium dark/gold custom map styles
+const PREMIUM_MAP_STYLE = [
+  {
+    "elementType": "geometry",
+    "stylers": [
+      { "color": "#040806" }
+    ]
+  },
+  {
+    "elementType": "labels.text.fill",
+    "stylers": [
+      { "color": "#7C8E84" }
+    ]
+  },
+  {
+    "elementType": "labels.text.stroke",
+    "stylers": [
+      { "color": "#040806" }
+    ]
+  },
+  {
+    "featureType": "administrative",
+    "elementType": "geometry",
+    "stylers": [
+      { "color": "#162C24" }
+    ]
+  },
+  {
+    "featureType": "poi",
+    "stylers": [
+      { "visibility": "off" }
+    ]
+  },
+  {
+    "featureType": "road",
+    "elementType": "geometry",
+    "stylers": [
+      { "color": "#0D1813" }
+    ]
+  },
+  {
+    "featureType": "road.highway",
+    "elementType": "geometry",
+    "stylers": [
+      { "color": "#162C24" }
+    ]
+  },
+  {
+    "featureType": "road.highway",
+    "elementType": "geometry.stroke",
+    "stylers": [
+      { "color": "#D4AF37" },
+      { "weight": 1 }
+    ]
+  },
+  {
+    "featureType": "water",
+    "elementType": "geometry",
+    "stylers": [
+      { "color": "#002114" }
+    ]
+  }
+];
+
 type DriverLocation = {
   lat: number;
   lng: number;
@@ -206,6 +270,11 @@ function ActiveTripScreen() {
     async function publishDriverLocation() {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted' || !mounted) return;
+
+      const current = await Location.getCurrentPositionAsync({}).catch(() => null);
+      if (current) {
+        setLocation({ lat: current.coords.latitude, lng: current.coords.longitude });
+      }
 
       subscription = await Location.watchPositionAsync(
         {
@@ -396,7 +465,7 @@ function ActiveTripScreen() {
   }, [contactPhone, openContactUrl, t]);
 
   const mapBody = MapView ? (
-    <MapView style={{ flex: 1 }} region={region}>
+    <MapView style={{ flex: 1 }} region={region} customMapStyle={PREMIUM_MAP_STYLE}>
       {pickupCoords && Marker ? (
         <Marker
           coordinate={{ latitude: pickupCoords.lat, longitude: pickupCoords.lng }}
@@ -418,18 +487,18 @@ function ActiveTripScreen() {
       {Polyline && routeCoords.length === 2 ? (
         <Polyline
           coordinates={routeCoords.map((coord) => ({ latitude: coord.lat, longitude: coord.lng }))}
-          strokeColor="#006947"
+          strokeColor="#D4AF37"
           strokeWidth={4}
         />
       ) : null}
     </MapView>
   ) : (
-    <View className="flex-1 bg-secondary/20 overflow-hidden">
-      <View className="absolute inset-0 opacity-60">
+    <View className="flex-1 bg-secondary/10 overflow-hidden relative">
+      <View className="absolute inset-0 opacity-40">
         {Array.from({ length: 8 }).map((_, index) => (
           <View
             key={index}
-            className="absolute bg-white/70"
+            className="absolute bg-card"
             style={{
               width: index % 2 ? 2 : '120%',
               height: index % 2 ? '120%' : 2,
@@ -440,19 +509,19 @@ function ActiveTripScreen() {
           />
         ))}
       </View>
-      <View className="absolute left-8 right-8 top-1/2 h-1 bg-primary rounded-full" />
-      <View className="absolute left-10 top-[46%] bg-primary p-2 rounded-full border-4 border-white">
+      <View className="absolute left-8 right-8 top-1/2 h-1 bg-primary rounded-full shadow-premium" />
+      <View className="absolute left-10 top-[46%] bg-primary p-2 rounded-full border-4 border-[#040806]">
         <MapPin size={18} color="#fff" />
       </View>
-      <View className="absolute right-10 top-[46%] bg-accent p-2 rounded-full border-4 border-white">
-        <Navigation size={18} color="#fff" />
+      <View className="absolute right-10 top-[46%] bg-accent p-2 rounded-full border-4 border-[#040806]">
+        <Navigation size={18} color="#040806" />
       </View>
-      <View className="absolute left-[48%] top-[38%] bg-white p-3 rounded-2xl shadow-sm border border-muted/20">
-        <Car size={22} color="#006947" />
+      <View className="absolute left-[48%] top-[38%] bg-card p-3 rounded-2xl shadow-premium border border-border">
+        <Car size={22} color="#D4AF37" />
       </View>
-      <View className="absolute left-4 top-4 bg-white/95 px-3 py-2 rounded-2xl border border-muted/20">
-        <Text className="text-[10px] font-black uppercase text-muted-foreground">{t('active_trip.live_map')}</Text>
-        <Text className="text-xs font-bold text-primary">
+      <View className="absolute left-4 top-4 bg-card/90 px-3.5 py-2 rounded-2xl border border-border shadow-premium">
+        <Text className="text-[10px] font-black uppercase text-accent tracking-widest">{t('active_trip.live_map')}</Text>
+        <Text className="text-xs font-bold text-foreground mt-0.5 tracking-wide">
           {driverCoords
             ? `${driverCoords.lat.toFixed(4)}, ${driverCoords.lng.toFixed(4)}`
             : t('active_trip.waiting_coordinates')}
@@ -464,12 +533,12 @@ function ActiveTripScreen() {
   return (
     <SafeAreaView className="flex-1 bg-background">
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        <View className="px-4 pt-4 pb-3 flex-row items-center justify-between">
+        <View className="px-6 pt-6 pb-4 flex-row items-center justify-between mt-4">
           <View className="flex-1 pr-3">
-            <Text className="text-2xl font-black text-primary">
+            <Text className="text-2xl font-black text-accent uppercase tracking-wider">
               {isDriver ? t('active_trip.active_assignment') : t('active_trip.active_trip')}
             </Text>
-            <Text className="text-muted-foreground text-sm mt-1">
+            <Text className="text-muted-foreground text-sm mt-1 font-semibold" numberOfLines={1}>
               {trip
                 ? `${trip.pickupLocation} -> ${trip.dropoffLocation}`
                 : connected ? t('active_trip.tracking_connected') : t('active_trip.connecting')}
@@ -479,65 +548,65 @@ function ActiveTripScreen() {
             accessibilityLabel={t('active_trip.sos_accessibility')}
             onPress={handleSos}
             disabled={sosSubmitting}
-            className={`flex-row items-center gap-2 rounded-full px-4 py-2 ${
+            className={`flex-row items-center gap-2 rounded-full px-5 py-2.5 shadow-premium ${
               activeAlertId ? 'bg-destructive/40' : 'bg-destructive'
             } ${sosSubmitting ? 'opacity-60' : ''}`}
           >
             <ShieldAlert size={18} color="#fff" />
-            <Text className="text-white font-bold">
+            <Text className="text-white font-black uppercase tracking-wider text-xs">
               {activeAlertId ? t('active_trip.sos_sent_short') : sosSubmitting ? t('active_trip.sending') : 'SOS'}
             </Text>
           </Pressable>
         </View>
 
-        <View className="mx-4 h-72 rounded-3xl overflow-hidden border border-muted/20 bg-card">
+        <View className="mx-6 h-72 rounded-4xl overflow-hidden border border-border bg-card shadow-premium mt-2">
           {mapBody}
         </View>
 
-        <View className="mx-4 mt-4 bg-card rounded-3xl p-5 border border-muted/10">
-          <View className="flex-row items-center justify-between mb-4">
+        <View className="mx-6 mt-6 bg-card rounded-4xl p-6 border border-border shadow-premium">
+          <View className="flex-row items-center justify-between mb-5">
             <View>
-              <Text className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+              <Text className="text-[10px] font-black uppercase tracking-widest text-accent">
                 {connected ? t('active_trip.live_tracking') : t('active_trip.connecting_tracking')}
               </Text>
-              <Text className="text-xl font-black text-foreground mt-1">
+              <Text className="text-xl font-black text-foreground mt-1 uppercase tracking-wide">
                 {trip?.status ? t(`active_trip.status_${trip.status}`, trip.status) : t('active_trip.loading_trip')}
               </Text>
             </View>
-            <View className={`px-3 py-1.5 rounded-full ${tripStatusTone(trip?.status).split(' ')[0]}`}>
-              <Text className={`text-xs font-black uppercase ${tripStatusTone(trip?.status).split(' ')[1]}`}>
+            <View className={`px-3 py-1.5 rounded-full border border-accent/20 ${tripStatusTone(trip?.status).split(' ')[0]}`}>
+              <Text className={`text-xs font-black uppercase tracking-wider ${tripStatusTone(trip?.status).split(' ')[1]}`}>
                 {trip?.status ?? t('common.loading')}
               </Text>
             </View>
           </View>
 
           <View className="flex-row gap-3">
-            <Metric icon={<Clock size={18} color="#006947" />} label={t('active_trip.eta')} value={t('active_trip.minutes', { count: etaMinutes })} />
-            <Metric icon={<Navigation size={18} color="#006947" />} label={t('book_ride.distance')} value={`${remainingKm.toFixed(1)} km`} />
-            <Metric icon={<ShieldCheck size={18} color="#006947" />} label={t('book_ride.safety_code')} value={trip?.safetyCode ?? '----'} />
+            <Metric icon={<Clock size={18} color="#D4AF37" />} label={t('active_trip.eta')} value={t('active_trip.minutes', { count: etaMinutes })} />
+            <Metric icon={<Navigation size={18} color="#D4AF37" />} label={t('book_ride.distance')} value={`${remainingKm.toFixed(1)} km`} />
+            <Metric icon={<ShieldCheck size={18} color="#D4AF37" />} label={t('book_ride.safety_code')} value={trip?.safetyCode ?? '----'} />
           </View>
         </View>
 
-        <View className="mx-4 mt-4 bg-card rounded-3xl p-5 border border-muted/10">
-          <Text className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-4">
+        <View className="mx-6 mt-6 bg-card rounded-4xl p-6 border border-border shadow-premium">
+          <Text className="text-[10px] font-black uppercase tracking-widest text-accent mb-4">
             {isDriver ? t('active_trip.rider_details') : t('active_trip.driver_details')}
           </Text>
           <View className="flex-row items-center gap-4">
-            <View className="w-16 h-16 rounded-3xl bg-primary/10 items-center justify-center">
-              <User size={28} color="#006947" />
+            <View className="w-16 h-16 rounded-3xl bg-primary/10 border border-primary/20 items-center justify-center shadow-premium">
+              <User size={28} color="#D4AF37" />
             </View>
             <View className="flex-1">
               <Text className="text-lg font-black text-foreground">{contactName}</Text>
-              <Text className="text-sm text-muted-foreground mt-1">{contactPhone || t('active_trip.phone_pending')}</Text>
+              <Text className="text-sm text-muted-foreground mt-0.5 font-bold">{contactPhone || t('active_trip.phone_pending')}</Text>
               {!isDriver ? (
                 <View className="flex-row items-center gap-2 mt-2">
-                  <View className="flex-row items-center gap-1">
-                    <Star size={14} color="#D4AF37" fill="#D4AF37" />
+                  <View className="flex-row items-center gap-1 bg-[#040806] px-2 py-0.5 rounded-lg border border-border">
+                    <Star size={12} color="#D4AF37" fill="#D4AF37" />
                     <Text className="text-xs font-black text-foreground">
                       {driverRating != null ? Number(driverRating).toFixed(1) : t('active_trip.rating_pending')}
                     </Text>
                   </View>
-                  <Text className="text-xs text-muted-foreground">
+                  <Text className="text-xs text-muted-foreground font-semibold">
                     {driverCompletedTrips != null
                       ? t('active_trip.completed_trips', { count: driverCompletedTrips })
                       : t('active_trip.trip_history_pending')}
@@ -547,50 +616,54 @@ function ActiveTripScreen() {
             </View>
             <Pressable
               onPress={() => setContactOpen(true)}
-              className={`w-12 h-12 rounded-2xl items-center justify-center ${contactPhone ? 'bg-primary' : 'bg-muted'}`}
+              className={`w-12 h-12 rounded-2xl items-center justify-center shadow-premium border border-accent/20 ${contactPhone ? 'bg-primary' : 'bg-muted'}`}
             >
               <Phone size={20} color="#fff" />
             </Pressable>
           </View>
           {!isDriver ? (
-            <View className="mt-5 rounded-2xl bg-secondary/25 p-4 border border-muted/10">
+            <View className="mt-5 rounded-3xl bg-[#040806] p-4 border border-border">
               <View className="flex-row items-center gap-3">
-                <View className="w-10 h-10 rounded-2xl bg-primary/10 items-center justify-center">
-                  <Car size={20} color="#006947" />
+                <View className="w-10 h-10 rounded-2xl bg-primary/10 border border-primary/20 items-center justify-center shadow-premium">
+                  <Car size={20} color="#D4AF37" />
                 </View>
                 <View className="flex-1">
-                  <Text className="font-black text-foreground">{vehicleName}</Text>
-                  <Text className="text-xs text-muted-foreground mt-1">{vehicleMeta || t('active_trip.vehicle_meta_pending')}</Text>
+                  <Text className="font-extrabold text-foreground text-sm uppercase tracking-wide">{vehicleName}</Text>
+                  <Text className="text-[10px] text-muted-foreground mt-1 font-bold uppercase">{vehicleMeta || t('active_trip.vehicle_meta_pending')}</Text>
                 </View>
-                <View className="px-3 py-2 rounded-xl bg-white border border-muted/20">
-                  <Text className="text-xs font-black text-primary">{plateNumber}</Text>
+                <View className="px-3.5 py-2 rounded-xl bg-card border border-accent/20 shadow-premium">
+                  <Text className="text-xs font-black text-accent tracking-wider">{plateNumber}</Text>
                 </View>
               </View>
             </View>
           ) : null}
         </View>
 
-        <View className="mx-4 mt-4 bg-card rounded-3xl p-5 border border-muted/10">
-          <View className="flex-row items-start gap-3">
-            <MapPin size={22} color="#006947" />
+        <View className="mx-6 mt-6 bg-card rounded-4xl p-6 border border-border shadow-premium">
+          <View className="flex-row items-start gap-4">
+            <View className="items-center mt-1">
+              <MapPin size={18} color="#D4AF37" />
+              <View className="w-[1px] h-10 bg-border my-2" />
+              <Navigation size={16} color="#D4AF37" />
+            </View>
             <View className="flex-1">
-              <Text className="text-xs font-black uppercase text-muted-foreground">{t('book_ride.pickup')}</Text>
-              <Text className="font-bold text-foreground mt-1">{trip?.pickupLocation ?? t('common.loading')}</Text>
-              <View className="h-px bg-muted/20 my-4" />
-              <Text className="text-xs font-black uppercase text-muted-foreground">{t('book_ride.dropoff')}</Text>
-              <Text className="font-bold text-foreground mt-1">{trip?.dropoffLocation ?? t('common.loading')}</Text>
+              <Text className="text-[10px] font-black uppercase text-accent tracking-widest">{t('book_ride.pickup')}</Text>
+              <Text className="font-bold text-foreground mt-1 text-sm">{trip?.pickupLocation ?? t('common.loading')}</Text>
+              <View className="h-px bg-border my-4" />
+              <Text className="text-[10px] font-black uppercase text-accent tracking-widest">{t('book_ride.dropoff')}</Text>
+              <Text className="font-bold text-foreground mt-1 text-sm">{trip?.dropoffLocation ?? t('common.loading')}</Text>
             </View>
           </View>
         </View>
 
-        <View className="mx-4 mt-4 mb-8 flex-row gap-3">
+        <View className="mx-6 mt-6 mb-8 flex-row gap-3">
           {isDriver && driverActionLabel ? (
             <Pressable
               onPress={handleDriverStatus}
               disabled={statusSubmitting}
-              className={`flex-1 rounded-2xl py-4 items-center ${statusSubmitting ? 'bg-muted' : 'bg-primary'}`}
+              className={`flex-1 rounded-2xl py-4 items-center shadow-premium ${statusSubmitting ? 'bg-muted' : 'bg-primary'}`}
             >
-              <Text className="font-black text-white">
+              <Text className="font-black text-white uppercase tracking-wider text-sm">
                 {statusSubmitting ? t('active_trip.updating') : driverActionLabel}
               </Text>
             </Pressable>
@@ -598,16 +671,16 @@ function ActiveTripScreen() {
             <>
               <Pressable
                 onPress={handleShareTrip}
-                className="flex-1 rounded-2xl bg-primary py-4 items-center flex-row justify-center gap-2"
+                className="flex-1 rounded-2xl bg-primary py-4 items-center flex-row justify-center gap-2 border border-accent/15 shadow-premium"
               >
                 <Share2 size={18} color="#fff" />
-                <Text className="font-black text-white">{t('common.share')}</Text>
+                <Text className="font-black text-white uppercase tracking-wider text-sm">{t('common.share')}</Text>
               </Pressable>
               <Pressable
                 onPress={() => router.push('/trusted-contacts')}
-                className="flex-1 rounded-2xl border border-muted/30 py-4 items-center"
+                className="flex-1 rounded-2xl border border-border bg-card py-4 items-center shadow-premium"
               >
-                <Text className="font-black text-foreground">{t('active_trip.contacts')}</Text>
+                <Text className="font-black text-foreground uppercase tracking-wider text-sm">{t('active_trip.contacts')}</Text>
               </Pressable>
             </>
           )}
@@ -616,31 +689,31 @@ function ActiveTripScreen() {
         {canCancel ? (
           <Pressable
             onPress={() => setCancelOpen(true)}
-            className="mx-4 mb-10 rounded-2xl border border-destructive/20 bg-destructive/5 py-4 items-center"
+            className="mx-6 mb-12 rounded-2xl border border-destructive/20 bg-destructive/5 py-4 items-center"
           >
-            <Text className="font-black text-destructive">{t('active_trip.cancel_trip')}</Text>
+            <Text className="font-black text-destructive uppercase tracking-widest text-xs">{t('active_trip.cancel_trip')}</Text>
           </Pressable>
         ) : null}
       </ScrollView>
 
       <Modal transparent visible={cancelOpen} animationType="fade" onRequestClose={() => setCancelOpen(false)}>
-        <View className="flex-1 bg-black/40 justify-end">
-          <View className="bg-card rounded-t-3xl p-6">
+        <View className="flex-1 bg-black/60 justify-end">
+          <View className="bg-card rounded-t-4xl p-6 border-t border-accent/20 shadow-premium">
             <View className="flex-row items-center justify-between mb-4">
-              <Text className="text-xl font-black text-foreground">{t('active_trip.cancel_trip')}</Text>
-              <Pressable onPress={() => setCancelOpen(false)} className="p-2">
-                <X size={20} color="#1b1b1b" />
+              <Text className="text-xl font-black text-accent uppercase tracking-widest">{t('active_trip.cancel_trip')}</Text>
+              <Pressable onPress={() => setCancelOpen(false)} className="p-2 bg-secondary rounded-xl border border-border">
+                <X size={20} color="#7C8E84" />
               </Pressable>
             </View>
-            <Text className="text-sm text-muted-foreground mb-4">{t('active_trip.cancel_prompt')}</Text>
+            <Text className="text-sm text-muted-foreground mb-4 font-semibold">{t('active_trip.cancel_prompt')}</Text>
             {CANCEL_REASONS.map((reason) => (
               <Pressable
                 key={reason}
                 disabled={cancelSubmitting}
                 onPress={() => handleCancelTrip(reason)}
-                className="py-4 border-b border-muted/10"
+                className="py-4 border-b border-border"
               >
-                <Text className="font-bold text-foreground">{t(reason)}</Text>
+                <Text className="font-bold text-foreground text-sm uppercase tracking-wider">{t(reason)}</Text>
               </Pressable>
             ))}
           </View>
@@ -648,46 +721,47 @@ function ActiveTripScreen() {
       </Modal>
 
       <Modal transparent visible={contactOpen} animationType="fade" onRequestClose={() => setContactOpen(false)}>
-        <View className="flex-1 bg-black/40 justify-end">
-          <View className="bg-card rounded-t-3xl p-6">
+        <View className="flex-1 bg-black/60 justify-end">
+          <View className="bg-card rounded-t-4xl p-6 border-t border-accent/20 shadow-premium">
             <View className="flex-row items-center justify-between mb-2">
-              <Text className="text-xl font-black text-foreground">{t('active_trip.contact_title')}</Text>
-              <Pressable onPress={() => setContactOpen(false)} className="p-2">
-                <X size={20} color="#1b1b1b" />
+              <Text className="text-xl font-black text-accent uppercase tracking-widest">{t('active_trip.contact_title')}</Text>
+              <Pressable onPress={() => setContactOpen(false)} className="p-2 bg-secondary rounded-xl border border-border">
+                <X size={20} color="#7C8E84" />
               </Pressable>
             </View>
-            <Text className="text-sm text-muted-foreground mb-5">{contactName}</Text>
-            <ContactAction icon={<Phone size={20} color="#006947" />} title={t('active_trip.call')} subtitle={contactPhone || t('active_trip.phone_pending')} onPress={handleCallContact} />
-            <ContactAction icon={<MessageCircle size={20} color="#006947" />} title={t('active_trip.sms')} subtitle={t('active_trip.sms_subtitle')} onPress={handleMessageContact} />
+            <Text className="text-sm text-muted-foreground mb-5 font-bold">{contactName}</Text>
+            <ContactAction icon={<Phone size={20} color="#D4AF37" />} title={t('active_trip.call')} subtitle={contactPhone || t('active_trip.phone_pending')} onPress={handleCallContact} />
+            <ContactAction icon={<MessageCircle size={20} color="#D4AF37" />} title={t('active_trip.sms')} subtitle={t('active_trip.sms_subtitle')} onPress={handleMessageContact} />
             <ContactAction icon={<MessageCircle size={20} color="#25D366" />} title={t('active_trip.whatsapp')} subtitle={t('active_trip.whatsapp_subtitle')} onPress={handleWhatsAppContact} />
           </View>
         </View>
       </Modal>
 
       <Modal transparent visible={safetyOpen} animationType="fade" onRequestClose={() => setSafetyOpen(false)}>
-        <View className="flex-1 bg-black/40 justify-end">
-          <View className="bg-card rounded-t-3xl p-6">
+        <View className="flex-1 bg-black/60 justify-end">
+          <View className="bg-card rounded-t-4xl p-6 border-t border-accent/20 shadow-premium">
             <View className="flex-row items-center justify-between mb-3">
-              <Text className="text-xl font-black text-foreground">{t('active_trip.verify_safety_code')}</Text>
-              <Pressable onPress={() => setSafetyOpen(false)} className="p-2">
-                <X size={20} color="#1b1b1b" />
+              <Text className="text-xl font-black text-accent uppercase tracking-widest">{t('active_trip.verify_safety_code')}</Text>
+              <Pressable onPress={() => setSafetyOpen(false)} className="p-2 bg-secondary rounded-xl border border-border">
+                <X size={20} color="#7C8E84" />
               </Pressable>
             </View>
-            <Text className="text-sm text-muted-foreground mb-5">{t('active_trip.verify_safety_code_subtitle')}</Text>
+            <Text className="text-sm text-muted-foreground mb-5 font-semibold leading-5">{t('active_trip.verify_safety_code_subtitle')}</Text>
             <TextInput
               value={enteredSafetyCode}
               onChangeText={setEnteredSafetyCode}
               keyboardType="number-pad"
               maxLength={6}
               placeholder="1234"
-              className="h-16 rounded-2xl border border-muted/20 bg-background px-5 text-center text-2xl font-black tracking-widest text-foreground"
+              placeholderTextColor="#7C8E84"
+              className="h-16 rounded-2xl border border-border bg-[#040806] px-5 text-center text-2xl font-black tracking-widest text-foreground"
             />
             <Pressable
               onPress={submitSafetyCodeAndStart}
               disabled={statusSubmitting || enteredSafetyCode.trim().length < 4}
-              className={`mt-5 rounded-2xl py-4 items-center ${statusSubmitting || enteredSafetyCode.trim().length < 4 ? 'bg-muted' : 'bg-primary'}`}
+              className={`mt-6 rounded-2xl py-4 items-center ${statusSubmitting || enteredSafetyCode.trim().length < 4 ? 'bg-muted' : 'bg-primary shadow-premium'}`}
             >
-              <Text className="font-black text-white">{statusSubmitting ? t('active_trip.updating') : t('active_trip.start_trip')}</Text>
+              <Text className="font-black text-white uppercase tracking-wider text-sm">{statusSubmitting ? t('active_trip.updating') : t('active_trip.start_trip')}</Text>
             </Pressable>
           </View>
         </View>
@@ -698,11 +772,11 @@ function ActiveTripScreen() {
 
 function ContactAction({ icon, title, subtitle, onPress }: { icon: React.ReactNode; title: string; subtitle: string; onPress: () => void }) {
   return (
-    <Pressable onPress={onPress} className="flex-row items-center gap-4 py-4 border-b border-muted/10">
-      <View className="w-11 h-11 rounded-2xl bg-primary/10 items-center justify-center">{icon}</View>
+    <Pressable onPress={onPress} className="flex-row items-center gap-4 py-4 border-b border-border">
+      <View className="w-11 h-11 rounded-2xl bg-primary/10 border border-primary/20 items-center justify-center shadow-premium">{icon}</View>
       <View className="flex-1">
-        <Text className="font-black text-foreground">{title}</Text>
-        <Text className="text-xs text-muted-foreground mt-1">{subtitle}</Text>
+        <Text className="font-extrabold text-foreground text-sm uppercase tracking-wide">{title}</Text>
+        <Text className="text-xs text-muted-foreground mt-1 font-semibold">{subtitle}</Text>
       </View>
     </Pressable>
   );
@@ -710,10 +784,10 @@ function ContactAction({ icon, title, subtitle, onPress }: { icon: React.ReactNo
 
 function Metric({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
-    <View className="flex-1 bg-secondary/25 rounded-2xl p-3">
+    <View className="flex-1 bg-secondary/35 border border-border rounded-2xl p-3 shadow-premium">
       <View className="mb-2">{icon}</View>
-      <Text className="text-[10px] font-black uppercase text-muted-foreground">{label}</Text>
-      <Text className="text-sm font-black text-foreground mt-1">{value}</Text>
+      <Text className="text-[10px] font-black uppercase text-accent tracking-widest">{label}</Text>
+      <Text className="text-xs font-black text-foreground mt-1 uppercase tracking-wide">{value}</Text>
     </View>
   );
 }

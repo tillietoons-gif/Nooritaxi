@@ -37,23 +37,26 @@ export default function TabsLayout() {
     <SessionGuard>
       {user === undefined ? (
         <View className="flex-1 items-center justify-center bg-background px-6">
-          <Text className="text-sm font-bold text-muted-foreground">{t('common.loading')}</Text>
+          <Text className="text-sm font-bold text-accent">{t('common.loading')}</Text>
         </View>
       ) : (
         <Tabs
           screenOptions={{
             headerShown: false,
-            tabBarActiveTintColor: '#006947',
-            tabBarInactiveTintColor: '#6d7a71',
+            tabBarActiveTintColor: '#D4AF37', // Luxurious Glowing Gold for active state
+            tabBarInactiveTintColor: '#7C8E84', // Muted deep-emerald gray for inactive state
             tabBarStyle: {
-              backgroundColor: '#ffffff',
-              borderTopColor: '#e0e7e3',
-              paddingBottom: 4,
-              height: 60,
+              backgroundColor: '#040806', // Velvet Obsidian deep dark background
+              borderTopWidth: 1,
+              borderTopColor: 'rgba(212, 175, 55, 0.15)', // Delicate gold borders
+              paddingBottom: 6,
+              height: 64,
             },
             tabBarLabelStyle: {
-              fontSize: 11,
-              fontWeight: '600',
+              fontSize: 10,
+              fontWeight: '700',
+              textTransform: 'uppercase',
+              letterSpacing: 1,
             },
           }}
         >

@@ -21,7 +21,8 @@ import { PatternOverlay } from '../../components/PatternOverlay';
 import { buildDriverWorkSummary } from '../../lib/driver-work';
 
 export default function HomeScreen() {
-  const { t } = useTranslation();
+  const { t } = t => ({ t: (k: string, d?: string) => t(k) || d }); // safety helper
+  const { t: trans } = useTranslation();
   const [user, setUser] = useState<AuthUser | null>(null);
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
   const [trips, setTrips] = useState<Trip[]>([]);
@@ -76,21 +77,21 @@ export default function HomeScreen() {
   const activeAssignments = workSummary.activeTripCount;
   const activeDeliveries = workSummary.activeDeliveryCount;
   const completedTrips = workSummary.completedTripCount;
-  const greeting = new Date().getHours() < 12 ? t('home.greeting_morning') : t('home.greeting_evening');
+  const greeting = new Date().getHours() < 12 ? trans('home.greeting_morning') : trans('home.greeting_evening');
 
   const activeWorkType = activeTrip ? 'trip' : activeDelivery ? 'delivery' : null;
   const activeWorkTitle = activeTrip
     ? `${activeTrip.pickupLocation} -> ${activeTrip.dropoffLocation}`
     : activeDelivery
       ? `${activeDelivery.pickupAddress} -> ${activeDelivery.dropoffAddress}`
-      : t('home.driver_idle_title', 'No active trip right now');
-  const activeWorkStatus = activeTrip?.status ?? activeDelivery?.status ?? t('home.driver_idle_subtitle', 'New assignments will appear here as soon as dispatch matches you.');
+      : trans('home.driver_idle_title', 'No active trip right now');
+  const activeWorkStatus = activeTrip?.status ?? activeDelivery?.status ?? trans('home.driver_idle_subtitle', 'New assignments will appear here as soon as dispatch matches you.');
   const activeWorkBadge = activeWorkType === 'trip'
-    ? t('home.driver_active_badge', 'Current assignment')
+    ? trans('home.driver_active_badge', 'Current assignment')
     : activeWorkType === 'delivery'
-      ? t('home.driver_delivery_badge', 'Current delivery')
-      : t('home.driver_queue_badge', 'Dispatch status');
-  const activeWorkSummary = t(
+      ? trans('home.driver_delivery_badge', 'Current delivery')
+      : trans('home.driver_queue_badge', 'Dispatch status');
+  const activeWorkSummary = trans(
     'home.driver_work_summary',
     '{{trips}} trip jobs and {{deliveries}} delivery jobs active',
     { trips: activeAssignments, deliveries: activeDeliveries },
@@ -105,44 +106,44 @@ export default function HomeScreen() {
     return (
       <SafeAreaView className="flex-1 bg-background">
         <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
-          <View className="px-6 pt-4 pb-2 flex-row justify-between items-center">
+          <View className="px-6 pt-6 pb-2 flex-row justify-between items-center mt-4">
             <View>
-              <Text className="text-muted-foreground text-sm font-medium">{greeting},</Text>
-              <Text className="text-2xl font-bold text-foreground">{user?.name || t('home.merchant')}</Text>
+              <Text className="text-muted-foreground text-xs font-bold uppercase tracking-widest">{greeting},</Text>
+              <Text className="text-3xl font-black text-foreground mt-1">{user?.name || trans('home.merchant')}</Text>
             </View>
             <TouchableOpacity
               onPress={() => router.push('/(tabs)/notifications')}
-              className="bg-card p-3 rounded-full shadow-sm border border-muted/20"
+              className="bg-card p-3 rounded-full border border-border shadow-premium"
             >
-              <Bell size={24} color="#006947" />
+              <Bell size={24} color="#D4AF37" />
             </TouchableOpacity>
           </View>
 
           <View className="px-6 py-4">
-            <View className="bg-primary rounded-3xl p-6 overflow-hidden relative shadow-high-tech">
-              <PatternOverlay color="#ffffff" opacity={0.08} />
+            <View className="bg-card rounded-3xl p-6 overflow-hidden relative border border-accent/20 shadow-premium">
+              <PatternOverlay color="#D4AF37" opacity={0.03} />
               <View className="relative z-10">
-                <Text className="text-white/70 text-[10px] font-bold uppercase tracking-widest mb-2">{t('home.merchant_mode_badge')}</Text>
-                <Text className="text-white text-2xl font-black mb-3">
-                  {primaryRestaurant?.name ?? t('home.merchant_profile_title')}
+                <Text className="text-accent text-[10px] font-black uppercase tracking-widest mb-2">{trans('home.merchant_mode_badge')}</Text>
+                <Text className="text-foreground text-2xl font-black mb-3">
+                  {primaryRestaurant?.name ?? trans('home.merchant_profile_title')}
                 </Text>
-                <Text className="text-white/80 leading-6 mb-6">
+                <Text className="text-muted-foreground text-sm leading-6 mb-6">
                   {primaryRestaurant
-                    ? t('home.merchant_profile_subtitle_active', { count: activeOrders.length })
-                    : t('home.merchant_profile_subtitle_empty')}
+                    ? trans('home.merchant_profile_subtitle_active', { count: activeOrders.length })
+                    : trans('home.merchant_profile_subtitle_empty')}
                 </Text>
                 <View className="flex-row gap-3">
                   <TouchableOpacity
                     onPress={() => router.push('/(tabs)/merchant')}
-                    className="flex-1 bg-white py-3 rounded-2xl items-center justify-center"
+                    className="flex-1 bg-primary py-3.5 rounded-2xl items-center justify-center border border-accent/15"
                   >
-                    <Text className="text-primary font-bold">{t('home.merchant_manage_menu')}</Text>
+                    <Text className="text-white font-bold tracking-wider text-xs uppercase">{trans('home.merchant_manage_menu')}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     onPress={() => router.push('/(tabs)/orders')}
-                    className="flex-1 bg-white/10 py-3 rounded-2xl items-center justify-center border border-white/15"
+                    className="flex-1 bg-secondary py-3.5 rounded-2xl items-center justify-center border border-border"
                   >
-                    <Text className="text-white font-bold">{t('profile.orders')}</Text>
+                    <Text className="text-foreground font-bold tracking-wider text-xs uppercase">{trans('profile.orders')}</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -151,58 +152,58 @@ export default function HomeScreen() {
 
           {loadError ? (
             <View className="px-6 pb-2">
-              <View className="bg-destructive/5 p-4 rounded-2xl border border-destructive/10">
+              <View className="bg-destructive/10 p-4 rounded-2xl border border-destructive/20">
                 <Text className="text-center text-xs text-destructive font-bold uppercase tracking-widest">{loadError}</Text>
               </View>
             </View>
           ) : null}
 
           <View className="px-6 py-2">
-            <View className="bg-card rounded-3xl p-6 border border-muted/20 shadow-sm">
+            <View className="bg-card rounded-3xl p-6 border border-border shadow-premium">
               <View className="flex-row justify-between items-start mb-4">
                 <View className="flex-1 pr-4">
-                  <Text className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest mb-2">{t('home.today')}</Text>
-                  <Text className="text-foreground text-lg font-bold leading-6">{t('home.active_orders', { count: activeOrders.length })}</Text>
-                  <Text className="text-xs text-muted-foreground mt-3">
-                    {t('home.merchant_today_summary', { restaurants: restaurants.length, orders: completedOrders })}
+                  <Text className="text-accent text-[10px] font-black uppercase tracking-widest mb-2">{trans('home.today')}</Text>
+                  <Text className="text-foreground text-xl font-black leading-7">{trans('home.active_orders', { count: activeOrders.length })}</Text>
+                  <Text className="text-xs text-muted-foreground mt-3 font-medium">
+                    {trans('home.merchant_today_summary', { restaurants: restaurants.length, orders: completedOrders })}
                   </Text>
                 </View>
-                <View className="bg-primary/10 p-3 rounded-2xl">
-                  <ReceiptText size={24} color="#006947" />
+                <View className="bg-primary/10 p-3.5 rounded-2xl border border-primary/20">
+                  <ReceiptText size={24} color="#D4AF37" />
                 </View>
               </View>
               <TouchableOpacity
                 onPress={() => router.push('/(tabs)/orders')}
-                className="bg-secondary/35 py-3 rounded-2xl items-center justify-center border border-accent/10"
+                className="bg-secondary py-3.5 rounded-2xl items-center justify-center border border-border"
               >
-                <Text className="text-foreground font-bold">{t('home.open_order_queue')}</Text>
+                <Text className="text-foreground font-bold tracking-wider text-xs uppercase">{trans('home.open_order_queue')}</Text>
               </TouchableOpacity>
             </View>
           </View>
 
           <View className="px-6 py-6">
-            <Text className="text-lg font-bold text-foreground mb-4">{t('home.merchant_tools')}</Text>
+            <Text className="text-lg font-black text-foreground uppercase tracking-widest mb-4">{trans('home.merchant_tools')}</Text>
             <View className="flex-row flex-wrap justify-between">
               <TouchableOpacity
                 onPress={() => router.push('/(tabs)/merchant')}
-                className="w-[48%] bg-card p-5 rounded-3xl border border-muted/20 shadow-sm items-center mb-4"
+                className="w-[48%] bg-card p-5 rounded-3xl border border-border shadow-premium items-center mb-4"
               >
-                <View className="bg-primary/10 p-4 rounded-2xl mb-3">
-                  <Store size={32} color="#006947" />
+                <View className="bg-primary/10 p-4 rounded-2xl mb-3 border border-primary/20">
+                  <Store size={32} color="#D4AF37" />
                 </View>
-                <Text className="font-bold text-foreground text-center">{t('profile.restaurant')}</Text>
-                <Text className="text-xs text-muted-foreground text-center mt-1">{t('home.profile_and_menu')}</Text>
+                <Text className="font-extrabold text-foreground text-center text-sm">{trans('profile.restaurant')}</Text>
+                <Text className="text-[10px] text-muted-foreground text-center mt-1 font-semibold uppercase">{trans('home.profile_and_menu')}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 onPress={() => router.push('/(tabs)/orders')}
-                className="w-[48%] bg-card p-5 rounded-3xl border border-muted/20 shadow-sm items-center mb-4"
+                className="w-[48%] bg-card p-5 rounded-3xl border border-border shadow-premium items-center mb-4"
               >
-                <View className="bg-accent/10 p-4 rounded-2xl mb-3">
+                <View className="bg-primary/10 p-4 rounded-2xl mb-3 border border-primary/20">
                   <ReceiptText size={32} color="#D4AF37" />
                 </View>
-                <Text className="font-bold text-foreground text-center">{t('profile.orders')}</Text>
-                <Text className="text-xs text-muted-foreground text-center mt-1">{t('home.accept_and_prepare')}</Text>
+                <Text className="font-extrabold text-foreground text-center text-sm">{trans('profile.orders')}</Text>
+                <Text className="text-[10px] text-muted-foreground text-center mt-1 font-semibold uppercase">{trans('home.accept_and_prepare')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -215,44 +216,44 @@ export default function HomeScreen() {
     return (
       <SafeAreaView className="flex-1 bg-background">
         <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
-          <View className="px-6 pt-4 pb-2 flex-row justify-between items-center">
+          <View className="px-6 pt-6 pb-2 flex-row justify-between items-center mt-4">
             <View>
-              <Text className="text-muted-foreground text-sm font-medium">{greeting},</Text>
-              <Text className="text-2xl font-bold text-foreground">{user?.name || t('home.driver')}</Text>
+              <Text className="text-muted-foreground text-xs font-bold uppercase tracking-widest">{greeting},</Text>
+              <Text className="text-3xl font-black text-foreground mt-1">{user?.name || trans('home.driver')}</Text>
             </View>
             <TouchableOpacity
               onPress={() => router.push('/(tabs)/notifications')}
-              className="bg-card p-3 rounded-full shadow-sm border border-muted/20"
+              className="bg-card p-3 rounded-full border border-border shadow-premium"
             >
-              <Bell size={24} color="#006947" />
+              <Bell size={24} color="#D4AF37" />
             </TouchableOpacity>
           </View>
 
           <View className="px-6 py-4">
-            <View className="bg-primary rounded-3xl p-6 overflow-hidden relative shadow-high-tech">
-              <PatternOverlay color="#ffffff" opacity={0.08} />
+            <View className="bg-card rounded-3xl p-6 overflow-hidden relative border border-accent/20 shadow-premium">
+              <PatternOverlay color="#D4AF37" opacity={0.03} />
               <View className="relative z-10">
-                <Text className="text-white/70 text-[10px] font-bold uppercase tracking-widest mb-2">
-                  {t('home.driver_mode_badge', 'Driver mode')}
+                <Text className="text-accent text-[10px] font-black uppercase tracking-widest mb-2">
+                  {trans('home.driver_mode_badge', 'Driver mode')}
                 </Text>
-                <Text className="text-white text-2xl font-black mb-3">
-                  {t('home.driver_mode_title', 'Shared driver workspace')}
+                <Text className="text-foreground text-2xl font-black mb-3">
+                  {trans('home.driver_mode_title', 'Shared driver workspace')}
                 </Text>
-                <Text className="text-white/80 leading-6 mb-6">
-                  {t('home.driver_mode_subtitle', 'Review assigned trips, stay ready for cash collections, and keep your verification current from the same Noori app.')}
+                <Text className="text-muted-foreground text-sm leading-6 mb-6 font-medium">
+                  {trans('home.driver_mode_subtitle', 'Review assigned trips, stay ready for cash collections, and keep your verification current from the same Noori app.')}
                 </Text>
                 <View className="flex-row gap-3">
                   <TouchableOpacity
                     onPress={() => router.push('/(tabs)/work')}
-                    className="flex-1 bg-white py-3 rounded-2xl items-center justify-center"
+                    className="flex-1 bg-primary py-3.5 rounded-2xl items-center justify-center border border-accent/15"
                   >
-                    <Text className="text-primary font-bold">{t('home.driver_jobs_cta', 'View work')}</Text>
+                    <Text className="text-white font-bold tracking-wider text-xs uppercase">{trans('home.driver_jobs_cta', 'View work')}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     onPress={() => router.push('/driver-kyc')}
-                    className="flex-1 bg-white/10 py-3 rounded-2xl items-center justify-center border border-white/15"
+                    className="flex-1 bg-secondary py-3.5 rounded-2xl items-center justify-center border border-border"
                   >
-                    <Text className="text-white font-bold">{t('home.driver_verification_cta', 'Verification')}</Text>
+                    <Text className="text-foreground font-bold tracking-wider text-xs uppercase">{trans('home.driver_verification_cta', 'Verification')}</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -261,112 +262,110 @@ export default function HomeScreen() {
 
           {loadError ? (
             <View className="px-6 pb-2">
-              <View className="bg-destructive/5 p-4 rounded-2xl border border-destructive/10">
+              <View className="bg-destructive/10 p-4 rounded-2xl border border-destructive/20">
                 <Text className="text-center text-xs text-destructive font-bold uppercase tracking-widest">{loadError}</Text>
               </View>
             </View>
           ) : null}
 
           <View className="px-6 py-2">
-            <View className="bg-card rounded-3xl p-6 border border-muted/20 shadow-sm">
+            <View className="bg-card rounded-3xl p-6 border border-border shadow-premium">
               <View className="flex-row justify-between items-start mb-4">
                 <View className="flex-1 pr-4">
-                  <Text className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest mb-2">
+                  <Text className="text-accent text-[10px] font-black uppercase tracking-widest mb-2">
                     {activeWorkBadge}
                   </Text>
-                  <Text className="text-foreground text-lg font-bold leading-6">
+                  <Text className="text-foreground text-xl font-black leading-7">
                     {activeWorkTitle}
                   </Text>
-                  <Text className="text-muted-foreground text-sm mt-2">
+                  <Text className="text-muted-foreground text-sm mt-2 font-medium">
                     {activeWorkStatus}
                   </Text>
-                  <Text className="text-xs text-muted-foreground mt-3">{activeWorkSummary}</Text>
-                  {/* Mini earnings summary for active work */}
-                  <Text className="text-xs text-primary font-bold mt-2">
-                    {t('home.estimated_earnings', { amount: Math.round((completedTrips * 80) + (activeAssignments * 60) + (activeDeliveries * 50)) })}
+                  <Text className="text-xs text-muted-foreground mt-3 font-bold uppercase tracking-wide">{activeWorkSummary}</Text>
+                  <Text className="text-xs text-accent font-black mt-2">
+                    {trans('home.estimated_earnings', { amount: Math.round((completedTrips * 80) + (activeAssignments * 60) + (activeDeliveries * 50)) })}
                   </Text>
                 </View>
-                <View className="bg-primary/10 p-3 rounded-2xl">
-                  {activeWorkType === 'delivery' ? <Package size={24} color="#006947" /> : <Car size={24} color="#006947" />}
+                <View className="bg-primary/10 p-3.5 rounded-2xl border border-primary/20">
+                  {activeWorkType === 'delivery' ? <Package size={24} color="#D4AF37" /> : <Car size={24} color="#D4AF37" />}
                 </View>
               </View>
 
               <TouchableOpacity
                 onPress={() => router.push(activeWorkRoute as any)}
-                className="bg-secondary/35 py-3 rounded-2xl items-center justify-center border border-accent/10"
+                className="bg-secondary py-3.5 rounded-2xl items-center justify-center border border-border"
               >
-                <Text className="text-foreground font-bold">
-                  {t('home.driver_all_jobs_cta', 'Open all work')}
+                <Text className="text-foreground font-bold tracking-wider text-xs uppercase">
+                  {trans('home.driver_all_jobs_cta', 'Open all work')}
                 </Text>
               </TouchableOpacity>
             </View>
           </View>
 
-          {/* Mini Live Tracking Preview for drivers */}
           {(activeTrip || activeDelivery) && (
             <View className="px-6 py-2">
               <TouchableOpacity
                 onPress={() => router.push('/active-trip' as any)}
-                className="bg-card rounded-3xl p-4 border border-primary/20 flex-row items-center"
+                className="bg-card rounded-3xl p-5 border border-primary/30 flex-row items-center shadow-premium"
               >
                 <View className="flex-1">
-                  <Text className="text-sm font-bold text-primary">{t('home.live_tracking_active')}</Text>
-                  <Text className="text-xs text-muted-foreground">{t('home.live_tracking_subtitle')}</Text>
+                  <Text className="text-sm font-black text-accent uppercase tracking-wider">{trans('home.live_tracking_active')}</Text>
+                  <Text className="text-xs text-muted-foreground mt-1 font-semibold">{trans('home.live_tracking_subtitle')}</Text>
                 </View>
-                <Car size={24} color="#006947" />
+                <Car size={24} color="#D4AF37" />
               </TouchableOpacity>
             </View>
           )}
 
           <View className="px-6 py-6">
-            <Text className="text-lg font-bold text-foreground mb-4">{t('home.driver_tools_title', 'Driver tools')}</Text>
+            <Text className="text-lg font-black text-foreground uppercase tracking-widest mb-4">{trans('home.driver_tools_title', 'Driver tools')}</Text>
             <View className="flex-row flex-wrap justify-between">
               <TouchableOpacity
                 onPress={() => router.push('/(tabs)/work')}
-                className="w-full bg-card p-5 rounded-3xl border border-muted/20 shadow-sm mb-4"
+                className="w-full bg-card p-5 rounded-3xl border border-border shadow-premium mb-4"
               >
                 <View className="flex-row items-center justify-between">
                   <View className="flex-row items-center gap-4 flex-1 pr-4">
-                    <View className="bg-primary/10 p-4 rounded-2xl">
-                      <BriefcaseBusiness size={32} color="#006947" />
+                    <View className="bg-primary/10 p-4 rounded-2xl border border-primary/20">
+                      <BriefcaseBusiness size={32} color="#D4AF37" />
                     </View>
                     <View className="flex-1">
-                      <Text className="font-bold text-foreground">{t('home.driver_jobs_title', 'Active work queue')}</Text>
-                      <Text className="text-xs text-muted-foreground mt-1">
-                        {t('home.driver_work_summary', '{{trips}} trip jobs and {{deliveries}} delivery jobs active', {
+                      <Text className="font-extrabold text-foreground text-sm uppercase tracking-wider">{trans('home.driver_jobs_title', 'Active work queue')}</Text>
+                      <Text className="text-[11px] text-muted-foreground mt-1 font-semibold">
+                        {trans('home.driver_work_summary', '{{trips}} trip jobs and {{deliveries}} delivery jobs active', {
                           trips: activeAssignments,
                           deliveries: activeDeliveries,
                         })}
                       </Text>
                     </View>
                   </View>
-                  <ChevronRight size={20} color="#6d7a71" />
+                  <ChevronRight size={20} color="#7C8E84" />
                 </View>
               </TouchableOpacity>
 
                 <TouchableOpacity
                   onPress={() => router.push('/driver-kyc')}
-                  className="w-[48%] bg-card p-5 rounded-3xl border border-muted/20 shadow-sm items-center mb-4"
+                  className="w-[48%] bg-card p-5 rounded-3xl border border-border shadow-premium items-center mb-4"
                 >
-                <View className="bg-accent/10 p-4 rounded-2xl mb-3">
+                <View className="bg-primary/10 p-4 rounded-2xl mb-3 border border-primary/20">
                     <User size={32} color="#D4AF37" />
                 </View>
-                  <Text className="font-bold text-foreground">{t('home.driver_documents_title', 'Verification')}</Text>
-                <Text className="text-xs text-muted-foreground text-center mt-1">
-                    {t('home.driver_documents_subtitle', 'Upload and review your driver documents')}
+                  <Text className="font-extrabold text-foreground text-center text-sm">{trans('home.driver_documents_title', 'Verification')}</Text>
+                <Text className="text-[10px] text-muted-foreground text-center mt-1 font-semibold uppercase">
+                    {trans('home.driver_documents_subtitle', 'Upload and review your driver documents')}
                 </Text>
                 </TouchableOpacity>
 
               <TouchableOpacity
                 onPress={() => router.push('/help-support')}
-                className="w-[48%] bg-card p-5 rounded-3xl border border-muted/20 shadow-sm items-center mb-4"
+                className="w-[48%] bg-card p-5 rounded-3xl border border-border shadow-premium items-center mb-4"
               >
-                <View className="bg-secondary/35 p-4 rounded-2xl mb-3">
-                  <Shield size={32} color="#006947" />
+                <View className="bg-primary/10 p-4 rounded-2xl mb-3 border border-primary/20">
+                  <Shield size={32} color="#D4AF37" />
                 </View>
-                <Text className="font-bold text-foreground">{t('home.driver_support_title', 'Support')}</Text>
-                <Text className="text-xs text-muted-foreground text-center mt-1">
-                  {t('home.driver_support_subtitle', '{{count}} completed trips so far', { count: completedTrips })}
+                <Text className="font-extrabold text-foreground text-center text-sm">{trans('home.driver_support_title', 'Support')}</Text>
+                <Text className="text-[10px] text-muted-foreground text-center mt-1 font-semibold uppercase">
+                  {trans('home.driver_support_subtitle', '{{count}} completed trips so far', { count: completedTrips })}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -381,36 +380,36 @@ export default function HomeScreen() {
       <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
 
         {/* Header Section */}
-        <View className="px-6 pt-4 pb-2 flex-row justify-between items-center">
+        <View className="px-6 pt-6 pb-2 flex-row justify-between items-center mt-4">
           <View>
-            <Text className="text-muted-foreground text-sm font-medium">
+            <Text className="text-muted-foreground text-xs font-bold uppercase tracking-widest">
               {greeting},
             </Text>
-            <Text className="text-2xl font-bold text-foreground">
-              {user?.name || t('home.friend')}
+            <Text className="text-3xl font-black text-foreground mt-1">
+              {user?.name || trans('home.friend')}
             </Text>
           </View>
           <TouchableOpacity
             onPress={() => router.push('/(tabs)/notifications')}
-            className="bg-card p-3 rounded-full shadow-sm border border-muted/20"
+            className="bg-card p-3 rounded-full border border-border shadow-premium relative"
           >
-            <Bell size={24} color="#006947" />
-            <View className="absolute top-3 right-3 w-3 h-3 bg-destructive rounded-full border-2 border-white" />
+            <Bell size={24} color="#D4AF37" />
+            <View className="absolute top-2.5 right-2.5 w-3 h-3 bg-destructive rounded-full border-2 border-background" />
           </TouchableOpacity>
         </View>
 
         {/* Cash Payment Notice */}
         <View className="px-6 py-4">
-          <View className="bg-secondary/35 rounded-3xl p-6 border border-accent/15 overflow-hidden relative">
-            <PatternOverlay color="#D4AF37" opacity={0.05} />
+          <View className="bg-card rounded-3xl p-6 border border-accent/20 overflow-hidden relative shadow-premium">
+            <PatternOverlay color="#D4AF37" opacity={0.03} />
 
             <View className="relative z-10">
               <View className="flex-row justify-between items-start mb-5">
                 <View className="flex-1 pr-4">
-                  <Text className="text-accent text-[10px] font-bold uppercase tracking-widest mb-2">{t('home.wallet_label')}</Text>
-                  <Text className="text-foreground text-lg font-bold leading-6">{t('home.cash_note')}</Text>
+                  <Text className="text-accent text-[10px] font-black uppercase tracking-widest mb-2">{trans('home.wallet_label')}</Text>
+                  <Text className="text-foreground text-lg font-black leading-6">{trans('home.cash_note')}</Text>
                 </View>
-                <View className="bg-accent/10 p-3 rounded-2xl">
+                <View className="bg-primary/10 p-3.5 rounded-2xl border border-primary/20">
                   <Banknote size={24} color="#D4AF37" />
                 </View>
               </View>
@@ -418,15 +417,15 @@ export default function HomeScreen() {
               <View className="flex-row gap-3">
                 <TouchableOpacity
                   onPress={() => router.push('/book-ride')}
-                  className="flex-1 bg-primary py-3 rounded-2xl items-center justify-center"
+                  className="flex-1 bg-primary py-3.5 rounded-2xl items-center justify-center border border-accent/15"
                 >
-                  <Text className="text-white font-bold">{t('home.add_money')}</Text>
+                  <Text className="text-white font-bold tracking-wider text-xs uppercase">{trans('home.add_money')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => router.push('/(tabs)/trips')}
-                  className="bg-card py-3 px-4 rounded-2xl items-center justify-center border border-muted/20"
+                  className="bg-secondary py-3.5 px-5 rounded-2xl items-center justify-center border border-border"
                 >
-                  <Text className="text-foreground font-bold">{t('home.details')}</Text>
+                  <Text className="text-foreground font-bold tracking-wider text-xs uppercase">{trans('home.details')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -437,85 +436,97 @@ export default function HomeScreen() {
         <View className="px-6 py-2">
           <TouchableOpacity
             onPress={() => router.push('/book-ride')}
-            className="bg-card flex-row items-center px-4 py-4 rounded-2xl border border-muted/30 shadow-sm"
+            className="bg-card flex-row items-center px-5 py-4 rounded-2xl border border-border shadow-premium"
           >
-            <Search size={20} color="#6D7A71" />
-            <Text className="ml-3 text-muted-foreground font-medium">{t('home.search_placeholder')}</Text>
+            <Search size={20} color="#7C8E84" />
+            <Text className="ml-4 text-muted-foreground font-semibold text-sm tracking-wide">{trans('home.search_placeholder')}</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Services Grid */}
+        {/* Services Grid - REDESIGNED BENTO GRID */}
         <View className="px-6 py-6">
-          <Text className="text-lg font-bold text-foreground mb-4">{t('home.services_title')}</Text>
-          <View className="flex-row flex-wrap justify-between">
+          <Text className="text-lg font-black text-foreground uppercase tracking-widest mb-4">{trans('home.services_title')}</Text>
 
-            {/* Taxi Service */}
+          {/* Bento Box Layout */}
+          <View className="flex-row justify-between mb-4">
+            {/* Primary Large Bento Card (Taxi) */}
             <TouchableOpacity
               onPress={() => router.push('/book-ride')}
-              className="w-[48%] bg-card p-5 rounded-3xl border border-muted/20 shadow-sm items-center mb-4"
+              className="w-[58%] bg-card p-6 rounded-4xl border border-accent/20 shadow-premium justify-between relative overflow-hidden"
+              style={{ minHeight: 180 }}
             >
-              <View className="bg-primary/10 p-4 rounded-2xl mb-3">
-                <Car size={32} color="#006947" />
+              <PatternOverlay color="#D4AF37" opacity={0.02} />
+              <View className="bg-primary/10 p-4 rounded-2xl self-start border border-primary/20">
+                <Car size={32} color="#D4AF37" />
               </View>
-              <Text className="font-bold text-foreground">{t('home.taxi_label')}</Text>
-              <Text className="text-xs text-muted-foreground text-center mt-1">{t('home.taxi_sub')}</Text>
+              <View className="mt-6">
+                <Text className="font-extrabold text-foreground text-lg uppercase tracking-wider">{trans('home.taxi_label')}</Text>
+                <Text className="text-xs text-muted-foreground mt-1 font-semibold uppercase">{trans('home.taxi_sub')}</Text>
+              </View>
             </TouchableOpacity>
 
-            {/* Food Service */}
-            <TouchableOpacity
-              onPress={() => router.push('/(tabs)/food')}
-              className="w-[48%] bg-card p-5 rounded-3xl border border-muted/20 shadow-sm items-center mb-4"
-            >
-              <View className="bg-orange-500/10 p-4 rounded-2xl mb-3">
-                <Utensils size={32} color="#f97316" />
-              </View>
-              <Text className="font-bold text-foreground">{t('home.food_label')}</Text>
-              <Text className="text-xs text-muted-foreground text-center mt-1">{t('home.food_sub')}</Text>
-            </TouchableOpacity>
+            {/* Vertical Stack Bento Column */}
+            <View className="w-[38%] justify-between">
+              {/* Food Bento Card */}
+              <TouchableOpacity
+                onPress={() => router.push('/(tabs)/food')}
+                className="bg-card p-4 rounded-3xl border border-border shadow-premium items-center justify-center"
+                style={{ height: 86 }}
+              >
+                <View className="bg-primary/10 p-2 rounded-xl mb-1.5 border border-primary/20">
+                  <Utensils size={18} color="#D4AF37" />
+                </View>
+                <Text className="font-bold text-foreground text-xs tracking-wide uppercase">{trans('home.food_label')}</Text>
+              </TouchableOpacity>
 
-            {/* Parcel Service */}
-            <TouchableOpacity
-              onPress={() => router.push('/delivery')}
-              className="w-[48%] bg-card p-5 rounded-3xl border border-muted/20 shadow-sm items-center mb-4"
-            >
-              <View className="bg-blue-500/10 p-4 rounded-2xl mb-3">
-                <Package size={32} color="#3b82f6" />
-              </View>
-              <Text className="font-bold text-foreground">{t('home.parcel_label')}</Text>
-              <Text className="text-xs text-muted-foreground text-center mt-1">{t('home.parcel_sub')}</Text>
-            </TouchableOpacity>
-
-            {/* More - now functional: Promotions & How it Works */}
-            <TouchableOpacity
-              onPress={() => router.push('/promotions')}
-              className="w-[48%] bg-accent/5 p-5 rounded-3xl border border-accent/20 shadow-sm items-center mb-4"
-            >
-              <View className="bg-accent/10 p-4 rounded-2xl mb-3">
-                <Gift size={32} color="#D4AF37" />
-              </View>
-              <Text className="font-bold text-accent">{t('home.more_title', 'More')}</Text>
-              <Text className="text-xs text-accent/70 text-center mt-1">{t('home.more_sub', 'Promotions & Rewards')}</Text>
-            </TouchableOpacity>
-
+              {/* Parcel Bento Card */}
+              <TouchableOpacity
+                onPress={() => router.push('/delivery')}
+                className="bg-card p-4 rounded-3xl border border-border shadow-premium items-center justify-center"
+                style={{ height: 86 }}
+              >
+                <View className="bg-primary/10 p-2 rounded-xl mb-1.5 border border-primary/20">
+                  <Package size={18} color="#D4AF37" />
+                </View>
+                <Text className="font-bold text-foreground text-xs tracking-wide uppercase">{trans('home.parcel_label')}</Text>
+              </TouchableOpacity>
+            </View>
           </View>
+
+          {/* Bottom Bento Row */}
+          <TouchableOpacity
+            onPress={() => router.push('/promotions')}
+            className="bg-card p-5 rounded-3xl border border-accent/20 shadow-premium flex-row items-center justify-between"
+          >
+            <View className="flex-row items-center gap-4">
+              <View className="bg-primary/10 p-3 rounded-2xl border border-primary/20">
+                <Gift size={24} color="#D4AF37" />
+              </View>
+              <View>
+                <Text className="font-extrabold text-accent text-sm tracking-wider uppercase">{trans('home.more_title', 'More')}</Text>
+                <Text className="text-[10px] text-muted-foreground mt-0.5 font-bold uppercase">{trans('home.more_sub', 'Promotions & Rewards')}</Text>
+              </View>
+            </View>
+            <ChevronRight size={18} color="#D4AF37" />
+          </TouchableOpacity>
         </View>
 
-        {/* How Noori Works - Educational section (mirrors web feature) */}
-        <View className="px-6 pb-4">
-          <Text className="text-lg font-bold text-foreground mb-3">{t('home.how_it_works', 'How Noori Works')}</Text>
-          <View className="space-y-3">
+        {/* How Noori Works */}
+        <View className="px-6 pb-6">
+          <Text className="text-lg font-black text-foreground uppercase tracking-widest mb-4">{trans('home.how_it_works', 'How Noori Works')}</Text>
+          <View className="space-y-4">
             {[
-              { num: '1', title: t('home.step_request', 'Request'), desc: t('home.step_request_desc', 'Choose ride, delivery or food and confirm your location.') },
-              { num: '2', title: t('home.step_match', 'Match'), desc: t('home.step_match_desc', 'We instantly connect you with a verified nearby partner.') },
-              { num: '3', title: t('home.step_track', 'Track & Pay'), desc: t('home.step_track_desc', 'Follow live on the map. Pay cash on arrival or delivery.') },
+              { num: '1', title: trans('home.step_request', 'Request'), desc: trans('home.step_request_desc', 'Choose ride, delivery or food and confirm your location.') },
+              { num: '2', title: trans('home.step_match', 'Match'), desc: trans('home.step_match_desc', 'We instantly connect you with a verified nearby partner.') },
+              { num: '3', title: trans('home.step_track', 'Track & Pay'), desc: trans('home.step_track_desc', 'Follow live on the map. Pay cash on arrival or delivery.') },
             ].map((step, idx) => (
-              <View key={idx} className="flex-row bg-card p-4 rounded-3xl border border-muted/10">
-                <View className="w-8 h-8 rounded-2xl bg-primary/10 items-center justify-center mr-4 mt-0.5">
-                  <Text className="font-black text-primary">{step.num}</Text>
+              <View key={idx} className="flex-row bg-card p-5 rounded-3xl border border-border shadow-premium mb-4">
+                <View className="w-10 h-10 rounded-2xl bg-primary/10 border border-primary/20 items-center justify-center mr-4 mt-0.5">
+                  <Text className="font-black text-accent text-sm">{step.num}</Text>
                 </View>
                 <View className="flex-1">
-                  <Text className="font-bold text-foreground">{step.title}</Text>
-                  <Text className="text-muted-foreground text-xs mt-1 leading-5">{step.desc}</Text>
+                  <Text className="font-extrabold text-foreground text-sm uppercase tracking-wide">{step.title}</Text>
+                  <Text className="text-muted-foreground text-xs mt-1.5 leading-5 font-semibold">{step.desc}</Text>
                 </View>
               </View>
             ))}
@@ -523,19 +534,18 @@ export default function HomeScreen() {
         </View>
 
         {/* Promo / Cultural Banner */}
-        <View className="px-6 pb-10">
-          <View className="bg-secondary/30 rounded-3xl p-6 relative overflow-hidden border border-accent/10">
-             {/* Cultural pattern background */}
-             <PatternOverlay color="#D4AF37" opacity={0.04} />
+        <View className="px-6 pb-12">
+          <View className="bg-card rounded-3xl p-6 relative overflow-hidden border border-accent/20 shadow-premium">
+             <PatternOverlay color="#D4AF37" opacity={0.03} />
 
-             <View className="flex-row justify-between items-center">
+             <View className="flex-row justify-between items-center relative z-10">
                <View className="flex-1 pr-4">
-                 <Text className="text-accent font-bold text-[10px] uppercase tracking-widest mb-1">{t('home.cultural_tip_label')}</Text>
-                 <Text className="text-foreground font-bold text-lg mb-2">{t('home.cultural_tip_title')}</Text>
-                 <Text className="text-muted-foreground text-xs leading-5">
-                   {t('home.cultural_tip_body')}</Text>
+                 <Text className="text-accent font-black text-[10px] uppercase tracking-widest mb-1.5">{trans('home.cultural_tip_label')}</Text>
+                 <Text className="text-foreground font-black text-lg uppercase tracking-wide mb-2 leading-6">{trans('home.cultural_tip_title')}</Text>
+                 <Text className="text-muted-foreground text-xs leading-5 font-semibold">
+                   {trans('home.cultural_tip_body')}</Text>
                </View>
-               <View className="w-16 h-16 bg-white rounded-2xl items-center justify-center shadow-sm">
+               <View className="w-16 h-16 bg-primary/10 rounded-2xl items-center justify-center shadow-premium border border-primary/20">
                   <User size={30} color="#D4AF37" />
                </View>
              </View>

@@ -3,6 +3,7 @@ import { ActivityIndicator, Alert, SafeAreaView, ScrollView, Text, TouchableOpac
 import { Gift, Trophy } from 'lucide-react-native';
 import { getMyLoyalty, LoyaltyAccount, LoyaltyTransaction, redeemLoyaltyPoints } from '../lib/api';
 import { withSessionGuard } from '../lib/SessionGuard';
+import { PatternOverlay } from '../components/PatternOverlay';
 
 function LoyaltyScreen() {
   const [account, setAccount] = React.useState<LoyaltyAccount | null>(null);
@@ -49,56 +50,62 @@ function LoyaltyScreen() {
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <View className="px-6 py-6">
           {loading ? (
-            <View className="py-20"><ActivityIndicator color="#006947" /></View>
+            <View className="py-20"><ActivityIndicator color="#D4AF37" /></View>
           ) : (
             <>
-              <View className="bg-primary rounded-3xl p-7 mb-6">
-                <View className="flex-row items-center justify-between">
+              {/* Ultra-Premium Loyalty Header Card */}
+              <View className="bg-card p-8 rounded-4xl shadow-premium mb-8 overflow-hidden relative border border-accent/30">
+                <PatternOverlay color="#D4AF37" opacity={0.04} />
+                <View className="relative z-10 flex-row items-center justify-between">
                   <View>
-                    <Text className="text-white/70 text-[10px] font-black uppercase tracking-widest">Noori Rewards</Text>
-                    <Text className="text-white text-4xl font-black mt-2">{account?.points ?? 0}</Text>
-                    <Text className="text-white/80 mt-1">Available points · {account?.tier ?? 'NOORI'} tier</Text>
+                    <Text className="text-accent text-[10px] font-black uppercase tracking-widest">Noori Rewards</Text>
+                    <Text className="text-foreground text-4xl font-black mt-2 tracking-wider">{account?.points ?? 0}</Text>
+                    <Text className="text-muted-foreground text-xs font-semibold uppercase tracking-wide mt-2">Available points · {account?.tier ?? 'NOORI'} tier</Text>
                   </View>
                   <Trophy size={42} color="#D4AF37" />
                 </View>
               </View>
 
-              <View className="bg-card rounded-3xl border border-muted/10 p-5 mb-6">
-                <Text className="font-bold text-foreground mb-4">Redeem rewards</Text>
+              <View className="bg-card rounded-3xl border border-border p-5 mb-8 shadow-premium">
+                <Text className="font-extrabold text-foreground uppercase tracking-widest text-sm mb-4">Redeem rewards</Text>
                 {rewards.map((reward) => (
                   <TouchableOpacity
                     key={reward.points}
                     onPress={() => redeem(reward.points)}
                     disabled={redeeming || (account?.points ?? 0) < reward.points}
-                    className={`rounded-2xl p-4 mb-3 ${(account?.points ?? 0) < reward.points ? 'bg-muted/20' : 'bg-primary/5 border border-primary/10'}`}
+                    className={`rounded-2xl p-4 mb-4 border ${
+                      (account?.points ?? 0) < reward.points
+                        ? 'bg-secondary/40 border-border opacity-50'
+                        : 'bg-primary/10 border-accent/20 shadow-premium'
+                    }`}
                   >
                     <View className="flex-row items-center justify-between gap-3">
-                      <View className="flex-row items-center gap-3 flex-1">
-                        <Gift size={20} color="#006947" />
+                      <View className="flex-row items-center gap-4 flex-1">
+                        <Gift size={20} color="#D4AF37" />
                         <View className="flex-1">
-                          <Text className="font-bold text-foreground">{reward.title}</Text>
-                          <Text className="text-xs text-muted-foreground mt-1">{reward.detail}</Text>
+                          <Text className="font-bold text-foreground text-sm uppercase tracking-wide">{reward.title}</Text>
+                          <Text className="text-xs text-muted-foreground mt-1.5 font-semibold leading-4">{reward.detail}</Text>
                         </View>
                       </View>
-                      <Text className="font-black text-primary">{reward.points} pts</Text>
+                      <Text className="font-black text-accent text-sm tracking-wider">{reward.points} pts</Text>
                     </View>
                   </TouchableOpacity>
                 ))}
               </View>
 
-              <Text className="text-lg font-bold text-foreground mb-4">Recent activity</Text>
+              <Text className="text-base font-black text-foreground uppercase tracking-widest mb-4">Recent activity</Text>
               {transactions.length === 0 ? (
-                <View className="bg-card rounded-3xl p-8 items-center border border-muted/10">
-                  <Text className="font-bold text-muted-foreground">No rewards activity yet</Text>
+                <View className="bg-card rounded-3xl p-10 items-center border border-border border-dashed shadow-premium">
+                  <Text className="font-bold text-muted-foreground text-xs uppercase tracking-widest">No rewards activity yet</Text>
                 </View>
               ) : (
                 transactions.map((tx) => (
-                  <View key={tx.id} className="bg-card rounded-2xl border border-muted/10 p-4 mb-3 flex-row justify-between">
+                  <View key={tx.id} className="bg-card rounded-2xl border border-border p-4 mb-4 flex-row justify-between shadow-premium">
                     <View className="flex-1 pr-4">
-                      <Text className="font-bold text-foreground">{tx.description ?? tx.type}</Text>
-                      <Text className="text-xs text-muted-foreground mt-1">{new Date(tx.createdAt).toLocaleDateString()}</Text>
+                      <Text className="font-extrabold text-foreground text-sm uppercase tracking-wider">{tx.description ?? tx.type}</Text>
+                      <Text className="text-xs text-muted-foreground mt-1.5 font-semibold">{new Date(tx.createdAt).toLocaleDateString()}</Text>
                     </View>
-                    <Text className={`font-black ${tx.type === 'CREDIT' ? 'text-primary' : 'text-foreground'}`}>
+                    <Text className={`font-black text-sm ${tx.type === 'CREDIT' ? 'text-accent' : 'text-foreground'}`}>
                       {tx.type === 'CREDIT' ? '+' : ''}{tx.amount}
                     </Text>
                   </View>

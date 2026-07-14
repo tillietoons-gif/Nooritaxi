@@ -45,53 +45,54 @@ export default function WalletScreen() {
     <SafeAreaView className="flex-1 bg-background">
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <View className="px-6 py-6">
-          <Text className="text-2xl font-bold text-foreground mb-6">{t('wallet.title')}</Text>
+          <Text className="text-2xl font-black text-foreground uppercase tracking-wider mb-6">{t('wallet.title')}</Text>
 
-          <View className="bg-primary p-8 rounded-3xl shadow-high-tech mb-8 overflow-hidden relative">
-            <PatternOverlay color="#ffffff" opacity={0.1} />
+          {/* Premium Metal Card Layout */}
+          <View className="bg-card p-8 rounded-4xl shadow-premium mb-8 overflow-hidden relative border border-accent/30">
+            <PatternOverlay color="#D4AF37" opacity={0.04} />
 
             <View className="relative z-10">
-              <Text className="text-white/70 text-xs font-bold uppercase tracking-widest mb-1">{t('wallet.available_balance')}</Text>
-              <Text className="text-white text-4xl font-bold">{loading ? '...' : `${balance} AFN`}</Text>
+              <Text className="text-accent text-[10px] font-black uppercase tracking-widest mb-1.5">{t('wallet.available_balance')}</Text>
+              <Text className="text-foreground text-4xl font-black tracking-wider">{loading ? '...' : `${balance} AFN`}</Text>
 
-              <View className="mt-6 rounded-2xl border border-white/15 bg-white/10 p-4">
-                <Text className="text-white text-sm leading-5 font-medium">{t('wallet.cash_only_notice')}</Text>
+              <View className="mt-6 rounded-2xl border border-border bg-[#040806] p-4">
+                <Text className="text-muted-foreground text-xs leading-5 font-semibold uppercase">{t('wallet.cash_only_notice')}</Text>
               </View>
             </View>
           </View>
 
           {message ? (
             <View className="mb-6 p-4 bg-primary/10 rounded-2xl border border-primary/20">
-              <Text className="text-primary font-bold text-sm text-center">{message}</Text>
+              <Text className="text-accent font-bold text-sm text-center">{message}</Text>
             </View>
           ) : null}
 
-          <Text className="text-lg font-bold text-foreground mb-4">{t('wallet.recent_transactions')}</Text>
+          <Text className="text-base font-black text-foreground uppercase tracking-widest mb-4">{t('wallet.recent_transactions')}</Text>
 
           <View className="space-y-4">
             {loading ? (
-              [1, 2, 3].map((item) => <View key={item} className="h-20 bg-muted/30 rounded-2xl" />)
+              [1, 2, 3].map((item) => <View key={item} className="h-20 bg-card border border-border rounded-2xl mb-4 opacity-50" />)
             ) : transactions.length === 0 ? (
-              <View className="items-center py-10 bg-card rounded-3xl border border-muted/20">
-                <Wallet size={34} color="#6d7a71" />
-                <Text className="mt-3 font-bold text-muted-foreground">{t('wallet.no_activity')}</Text>
+              <View className="items-center py-12 bg-card rounded-3xl border border-border border-dashed shadow-premium">
+                <Wallet size={34} color="#7C8E84" />
+                <Text className="mt-3 font-black text-muted-foreground text-xs uppercase tracking-widest">{t('wallet.no_activity')}</Text>
               </View>
             ) : (
               transactions.map((tx) => {
                 const amount = Number(tx.amount);
                 const isIn = amount >= 0;
                 return (
-                  <View key={tx.id} className="flex-row items-center justify-between p-4 bg-card rounded-2xl border border-muted/10 shadow-sm mb-4">
+                  <View key={tx.id} className="flex-row items-center justify-between p-4 bg-card rounded-2xl border border-border shadow-premium mb-4">
                     <View className="flex-row items-center gap-4">
-                      <View className={`p-3 rounded-2xl ${isIn ? 'bg-success/10' : 'bg-muted/10'}`}>
-                        {isIn ? <ArrowDownRight size={20} color="#15803D" /> : <ArrowUpRight size={20} color="#6d7a71" />}
+                      <View className={`p-3 rounded-2xl ${isIn ? 'bg-success/10 border border-success/20' : 'bg-secondary border border-border'}`}>
+                        {isIn ? <ArrowDownRight size={20} color="#00C853" /> : <ArrowUpRight size={20} color="#7C8E84" />}
                       </View>
                       <View>
-                        <Text className="font-bold text-sm text-foreground">{tx.description ?? tx.type}</Text>
-                        <Text className="text-muted-foreground text-[10px] uppercase font-bold">{new Date(tx.createdAt).toLocaleDateString()}</Text>
+                        <Text className="font-extrabold text-sm text-foreground uppercase tracking-wider">{tx.description ?? tx.type}</Text>
+                        <Text className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest mt-1">{new Date(tx.createdAt).toLocaleDateString()}</Text>
                       </View>
                     </View>
-                    <Text className={`font-bold ${isIn ? 'text-success' : 'text-foreground'}`}>
+                    <Text className={`font-black text-sm ${isIn ? 'text-success' : 'text-foreground'}`}>
                       {isIn ? '+' : ''}{amount.toLocaleString()} AFN
                     </Text>
                   </View>

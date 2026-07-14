@@ -44,6 +44,70 @@ import { withSessionGuard } from '../lib/SessionGuard';
 const KABUL_COORDS = { lat: 34.5553, lng: 69.2075 };
 const RECENT_DESTINATIONS_KEY = 'noori_recent_destinations';
 
+// Premium dark/gold custom map styles
+const PREMIUM_MAP_STYLE = [
+  {
+    "elementType": "geometry",
+    "stylers": [
+      { "color": "#040806" }
+    ]
+  },
+  {
+    "elementType": "labels.text.fill",
+    "stylers": [
+      { "color": "#7C8E84" }
+    ]
+  },
+  {
+    "elementType": "labels.text.stroke",
+    "stylers": [
+      { "color": "#040806" }
+    ]
+  },
+  {
+    "featureType": "administrative",
+    "elementType": "geometry",
+    "stylers": [
+      { "color": "#162C24" }
+    ]
+  },
+  {
+    "featureType": "poi",
+    "stylers": [
+      { "visibility": "off" }
+    ]
+  },
+  {
+    "featureType": "road",
+    "elementType": "geometry",
+    "stylers": [
+      { "color": "#0D1813" }
+    ]
+  },
+  {
+    "featureType": "road.highway",
+    "elementType": "geometry",
+    "stylers": [
+      { "color": "#162C24" }
+    ]
+  },
+  {
+    "featureType": "road.highway",
+    "elementType": "geometry.stroke",
+    "stylers": [
+      { "color": "#D4AF37" },
+      { "weight": 1 }
+    ]
+  },
+  {
+    "featureType": "water",
+    "elementType": "geometry",
+    "stylers": [
+      { "color": "#002114" }
+    ]
+  }
+];
+
 type Coords = { lat: number; lng: number };
 type RideType = {
   id: 'economy' | 'comfort' | 'women' | 'xl';
@@ -371,19 +435,19 @@ function BookRideScreen() {
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <View className="px-6 py-6">
           <View className="flex-row items-center mb-6 gap-4">
-            <TouchableOpacity onPress={() => safeBack(router)} className="p-3 bg-card rounded-2xl border border-muted/20 shadow-sm">
-              <ChevronLeft size={20} color="#006947" />
+            <TouchableOpacity onPress={() => safeBack(router)} className="p-3 bg-card rounded-2xl border border-border shadow-premium">
+              <ChevronLeft size={20} color="#D4AF37" />
             </TouchableOpacity>
-            <Text className="text-2xl font-bold text-foreground">{t('book_ride.title', 'Book a Ride')}</Text>
+            <Text className="text-2xl font-black text-foreground uppercase tracking-wider">{t('book_ride.title', 'Book a Ride')}</Text>
           </View>
 
-          <View className="h-80 rounded-3xl overflow-hidden border border-muted/20 shadow-sm bg-muted/10 relative">
+          <View className="h-80 rounded-3xl overflow-hidden border border-border shadow-premium bg-[#040806] relative">
             {MapView ? (
-              <MapView style={{ flex: 1 }} region={mapRegion} showsUserLocation onPress={handleMapPress}>
+              <MapView style={{ flex: 1 }} region={mapRegion} showsUserLocation onPress={handleMapPress} customMapStyle={PREMIUM_MAP_STYLE}>
                 {driverMarkers.map((driver) => Marker ? (
                   <Marker key={driver.id} coordinate={{ latitude: driver.lat, longitude: driver.lng }} title={t('book_ride.nearby_driver')}>
-                    <View className="w-9 h-9 rounded-full bg-white border border-blue-100 items-center justify-center shadow-sm">
-                      <Car size={18} color="#2563eb" />
+                    <View className="w-9 h-9 rounded-full bg-card border border-border items-center justify-center shadow-premium">
+                      <Car size={18} color="#D4AF37" />
                     </View>
                   </Marker>
                 ) : null)}
@@ -391,18 +455,18 @@ function BookRideScreen() {
                   <Circle
                     center={{ latitude: pickupCoords.lat, longitude: pickupCoords.lng }}
                     radius={Math.max(20, Math.min(locationAccuracy, 120))}
-                    strokeColor="rgba(0,105,71,0.25)"
-                    fillColor="rgba(0,105,71,0.08)"
+                    strokeColor="rgba(212,175,55,0.25)"
+                    fillColor="rgba(212,175,55,0.08)"
                   />
                 ) : null}
                 {pickupCoords && Marker ? (
                   <Marker coordinate={{ latitude: pickupCoords.lat, longitude: pickupCoords.lng }} title={pickupLocation || 'Pickup'}>
                     <View className="items-center">
-                      <View className="bg-primary px-3 py-1 rounded-full mb-1">
+                      <View className="bg-primary px-3 py-1 rounded-full mb-1 border border-accent/20">
                         <Text className="text-white text-[10px] font-black uppercase">{t('book_ride.pickup')}</Text>
                       </View>
-                      <View className="w-7 h-7 rounded-full bg-white border-4 border-primary items-center justify-center">
-                        <View className="w-2 h-2 rounded-full bg-primary" />
+                      <View className="w-7 h-7 rounded-full bg-card border-4 border-primary items-center justify-center">
+                        <View className="w-2 h-2 rounded-full bg-accent" />
                       </View>
                     </View>
                   </Marker>
@@ -413,46 +477,46 @@ function BookRideScreen() {
                       <View className="bg-accent px-3 py-1 rounded-full mb-1">
                         <Text className="text-foreground text-[10px] font-black uppercase">{t('book_ride.dropoff')}</Text>
                       </View>
-                      <View className="w-8 h-8 rounded-full bg-white border-4 border-accent items-center justify-center">
+                      <View className="w-8 h-8 rounded-full bg-card border-4 border-accent items-center justify-center">
                         <Navigation size={13} color="#D4AF37" />
                       </View>
                     </View>
                   </Marker>
                 ) : null}
                 {routeCoords.length > 1 && Polyline ? (
-                  <Polyline coordinates={routeCoords.map((point) => ({ latitude: point.lat, longitude: point.lng }))} strokeColor="#006947" strokeWidth={4} />
+                  <Polyline coordinates={routeCoords.map((point) => ({ latitude: point.lat, longitude: point.lng }))} strokeColor="#D4AF37" strokeWidth={4} />
                 ) : null}
               </MapView>
             ) : (
-              <View className="flex-1 bg-[#eef4ef] relative overflow-hidden">
-                <View className="absolute left-[-20%] top-10 h-8 w-[140%] rotate-[-18deg] bg-white/80" />
-                <View className="absolute left-[-10%] top-32 h-7 w-[125%] rotate-[12deg] bg-white/70" />
-                <View className="absolute left-16 top-[-20%] h-[150%] w-7 rotate-[28deg] bg-white/60" />
-                <View className="absolute right-20 top-[-10%] h-[130%] w-6 rotate-[-8deg] bg-white/50" />
-                <View className="absolute left-8 bottom-10 h-20 w-28 rounded-3xl bg-primary/10" />
-                <View className="absolute right-8 top-20 h-24 w-24 rounded-3xl bg-accent/15" />
+              <View className="flex-1 bg-secondary/10 relative overflow-hidden">
+                <View className="absolute left-[-20%] top-10 h-8 w-[140%] rotate-[-18deg] bg-card/10" />
+                <View className="absolute left-[-10%] top-32 h-7 w-[125%] rotate-[12deg] bg-card/20" />
+                <View className="absolute left-16 top-[-20%] h-[150%] w-7 rotate-[28deg] bg-card/20" />
+                <View className="absolute right-20 top-[-10%] h-[130%] w-6 rotate-[-8deg] bg-card/10" />
+                <View className="absolute left-8 bottom-10 h-20 w-28 rounded-3xl bg-primary/10 border border-primary/20" />
+                <View className="absolute right-8 top-20 h-24 w-24 rounded-3xl bg-accent/15 border border-accent/20" />
                 {driverMarkers.map((driver, index) => (
                   <View
                     key={driver.id}
-                    className="absolute w-9 h-9 rounded-full bg-white border border-blue-100 items-center justify-center shadow-sm"
+                    className="absolute w-9 h-9 rounded-full bg-card border border-accent/20 items-center justify-center shadow-premium"
                     style={{
                       left: `${22 + index * 24}%`,
                       top: `${32 + (index % 2) * 20}%`,
                     }}
                   >
-                    <Car size={18} color="#2563eb" />
+                    <Car size={18} color="#D4AF37" />
                   </View>
                 ))}
                 {routeCoords.length > 1 ? (
-                  <View className="absolute left-[26%] top-[48%] h-1 w-[46%] rounded-full bg-primary rotate-[-12deg]" />
+                  <View className="absolute left-[26%] top-[48%] h-1 w-[46%] rounded-full bg-accent rotate-[-12deg] shadow-premium" />
                 ) : null}
                 {pickupCoords ? (
                   <View className="absolute left-[22%] top-[50%] items-center">
-                    <View className="bg-primary px-3 py-1 rounded-full mb-1">
+                    <View className="bg-primary px-3 py-1 rounded-full mb-1 border border-accent/20">
                       <Text className="text-white text-[10px] font-black uppercase">Pickup</Text>
                     </View>
-                    <View className="w-7 h-7 rounded-full bg-white border-4 border-primary items-center justify-center">
-                      <View className="w-2 h-2 rounded-full bg-primary" />
+                    <View className="w-7 h-7 rounded-full bg-card border-4 border-primary items-center justify-center">
+                      <View className="w-2 h-2 rounded-full bg-accent" />
                     </View>
                   </View>
                 ) : null}
@@ -461,7 +525,7 @@ function BookRideScreen() {
                     <View className="bg-accent px-3 py-1 rounded-full mb-1">
                       <Text className="text-foreground text-[10px] font-black uppercase">Dropoff</Text>
                     </View>
-                    <View className="w-8 h-8 rounded-full bg-white border-4 border-accent items-center justify-center">
+                    <View className="w-8 h-8 rounded-full bg-card border-4 border-accent items-center justify-center">
                       <Navigation size={13} color="#D4AF37" />
                     </View>
                   </View>
@@ -469,24 +533,24 @@ function BookRideScreen() {
               </View>
             )}
             {!pickupCoords ? (
-              <View className="absolute inset-0 bg-white/80 items-center justify-center px-8">
-                <View className="w-14 h-14 rounded-full bg-primary/10 items-center justify-center mb-4">
-                  <Crosshair size={26} color="#006947" />
+              <View className="absolute inset-0 bg-background/95 items-center justify-center px-8">
+                <View className="w-14 h-14 rounded-full bg-primary/10 items-center justify-center mb-4 border border-primary/20">
+                  <Crosshair size={26} color="#D4AF37" />
                 </View>
-                <Text className="text-base font-black text-foreground text-center">{t('book_ride.map_finding')}</Text>
-                <Text className="text-xs font-bold text-muted-foreground text-center mt-2">
+                <Text className="text-base font-black text-foreground text-center uppercase tracking-wider">{t('book_ride.map_finding')}</Text>
+                <Text className="text-xs font-bold text-muted-foreground text-center mt-2 px-4 leading-5">
                   {t('book_ride.map_permission')}
                 </Text>
               </View>
             ) : null}
             <View className="absolute top-3 left-3 right-3 flex-row items-start justify-between gap-3">
-              <View className="flex-1 bg-white/95 rounded-2xl px-4 py-3 border border-muted/20 shadow-sm">
-                <Text className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{t('book_ride.map_status')}</Text>
-                <Text className="text-sm font-black text-foreground mt-1">{mapStatus}</Text>
+              <View className="flex-1 bg-card/90 rounded-2xl px-4 py-3 border border-border shadow-premium">
+                <Text className="text-[10px] font-black text-accent uppercase tracking-widest">{t('book_ride.map_status')}</Text>
+                <Text className="text-sm font-black text-foreground mt-1 uppercase tracking-wide">{mapStatus}</Text>
               </View>
-              <View className="bg-white/95 rounded-2xl border border-muted/20 shadow-sm overflow-hidden">
-                <TouchableOpacity onPress={refreshCurrentLocation} disabled={locating} className="w-12 h-12 items-center justify-center border-b border-muted/10">
-                  <Crosshair size={19} color="#006947" />
+              <View className="bg-card/90 rounded-2xl border border-border shadow-premium overflow-hidden">
+                <TouchableOpacity onPress={refreshCurrentLocation} disabled={locating} className="w-12 h-12 items-center justify-center border-b border-border">
+                  <Crosshair size={19} color="#D4AF37" />
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => {
@@ -501,60 +565,61 @@ function BookRideScreen() {
               </View>
             </View>
             <View className="absolute bottom-3 left-3 right-3">
-              <View className="bg-white/95 rounded-2xl px-4 py-3 border border-muted/20 shadow-sm flex-row items-center justify-between">
+              <View className="bg-card/90 rounded-2xl px-4 py-3 border border-border shadow-premium flex-row items-center justify-between">
                 <View>
-                  <Text className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{t('book_ride.route')}</Text>
-                  <Text className="text-base font-black text-foreground">
+                  <Text className="text-[10px] font-black text-accent uppercase tracking-widest">{t('book_ride.route')}</Text>
+                  <Text className="text-sm font-black text-foreground mt-1 uppercase tracking-wide">
                     {dropoffCoords ? `${routeDistance.toFixed(1)} km · ${routeMinutes} min` : t('book_ride.choose_destination')}
                   </Text>
                 </View>
-                <View className="bg-primary/10 rounded-2xl px-3 py-2">
-                  <Text className="text-primary font-black">AFN {dropoffCoords ? totalFare.toLocaleString() : '--'}</Text>
+                <View className="bg-primary/20 rounded-2xl px-3.5 py-2 border border-accent/20">
+                  <Text className="text-accent font-black tracking-wider text-xs">AFN {dropoffCoords ? totalFare.toLocaleString() : '--'}</Text>
                 </View>
               </View>
             </View>
           </View>
 
-          <View className="flex-row items-center justify-between mb-6 gap-3">
-            <Text className="flex-1 text-xs font-bold text-muted-foreground">
+          <View className="flex-row items-center justify-between mb-6 gap-3 mt-4">
+            <Text className="flex-1 text-xs font-bold text-muted-foreground uppercase tracking-wide leading-5">
               {locationMessage || t('book_ride.location_hint')}
             </Text>
             <TouchableOpacity
               onPress={refreshCurrentLocation}
               disabled={locating}
-              className={`px-4 py-3 rounded-2xl border ${locating ? 'bg-muted/20 border-muted/20' : 'bg-primary/5 border-primary/10'}`}
+              className={`px-4 py-3 rounded-2xl border ${locating ? 'bg-card border-border' : 'bg-primary/10 border-accent/20'}`}
             >
-              <Text className="text-primary text-xs font-black uppercase">
+              <Text className="text-accent text-xs font-black uppercase tracking-wider">
                 {locating ? t('book_ride.locating') : t('book_ride.use_exact')}
               </Text>
             </TouchableOpacity>
           </View>
 
-          <View className="bg-card p-5 rounded-3xl shadow-sm border border-muted/10 mb-5">
+          <View className="bg-card p-5 rounded-3xl shadow-premium border border-border mb-6">
             <View>
-              <Text className="text-xs font-bold text-muted-foreground uppercase mb-2 ml-1">{t('book_ride.from')}</Text>
-              <View className="flex-row items-center bg-muted/10 h-14 px-4 rounded-2xl border border-muted/20">
-                <MapPin size={20} color="#006947" />
+              <Text className="text-[10px] font-black text-accent uppercase mb-2 ml-1 tracking-widest">{t('book_ride.from')}</Text>
+              <View className="flex-row items-center bg-[#040806] h-14 px-4 rounded-2xl border border-border">
+                <MapPin size={20} color="#D4AF37" />
                 <TextInput
                   value={pickupLocation}
                   editable={false}
                   selectTextOnFocus={false}
                   placeholder={t('book_ride.exact_location')}
-                  className="flex-1 ml-3 text-base font-bold text-foreground opacity-80"
+                  placeholderTextColor="#7C8E84"
+                  className="flex-1 ml-3 text-base font-bold text-foreground opacity-85"
                 />
               </View>
-              <Text className="text-[10px] text-muted-foreground mt-2 ml-1 font-bold">
+              <Text className="text-[10px] text-muted-foreground mt-2 ml-1 font-bold uppercase tracking-wide">
                 {t('book_ride.pickup_locked')}
               </Text>
             </View>
 
             <View className="h-4 items-center">
-              <View className="w-[1px] h-full bg-muted/30" />
+              <View className="w-[1px] h-full bg-border" />
             </View>
 
             <View>
-              <Text className="text-xs font-bold text-muted-foreground uppercase mb-2 ml-1">{t('book_ride.to')}</Text>
-              <View className="flex-row items-center bg-muted/10 h-14 px-4 rounded-2xl border border-muted/20">
+              <Text className="text-[10px] font-black text-accent uppercase mb-2 ml-1 tracking-widest">{t('book_ride.to')}</Text>
+              <View className="flex-row items-center bg-[#040806] h-14 px-4 rounded-2xl border border-border">
                 <Navigation size={20} color="#D4AF37" />
                 <TextInput
                   value={dropoffLocation}
@@ -563,16 +628,17 @@ function BookRideScreen() {
                     setDropoffCoords(null);
                   }}
                   placeholder={t('book_ride.destination_placeholder', 'Destination')}
+                  placeholderTextColor="#7C8E84"
                   className="flex-1 ml-3 text-base font-bold text-foreground"
                 />
               </View>
             </View>
 
             {suggestions.length ? (
-              <View className="mt-3 border border-muted/20 rounded-2xl overflow-hidden">
+              <View className="mt-3 border border-border rounded-2xl overflow-hidden shadow-premium">
                 {suggestions.map((place) => (
-                  <TouchableOpacity key={place.id} onPress={() => chooseDropoff(place)} className="p-4 border-b border-muted/10 bg-white">
-                    <Text className="font-bold text-foreground">{place.name}</Text>
+                  <TouchableOpacity key={place.id} onPress={() => chooseDropoff(place)} className="p-4 border-b border-border bg-[#040806]">
+                    <Text className="font-bold text-foreground text-sm">{place.name}</Text>
                     <Text className="text-xs text-muted-foreground mt-1" numberOfLines={1}>{place.address}</Text>
                   </TouchableOpacity>
                 ))}
@@ -581,17 +647,17 @@ function BookRideScreen() {
           </View>
 
           {[...savedPlaces, ...recentPlaces].length ? (
-            <View className="mb-5">
-              <Text className="text-xs font-black text-muted-foreground uppercase mb-3 ml-1 tracking-widest">{t('book_ride.saved_recent')}</Text>
+            <View className="mb-6">
+              <Text className="text-[10px] font-black text-accent uppercase mb-3 ml-1 tracking-widest">{t('book_ride.saved_recent')}</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 <View className="flex-row gap-2">
                   {[...savedPlaces, ...recentPlaces].map((place) => (
                     <TouchableOpacity
                       key={`${place.id}-${place.address}`}
                       onPress={() => chooseDropoff(place)}
-                      className="bg-primary/5 border border-primary/10 rounded-2xl px-4 py-3"
+                      className="bg-card border border-border rounded-2xl px-4 py-3 shadow-premium"
                     >
-                      <Text className="text-primary font-bold">{place.label}</Text>
+                      <Text className="text-accent font-black text-xs uppercase tracking-wide">{place.label}</Text>
                       <Text className="text-[10px] text-muted-foreground mt-1" numberOfLines={1}>{place.address}</Text>
                     </TouchableOpacity>
                   ))}
@@ -600,31 +666,31 @@ function BookRideScreen() {
             </View>
           ) : null}
 
-          <View className="mb-5">
-            <Text className="text-xs font-black text-muted-foreground uppercase mb-3 ml-1 tracking-widest">{t('book_ride.ride_type')}</Text>
+          <View className="mb-6">
+            <Text className="text-[10px] font-black text-accent uppercase mb-3 ml-1 tracking-widest">{t('book_ride.ride_type')}</Text>
             <View className="flex-row flex-wrap justify-between">
               {RIDE_TYPES.map((type) => (
                 <TouchableOpacity
                   key={type.id}
                   onPress={() => setRideType(type)}
-                  className={`w-[48%] p-4 rounded-3xl border mb-3 ${rideType.id === type.id ? 'bg-primary border-primary' : 'bg-card border-muted/20'}`}
+                  className={`w-[48%] p-4 rounded-3xl border mb-3 ${rideType.id === type.id ? 'bg-primary border-accent/30 shadow-premium' : 'bg-card border-border shadow-premium'}`}
                 >
                   <View className="flex-row items-center justify-between mb-2">
-                    <Text className={`font-black ${rideType.id === type.id ? 'text-white' : 'text-foreground'}`}>{t(type.title)}</Text>
-                    {type.id === 'xl' ? <Users size={18} color={rideType.id === type.id ? '#fff' : '#006947'} /> : <Car size={18} color={rideType.id === type.id ? '#fff' : '#006947'} />}
+                    <Text className={`font-extrabold uppercase text-xs tracking-wider ${rideType.id === type.id ? 'text-white' : 'text-foreground'}`}>{t(type.title)}</Text>
+                    {type.id === 'xl' ? <Users size={18} color="#D4AF37" /> : <Car size={18} color="#D4AF37" />}
                   </View>
-                  <Text className={`text-xs ${rideType.id === type.id ? 'text-white/70' : 'text-muted-foreground'}`}>{t(type.subtitle)}</Text>
+                  <Text className={`text-[10px] font-semibold uppercase ${rideType.id === type.id ? 'text-white/75' : 'text-muted-foreground'}`}>{t(type.subtitle)}</Text>
                 </TouchableOpacity>
               ))}
             </View>
           </View>
 
-          <View className="bg-card rounded-3xl border border-muted/20 p-5 mb-5">
-            <Text className="text-xs font-black text-muted-foreground uppercase mb-3 tracking-widest">{t('book_ride.pickup_notes')}</Text>
-            <View className="flex-row flex-wrap gap-2 mb-3">
+          <View className="bg-card rounded-3xl border border-border p-5 mb-6">
+            <Text className="text-[10px] font-black text-accent uppercase mb-3 tracking-widest">{t('book_ride.pickup_notes')}</Text>
+            <View className="flex-row flex-wrap gap-2 mb-4">
               {PICKUP_NOTES.map((item) => (
-                <TouchableOpacity key={item} onPress={() => setNote(t(item))} className="bg-muted/20 border border-muted/20 rounded-2xl px-3 py-2">
-                  <Text className="text-xs font-bold text-foreground">{t(item)}</Text>
+                <TouchableOpacity key={item} onPress={() => setNote(t(item))} className="bg-[#040806] border border-border rounded-2xl px-3 py-2">
+                  <Text className="text-xs font-semibold text-foreground">{t(item)}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -632,24 +698,25 @@ function BookRideScreen() {
               value={note}
               onChangeText={setNote}
               placeholder={t('book_ride.note_placeholder')}
-              className="bg-muted/10 border border-muted/20 rounded-2xl px-4 py-3 text-sm font-bold text-foreground"
+              placeholderTextColor="#7C8E84"
+              className="bg-[#040806] border border-border rounded-2xl px-4 py-3.5 text-sm font-bold text-foreground"
             />
           </View>
 
-          <View className="bg-primary/5 rounded-3xl border border-primary/10 p-5 mb-5">
+          <View className="bg-card rounded-3xl border border-accent/20 p-5 mb-6 shadow-premium">
             <View className="flex-row items-center justify-between mb-4">
               <View className="flex-row items-center gap-3">
-                <View className="bg-primary/10 p-3 rounded-2xl">
-                  <Car size={20} color="#006947" />
+                <View className="bg-primary/10 p-3 rounded-2xl border border-primary/20">
+                  <Car size={20} color="#D4AF37" />
                 </View>
                 <View>
-                  <Text className="font-bold text-foreground">{t('book_ride.fare_preview', 'Fare preview')}</Text>
-                  <Text className="text-[10px] text-muted-foreground uppercase font-black">{routeDistance.toFixed(1)} km · {routeMinutes} min</Text>
+                  <Text className="font-extrabold text-foreground text-sm uppercase tracking-wider">{t('book_ride.fare_preview', 'Fare preview')}</Text>
+                  <Text className="text-[10px] text-muted-foreground uppercase font-black tracking-widest mt-0.5">{routeDistance.toFixed(1)} km · {routeMinutes} min</Text>
                 </View>
               </View>
-              <Text className="text-2xl font-black text-primary">AFN {totalFare.toLocaleString()}</Text>
+              <Text className="text-2xl font-black text-accent">AFN {totalFare.toLocaleString()}</Text>
             </View>
-            <View className="gap-2">
+            <View className="gap-2.5 mt-2.5 pt-2 border-t border-border">
               <FareRow label={t('book_ride.base_fare')} value={baseFare} />
               <FareRow label={t('book_ride.distance')} value={distanceFare} />
               <FareRow label={`Surge x${Number(estimate?.surgeMultiplier ?? 1).toFixed(1)}`} value={surgeFare} />
@@ -658,15 +725,15 @@ function BookRideScreen() {
           </View>
 
           {safetyCode ? (
-            <View className="bg-primary rounded-3xl p-7 mb-6 shadow-high-tech overflow-hidden relative">
-              <PatternOverlay color="#ffffff" opacity={0.1} />
+            <View className="bg-card rounded-3xl p-6 mb-6 shadow-premium border border-accent/30 overflow-hidden relative">
+              <PatternOverlay color="#D4AF37" opacity={0.03} />
               <View className="relative z-10 flex-row items-center justify-between">
                 <View>
-                  <Text className="text-white/70 text-[10px] font-bold uppercase tracking-widest mb-1">{t('book_ride.safety_code', 'Safety code')}</Text>
-                  <Text className="text-4xl font-black text-white">{safetyCode}</Text>
+                  <Text className="text-accent text-[10px] font-black uppercase tracking-widest mb-1">{t('book_ride.safety_code', 'Safety code')}</Text>
+                  <Text className="text-4xl font-black text-foreground tracking-widest">{safetyCode}</Text>
                 </View>
-                <View className="bg-accent p-4 rounded-3xl">
-                  <ShieldCheck size={32} color="#002113" />
+                <View className="bg-primary/10 p-4 rounded-3xl border border-primary/20">
+                  <ShieldCheck size={32} color="#D4AF37" />
                 </View>
               </View>
             </View>
@@ -674,16 +741,16 @@ function BookRideScreen() {
 
           {message ? (
             <View className="mb-6 p-4 bg-primary/10 rounded-2xl border border-primary/20">
-              <Text className="text-primary font-bold text-center text-xs">{message}</Text>
+              <Text className="text-accent font-bold text-center text-xs">{message}</Text>
             </View>
           ) : null}
 
           <TouchableOpacity
             onPress={openConfirmation}
             disabled={loading || !pickupLocation || !dropoffLocation}
-            className={`h-16 rounded-3xl items-center justify-center shadow-lg mb-10 ${loading || !pickupLocation || !dropoffLocation ? 'bg-muted shadow-none' : 'bg-primary shadow-primary/30'}`}
+            className={`h-16 rounded-3xl items-center justify-center shadow-premium mb-10 ${loading || !pickupLocation || !dropoffLocation ? 'bg-muted shadow-none' : 'bg-primary'}`}
           >
-            <Text className="text-white text-lg font-black uppercase tracking-widest">
+            <Text className="text-white text-base font-black uppercase tracking-widest">
               {loading ? t('book_ride.confirming', 'Confirming...') : t('book_ride.review_ride')}
             </Text>
           </TouchableOpacity>
@@ -691,26 +758,26 @@ function BookRideScreen() {
       </ScrollView>
 
       <Modal visible={confirmOpen} transparent animationType="slide" onRequestClose={() => setConfirmOpen(false)}>
-        <View className="flex-1 bg-black/40 justify-end">
-          <View className="bg-card rounded-t-3xl p-6 border border-muted/20">
-            <View className="flex-row items-center justify-between mb-5">
-              <Text className="text-xl font-black text-foreground">{t('book_ride.confirm_title')}</Text>
-              <TouchableOpacity onPress={() => setConfirmOpen(false)} className="p-2 bg-muted/20 rounded-2xl">
-                <X size={20} color="#52635a" />
+        <View className="flex-1 bg-black/60 justify-end">
+          <View className="bg-card rounded-t-4xl p-6 border-t border-accent/20 shadow-premium">
+            <View className="flex-row items-center justify-between mb-6">
+              <Text className="text-xl font-black text-accent uppercase tracking-widest">{t('book_ride.confirm_title')}</Text>
+              <TouchableOpacity onPress={() => setConfirmOpen(false)} className="p-2.5 bg-secondary rounded-2xl border border-border">
+                <X size={20} color="#7C8E84" />
               </TouchableOpacity>
             </View>
-            <ConfirmRow icon={<Crosshair size={18} color="#006947" />} label={t('book_ride.pickup')} value={pickupLocation} />
+            <ConfirmRow icon={<Crosshair size={18} color="#D4AF37" />} label={t('book_ride.pickup')} value={pickupLocation} />
             <ConfirmRow icon={<Navigation size={18} color="#D4AF37" />} label={t('book_ride.dropoff')} value={dropoffLocation} />
-            <ConfirmRow icon={<Clock size={18} color="#006947" />} label={t('book_ride.route')} value={`${routeDistance.toFixed(1)} km · ${routeMinutes} min`} />
-            <ConfirmRow icon={<Sparkles size={18} color="#006947" />} label={t('book_ride.ride_type')} value={t(rideType.title)} />
-            <ConfirmRow icon={<Banknote size={18} color="#006947" />} label={t('book_ride.payment')} value={t('book_ride.cash_payment', { amount: totalFare.toLocaleString() })} />
-            {note ? <ConfirmRow icon={<MapPin size={18} color="#006947" />} label={t('book_ride.note')} value={note} /> : null}
+            <ConfirmRow icon={<Clock size={18} color="#D4AF37" />} label={t('book_ride.route')} value={`${routeDistance.toFixed(1)} km · ${routeMinutes} min`} />
+            <ConfirmRow icon={<Sparkles size={18} color="#D4AF37" />} label={t('book_ride.ride_type')} value={t(rideType.title)} />
+            <ConfirmRow icon={<Banknote size={18} color="#D4AF37" />} label={t('book_ride.payment')} value={t('book_ride.cash_payment', { amount: totalFare.toLocaleString() })} />
+            {note ? <ConfirmRow icon={<MapPin size={18} color="#D4AF37" />} label={t('book_ride.note')} value={note} /> : null}
             <TouchableOpacity
               onPress={confirm}
               disabled={loading}
-              className={`h-16 rounded-3xl items-center justify-center mt-5 ${loading ? 'bg-muted' : 'bg-primary'}`}
+              className={`h-16 rounded-3xl items-center justify-center mt-6 ${loading ? 'bg-muted' : 'bg-primary shadow-premium'}`}
             >
-              <Text className="text-white text-lg font-black uppercase tracking-widest">
+              <Text className="text-white text-base font-black uppercase tracking-widest">
                 {loading ? t('book_ride.booking') : t('book_ride.confirm_title')}
               </Text>
             </TouchableOpacity>
@@ -724,7 +791,7 @@ function BookRideScreen() {
 function FareRow({ label, value }: { label: string; value: number }) {
   return (
     <View className="flex-row justify-between">
-      <Text className="text-xs font-bold text-muted-foreground">{label}</Text>
+      <Text className="text-xs font-bold text-muted-foreground uppercase tracking-wide">{label}</Text>
       <Text className="text-xs font-black text-foreground">AFN {Math.max(0, Math.round(value)).toLocaleString()}</Text>
     </View>
   );
@@ -732,10 +799,10 @@ function FareRow({ label, value }: { label: string; value: number }) {
 
 function ConfirmRow({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
-    <View className="flex-row items-start gap-3 py-3 border-b border-muted/10">
-      <View className="w-9 h-9 rounded-2xl bg-primary/5 items-center justify-center">{icon}</View>
+    <View className="flex-row items-start gap-3 py-3 border-b border-border">
+      <View className="w-9 h-9 rounded-2xl bg-primary/10 items-center justify-center border border-primary/20">{icon}</View>
       <View className="flex-1">
-        <Text className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{label}</Text>
+        <Text className="text-[10px] font-black text-accent uppercase tracking-widest">{label}</Text>
         <Text className="text-sm font-bold text-foreground mt-1" numberOfLines={2}>{value}</Text>
       </View>
     </View>

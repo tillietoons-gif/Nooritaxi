@@ -31,28 +31,28 @@ export default function ProfileScreen() {
   const isMerchant = isMerchantUser(user);
 
   const menuItems = [
-    { id: 'safety', icon: <Shield size={22} color="#006947" />, title: isDriver ? t('profile.safety_center') : t('profile.safety_center'), subtitle: isDriver ? t('profile.safety_subtitle_driver') : t('profile.safety_subtitle_rider') },
-    { id: 'notifications', icon: <Bell size={22} color="#006947" />, title: t('profile.notifications', 'Notifications'), subtitle: t('profile.notifications_subtitle', '{{count}} new updates', { count: notificationCount }) },
-    { id: 'language', icon: <Globe size={22} color="#006947" />, title: t('profile.language', 'Language'), subtitle: t('profile.language_subtitle', 'English, Dari, Pashto') },
+    { id: 'safety', icon: <Shield size={22} color="#D4AF37" />, title: isDriver ? t('profile.safety_center') : t('profile.safety_center'), subtitle: isDriver ? t('profile.safety_subtitle_driver') : t('profile.safety_subtitle_rider') },
+    { id: 'notifications', icon: <Bell size={22} color="#D4AF37" />, title: t('profile.notifications', 'Notifications'), subtitle: t('profile.notifications_subtitle', '{{count}} new updates', { count: notificationCount }) },
+    { id: 'language', icon: <Globe size={22} color="#D4AF37" />, title: t('profile.language', 'Language'), subtitle: t('profile.language_subtitle', 'English, Dari, Pashto') },
     ...(isMerchant
       ? [
-          { id: 'merchant', icon: <Store size={22} color="#006947" />, title: t('profile.restaurant'), subtitle: t('profile.restaurant_subtitle') },
-          { id: 'orders', icon: <ReceiptText size={22} color="#006947" />, title: t('profile.orders'), subtitle: t('profile.orders_subtitle') },
+          { id: 'merchant', icon: <Store size={22} color="#D4AF37" />, title: t('profile.restaurant'), subtitle: t('profile.restaurant_subtitle') },
+          { id: 'orders', icon: <ReceiptText size={22} color="#D4AF37" />, title: t('profile.orders'), subtitle: t('profile.orders_subtitle') },
         ]
       : []),
     ...(!isDriver && !isMerchant
       ? [
           { id: 'loyalty', icon: <Trophy size={22} color="#D4AF37" />, title: t('profile.loyalty', 'Noori Rewards'), subtitle: t('profile.loyalty_subtitle', 'Points, tier, and redemptions') },
           { id: 'promotions', icon: <Gift size={22} color="#D4AF37" />, title: t('profile.promotions', 'Promotions'), subtitle: t('profile.promotions_subtitle', 'Active offers and promo codes') },
-          { id: 'saved_places', icon: <MapPin size={22} color="#006947" />, title: t('profile.saved_places', 'Saved Places'), subtitle: t('profile.saved_places_subtitle', 'Home, work, and favorites') },
+          { id: 'saved_places', icon: <MapPin size={22} color="#D4AF37" />, title: t('profile.saved_places', 'Saved Places'), subtitle: t('profile.saved_places_subtitle', 'Home, work, and favorites') },
           { id: 'referral', icon: <Gift size={22} color="#D4AF37" />, title: t('profile.referral', 'Refer & Earn'), subtitle: t('profile.referral_subtitle') },
         ]
       : []),
     ...(isDriver || isMerchant
-      ? [{ id: 'cash_ledger', icon: <Banknote size={22} color="#006947" />, title: t('profile.cash_ledger'), subtitle: t('profile.cash_ledger_subtitle') }]
+      ? [{ id: 'cash_ledger', icon: <Banknote size={22} color="#D4AF37" />, title: t('profile.cash_ledger'), subtitle: t('profile.cash_ledger_subtitle') }]
       : []),
-    { id: 'help', icon: <HelpCircle size={22} color="#006947" />, title: t('profile.help'), subtitle: t('profile.premium_help_subtitle') },
-    ...(isDriver ? [{ id: 'kyc', icon: <User size={22} color="#006947" />, title: t('profile.verification'), subtitle: t('profile.verification_subtitle') }] : []),
+    { id: 'help', icon: <HelpCircle size={22} color="#D4AF37" />, title: t('profile.help'), subtitle: t('profile.premium_help_subtitle') },
+    ...(isDriver ? [{ id: 'kyc', icon: <User size={22} color="#D4AF37" />, title: t('profile.verification'), subtitle: t('profile.verification_subtitle') }] : []),
   ];
 
   async function handleMenuPress(id: string) {
@@ -115,20 +115,20 @@ export default function ProfileScreen() {
     <SafeAreaView className="flex-1 bg-background">
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <View className="px-6 py-6">
-          <Text className="text-2xl font-bold text-foreground mb-8">{t('profile.title', 'Profile')}</Text>
+          <Text className="text-2xl font-bold text-foreground uppercase tracking-wider mb-8">{t('profile.title', 'Profile')}</Text>
 
           {/* Premium Profile Card */}
-          <View className="bg-primary p-8 rounded-4xl shadow-high-tech mb-10 overflow-hidden relative">
-            <PatternOverlay color="#ffffff" opacity={0.1} />
+          <View className="bg-card p-8 rounded-4xl shadow-premium mb-10 overflow-hidden relative border border-accent/30">
+            <PatternOverlay color="#D4AF37" opacity={0.04} />
             <View className="relative z-10 flex-row items-center gap-6">
-              <View className="w-20 h-20 bg-white/20 backdrop-blur-md rounded-3xl items-center justify-center border border-white/30 shadow-sm">
-                <User size={40} color="white" />
+              <View className="w-20 h-20 bg-primary/10 rounded-3xl items-center justify-center border border-accent/20 shadow-premium">
+                <User size={40} color="#D4AF37" />
               </View>
               <View className="flex-1">
-                <Text className="text-white text-2xl font-black">{user?.name ?? (isDriver ? t('profile.noori_driver') : t('profile.noori_user'))}</Text>
-                <Text className="text-white/70 text-sm font-bold mt-1">{user?.phone ?? t('profile.not_signed_in')}</Text>
-                <View className="bg-accent/20 self-start px-2 py-0.5 rounded-lg mt-2 border border-accent/20">
-                   <Text className="text-accent text-[10px] font-black uppercase">{user?.role ?? 'RIDER'}</Text>
+                <Text className="text-foreground text-2xl font-black uppercase tracking-wide">{user?.name ?? (isDriver ? t('profile.noori_driver') : t('profile.noori_user'))}</Text>
+                <Text className="text-muted-foreground text-sm font-bold mt-1 tracking-wide">{user?.phone ?? t('profile.not_signed_in')}</Text>
+                <View className="bg-primary/20 self-start px-3 py-1 rounded-xl mt-3 border border-accent/20">
+                   <Text className="text-accent text-[10px] font-black uppercase tracking-widest">{user?.role ?? 'RIDER'}</Text>
                 </View>
               </View>
             </View>
@@ -139,33 +139,33 @@ export default function ProfileScreen() {
               <TouchableOpacity
                 key={item.id}
                 onPress={() => handleMenuPress(item.id)}
-                className="flex-row items-center justify-between p-5 bg-card rounded-3xl border border-muted/10 shadow-sm mb-4"
+                className="flex-row items-center justify-between p-5 bg-card rounded-3xl border border-border shadow-premium mb-4"
               >
                 <View className="flex-row items-center gap-5">
-                  <View className="p-3 bg-primary/10 rounded-2xl">
+                  <View className="p-3 bg-primary/10 border border-primary/20 rounded-2xl">
                     {item.icon}
                   </View>
-                  <View>
-                    <Text className="font-bold text-sm text-foreground">{item.title}</Text>
-                    <Text className="text-muted-foreground text-xs font-medium mt-0.5">{item.subtitle}</Text>
+                  <View className="flex-1 pr-4">
+                    <Text className="font-extrabold text-sm text-foreground uppercase tracking-wide leading-5">{item.title}</Text>
+                    <Text className="text-muted-foreground text-xs font-semibold mt-1 leading-4">{item.subtitle}</Text>
                   </View>
                 </View>
-                <ChevronRight size={18} color="#bccac0" />
+                <ChevronRight size={18} color="#D4AF37" />
               </TouchableOpacity>
             ))}
           </View>
 
           <TouchableOpacity
             onPress={logout}
-            className="flex-row items-center justify-center gap-3 p-5 mt-6 bg-destructive/5 rounded-3xl border border-destructive/10 border-dashed"
+            className="flex-row items-center justify-center gap-3 p-5 mt-6 bg-destructive/10 rounded-3xl border border-destructive/20 border-dashed shadow-premium"
           >
             <LogOut size={20} color="#ba1a1a" />
             <Text className="text-destructive font-black uppercase text-xs tracking-widest">{t('profile.logout', 'Log Out')}</Text>
           </TouchableOpacity>
 
-          <View className="mt-12 items-center">
-            <View className="bg-muted/10 px-4 py-2 rounded-full">
-              <Text className="text-muted-foreground text-[10px] font-bold tracking-tighter uppercase italic">
+          <View className="mt-12 items-center mb-8">
+            <View className="bg-[#040806] border border-border px-4 py-2.5 rounded-full shadow-premium">
+              <Text className="text-muted-foreground text-[9px] font-black tracking-widest uppercase italic text-center">
                 Noori Mobility System v1.2.0 - Complete (offline, real-time, notifications, cart, earnings, background tracking, FlashList, women-only rides)
               </Text>
             </View>

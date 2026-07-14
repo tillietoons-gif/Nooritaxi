@@ -66,3 +66,9 @@
 **Learning:** Sequential await calls for independent database queries in high-frequency endpoints like `getLiveMapData` introduce unnecessary latency. In a mocked environment with 50ms query delay, sequential execution takes ~100ms while parallel execution takes ~50ms.
 
 **Action:** Use `Promise.all` to parallelize independent Prisma queries in tracking and dashboard services to reduce API response time by up to 50%.
+
+## 2026-06-17 - Optimizing Payment Intent Creation and Transaction Listing
+
+**Learning:** `PaymentsService.createIntent` was performing 3 sequential database round-trips (upsert wallet, fetch wallet, create transaction), leading to high latency (~150ms in high-latency scenarios). Additionally, `listTransactions` used sequential execution via `$transaction` for independent `findMany` and `count` operations.
+
+**Action:** Consolidate `createIntent` into a single round-trip using Prisma nested writes with `upsert` and `include`, reducing latency by ~67% (~50ms). Refactor `listTransactions` to use `Promise.all` for parallel execution, reducing latency by ~50% (~50ms).

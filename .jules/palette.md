@@ -8,3 +8,9 @@
   - Maintained high contrast for text (white on emerald, foreground on off-white).
   - Used large touch targets (14-16px height for primary buttons) to accommodate one-handed mobile use.
   - Consistent RTL-ready layout structures.
+
+## 2026-07-16 - [Contact Page UX & Accessibility]
+
+**Learning:** Actionable `tel:` and `mailto:` links within a semantic `<address>` block improve mobile usability and clarity for contact information. Character counters should be associated with inputs via `aria-describedby` and use `aria-live="polite"` to keep assistive technology users informed of remaining space without interrupting their typing flow.
+
+**Action:** Ensure all contact information uses appropriate URI schemes and semantic tags. Implement character counters with appropriate ARIA attributes for all constrained text areas.

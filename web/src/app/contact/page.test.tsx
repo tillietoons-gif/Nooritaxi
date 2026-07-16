@@ -45,4 +45,11 @@ describe("ContactPage", () => {
       expect(screen.getAllByText(/Message Sent/i)[0]).toBeInTheDocument()
     }, { timeout: 2000 })
   })
+
+  it("updates character counter", () => {
+    render(<ContactPage />)
+    const textarea = screen.getByLabelText(/Message/i)
+    fireEvent.change(textarea, { target: { value: "Test message" } })
+    expect(screen.getByText("12 / 1000")).toBeInTheDocument()
+  })
 })

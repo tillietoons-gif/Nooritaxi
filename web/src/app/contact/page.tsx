@@ -12,6 +12,7 @@ import { GlassSurface } from "@/components/ui/glass-surface"
 import { LabelMd, HeadingMd, BodyMd } from "@/components/ui/typography"
 import { PatternOverlay } from "@/components/ui/pattern-overlay"
 import { useTranslation } from "react-i18next"
+import { cn } from "@/lib/utils"
 
 export default function ContactPage() {
   const { t } = useTranslation()
@@ -22,6 +23,7 @@ export default function ContactPage() {
     email: "",
     message: ""
   })
+  const MAX_MESSAGE_LENGTH = 1000
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -73,16 +75,18 @@ export default function ContactPage() {
               <GlassSurface variant="premium" className="p-8 space-y-8 relative overflow-hidden bg-card/50 backdrop-blur-md">
                 <PatternOverlay opacity={0.03} />
                 <div>
-                  <LabelMd className="mb-4 block text-primary" htmlFor="">Headquarters</LabelMd>
-                  <p className="text-sm font-bold leading-relaxed text-foreground">
+                  <LabelMd className="mb-4 block text-primary">Headquarters</LabelMd>
+                  <address className="not-italic text-sm font-bold leading-relaxed text-foreground">
                     Kart-e-Char, District 3<br />
                     Kabul, Afghanistan
-                  </p>
+                  </address>
                 </div>
                 <div>
-                  <LabelMd className="mb-4 block text-primary" htmlFor="">Inquiries</LabelMd>
-                  <p className="text-sm font-bold text-foreground">support@noori.af</p>
-                  <p className="text-sm font-bold text-foreground">+93 700 000 000</p>
+                  <LabelMd className="mb-4 block text-primary">Inquiries</LabelMd>
+                  <div className="flex flex-col space-y-1">
+                    <a href="mailto:support@noori.af" className="text-sm font-bold text-foreground hover:text-primary transition-colors w-fit">support@noori.af</a>
+                    <a href="tel:+93700000000" className="text-sm font-bold text-foreground hover:text-primary transition-colors w-fit">+93 700 000 000</a>
+                  </div>
                 </div>
                 <div className="pt-4 border-t border-primary/10">
                   <p className="text-[10px] font-black uppercase tracking-widest text-primary">
@@ -151,16 +155,33 @@ export default function ContactPage() {
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <LabelMd htmlFor="message" className="text-primary">
-                          {t('contact.message_label', 'Message')}
-                          <span className="text-destructive ml-1" aria-hidden="true">*</span>
-                        </LabelMd>
+                        <div className="flex justify-between items-center">
+                          <LabelMd htmlFor="message" className="text-primary">
+                            {t('contact.message_label', 'Message')}
+                            <span className="text-destructive ml-1" aria-hidden="true">*</span>
+                          </LabelMd>
+                          <span
+                            id="message-counter"
+                            aria-live="polite"
+                            className={cn(
+                              "text-[10px] font-black uppercase tracking-widest transition-colors",
+                              formData.message.length >= MAX_MESSAGE_LENGTH ? "text-destructive" : "text-muted-foreground/50"
+                            )}
+                          >
+                            {formData.message.length} / {MAX_MESSAGE_LENGTH}
+                          </span>
+                        </div>
                         <Textarea
                           id="message"
                           required
                           aria-required="true"
+                          aria-describedby="message-counter"
+                          maxLength={MAX_MESSAGE_LENGTH}
                           placeholder={t('contact.message_placeholder', 'How can we help you?')}
-                          className="min-h-[160px] bg-background/50 border-input focus-visible:ring-primary/30 font-bold resize-none text-foreground placeholder:text-muted-foreground/50"
+                          className={cn(
+                            "min-h-[160px] bg-background/50 border-input focus-visible:ring-primary/30 font-bold resize-none text-foreground placeholder:text-muted-foreground/50 transition-colors",
+                            formData.message.length >= MAX_MESSAGE_LENGTH && "border-destructive/50 focus-visible:ring-destructive/30"
+                          )}
                           value={formData.message}
                           onChange={e => setFormData({...formData, message: e.target.value})}
                         />

@@ -126,7 +126,11 @@ export class FoodController {
   @Patch('orders/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.MERCHANT, UserRole.SUPPORT)
-  updateOrder(@Param('id') id: string, @Body() body: any, @CurrentUser() user: any) {
+  updateOrder(
+    @Param('id') id: string,
+    @Body() body: any,
+    @CurrentUser() user: any,
+  ) {
     return this.foodService.updateOrder(id, body, user);
   }
 }

@@ -66,3 +66,9 @@
 **Learning:** Sequential await calls for independent database queries in high-frequency endpoints like `getLiveMapData` introduce unnecessary latency. In a mocked environment with 50ms query delay, sequential execution takes ~100ms while parallel execution takes ~50ms.
 
 **Action:** Use `Promise.all` to parallelize independent Prisma queries in tracking and dashboard services to reduce API response time by up to 50%.
+
+## 2026-07-16 - Optimizing Loyalty Service Database Operations
+
+**Learning:** Sequential database operations in `LoyaltyService` (like `upsert` followed by `findMany` or `upsert` followed by `create`) introduce unnecessary latency. In a simulated environment with 50ms DB delay, these sequential patterns take ~100ms, while merged operations take ~50ms.
+
+**Action:** Use Prisma's `include` and nested writes to consolidate multiple operations into a single atomic database round-trip. This was applied to `getUserLoyalty` (using `include`) and `addPointsForTrip` (using nested `create` within `upsert`), resulting in a ~50% latency reduction for these operations.

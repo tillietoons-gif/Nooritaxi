@@ -72,18 +72,32 @@ export default function ContactPage() {
             >
               <GlassSurface variant="premium" className="p-8 space-y-8 relative overflow-hidden bg-card/50 backdrop-blur-md">
                 <PatternOverlay opacity={0.03} />
-                <div>
-                  <LabelMd className="mb-4 block text-primary" htmlFor="">Headquarters</LabelMd>
-                  <p className="text-sm font-bold leading-relaxed text-foreground">
-                    Kart-e-Char, District 3<br />
-                    Kabul, Afghanistan
-                  </p>
-                </div>
-                <div>
-                  <LabelMd className="mb-4 block text-primary" htmlFor="">Inquiries</LabelMd>
-                  <p className="text-sm font-bold text-foreground">support@noori.af</p>
-                  <p className="text-sm font-bold text-foreground">+93 700 000 000</p>
-                </div>
+                <address className="not-italic space-y-8">
+                  <div>
+                    <LabelMd className="mb-4 block text-primary">Headquarters</LabelMd>
+                    <p className="text-sm font-bold leading-relaxed text-foreground">
+                      Kart-e-Char, District 3<br />
+                      Kabul, Afghanistan
+                    </p>
+                  </div>
+                  <div>
+                    <LabelMd className="mb-4 block text-primary">Inquiries</LabelMd>
+                    <div className="flex flex-col space-y-1">
+                      <a
+                        href="mailto:support@noori.af"
+                        className="text-sm font-bold text-foreground hover:text-primary focus-visible:text-primary outline-none transition-colors"
+                      >
+                        support@noori.af
+                      </a>
+                      <a
+                        href="tel:+93700000000"
+                        className="text-sm font-bold text-foreground hover:text-primary focus-visible:text-primary outline-none transition-colors"
+                      >
+                        +93 700 000 000
+                      </a>
+                    </div>
+                  </div>
+                </address>
                 <div className="pt-4 border-t border-primary/10">
                   <p className="text-[10px] font-black uppercase tracking-widest text-primary">
                     Average Response Time: &lt; 2 Hours

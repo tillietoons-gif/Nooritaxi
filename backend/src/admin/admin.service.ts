@@ -186,7 +186,15 @@ export class AdminService {
       this.prisma.restaurant.findMany({
         where,
         include: {
-          owner: { select: { id: true, name: true, phone: true, status: true, isVerified: true } },
+          owner: {
+            select: {
+              id: true,
+              name: true,
+              phone: true,
+              status: true,
+              isVerified: true,
+            },
+          },
           documents: { orderBy: { createdAt: 'desc' } } as any,
           _count: { select: { menuItems: true, orders: true } },
         } as any,
@@ -203,14 +211,24 @@ export class AdminService {
     if (!['PENDING', 'OPEN', 'CLOSED', 'SUSPENDED'].includes(status)) {
       throw new BadRequestException('Invalid restaurant status');
     }
-    const restaurant = await this.prisma.restaurant.findUnique({ where: { id } });
+    const restaurant = await this.prisma.restaurant.findUnique({
+      where: { id },
+    });
     if (!restaurant) throw new NotFoundException('Restaurant not found');
 
     const updated = await this.prisma.restaurant.update({
       where: { id },
       data: { status: status as any },
       include: {
-        owner: { select: { id: true, name: true, phone: true, status: true, isVerified: true } },
+        owner: {
+          select: {
+            id: true,
+            name: true,
+            phone: true,
+            status: true,
+            isVerified: true,
+          },
+        },
         documents: { orderBy: { createdAt: 'desc' } } as any,
         _count: { select: { menuItems: true, orders: true } },
       } as any,
@@ -223,7 +241,14 @@ export class AdminService {
       });
     }
 
-    await this.audit('ADMIN_MERCHANT_STATUS_UPDATED', 'Restaurant', id, actorId, { status }, { status: restaurant.status });
+    await this.audit(
+      'ADMIN_MERCHANT_STATUS_UPDATED',
+      'Restaurant',
+      id,
+      actorId,
+      { status },
+      { status: restaurant.status },
+    );
     return updated;
   }
 
@@ -250,7 +275,14 @@ export class AdminService {
       },
     });
 
-    await this.audit('MERCHANT_DOCUMENT_REVIEWED', 'MerchantDocument', docId, actorId, { status }, { status: doc.status });
+    await this.audit(
+      'MERCHANT_DOCUMENT_REVIEWED',
+      'MerchantDocument',
+      docId,
+      actorId,
+      { status },
+      { status: doc.status },
+    );
     return updated;
   }
 
@@ -839,9 +871,7 @@ export class AdminService {
         select: { type: true },
       });
       const verifiedTypes = new Set(verifiedDocs.map((item) => item.type));
-      if (
-        REQUIRED_DRIVER_DOCUMENTS.every((type) => verifiedTypes.has(type))
-      ) {
+      if (REQUIRED_DRIVER_DOCUMENTS.every((type) => verifiedTypes.has(type))) {
         await this.prisma.user.update({
           where: { id: doc.driverId },
           data: { isVerified: true, status: 'ACTIVE' as any },

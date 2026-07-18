@@ -37,7 +37,9 @@ export class FoodService {
       select: { id: true },
     });
     if (existing) {
-      throw new BadRequestException('Merchant already has a restaurant profile');
+      throw new BadRequestException(
+        'Merchant already has a restaurant profile',
+      );
     }
     const { preventDuplicateOwner, ...restaurantData } = data;
     return this.prisma.restaurant.create({ data: restaurantData });

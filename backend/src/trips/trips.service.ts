@@ -201,7 +201,8 @@ export class TripsService {
       if (!before) throw new NotFoundException('Trip not found');
       if (before.status === TripStatus.COMPLETED)
         throw new BadRequestException('Completed trips cannot be cancelled');
-      if (before.status === TripStatus.CANCELLED) return { ride: before, before };
+      if (before.status === TripStatus.CANCELLED)
+        return { ride: before, before };
 
       const isStaff = data.actorRole === UserRole.ADMIN;
       const isTripRider = before.customerId === data.actorId;

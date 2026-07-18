@@ -8,3 +8,9 @@
   - Maintained high contrast for text (white on emerald, foreground on off-white).
   - Used large touch targets (14-16px height for primary buttons) to accommodate one-handed mobile use.
   - Consistent RTL-ready layout structures.
+
+## 2026-03-05 - [Global Keyboard Focus Shortcuts]
+
+**Learning:** Global keyboard shortcuts (such as `/` to focus search inputs) can significantly boost power-user momentum, but must explicitly check that `document.activeElement` is not an editable field (like `INPUT`, `TEXTAREA`, or elements with `contenteditable="true"`) to avoid disrupting standard text entry. Providing a semantic label (via `<LabelMd htmlFor="...">`) and a visual cue (via `<kbd>`) ensures perfect screen reader association and interactive clarity.
+
+**Action:** Implement ref forwarding using `React.forwardRef` on primitive input components to allow programmatic focus targeting, and mount a global event listener inside a `useEffect` to safely intercept keystrokes for targeting.

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { Input } from "@/components/ui/input"
@@ -11,6 +11,7 @@ import { authedFetch } from "@/lib/auth"
 import { AdminPageHeader } from "@/components/admin/admin-page-header"
 import { useTranslation } from "react-i18next"
 import { FilterX, LoaderCircle, Search } from "lucide-react"
+import { LabelMd } from "@/components/ui/typography"
 
 const PAGE_SIZE = 25
 
@@ -54,8 +55,29 @@ export function AdminListPage<T>({
   const [q, setQ] = useState("")
   const [search, setSearch] = useState("")
   const [error, setError] = useState<string | null>(null)
+  const searchInputRef = useRef<HTMLInputElement>(null)
 
   const defaultSearchPlaceholder = searchPlaceholder || t("admin.search_placeholder", "Search...")
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "/") {
+        const activeEl = document.activeElement
+        const isEditable = activeEl && (
+          activeEl.tagName === "INPUT" ||
+          activeEl.tagName === "TEXTAREA" ||
+          activeEl.getAttribute("contenteditable") === "true"
+        )
+        if (!isEditable) {
+          e.preventDefault()
+          searchInputRef.current?.focus()
+          searchInputRef.current?.select()
+        }
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [])
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -112,10 +134,19 @@ export function AdminListPage<T>({
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
           <GlassSurface variant="premium" className="flex flex-col gap-3 p-4 md:flex-row md:items-end">
             <div className="flex-1 relative">
-              <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1 block">{t("admin.search_query", "Search Query")}</label>
+              <div className="flex justify-between items-center mb-1">
+                <LabelMd htmlFor="search-query" className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">
+                  {t("admin.search_query", "Search Query")}
+                </LabelMd>
+                <kbd className="hidden sm:inline-flex h-5 select-none items-center gap-1 rounded border border-primary/10 bg-primary/5 px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+                  <span className="text-xs">/</span> Focus
+                </kbd>
+              </div>
               <div className="relative">
                 <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
+                  id="search-query"
+                  ref={searchInputRef}
                   placeholder={defaultSearchPlaceholder}
                   value={q}
                   className="bg-background/80 backdrop-blur-sm border-primary/20 focus-visible:ring-primary ps-9"

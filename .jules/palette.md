@@ -8,3 +8,18 @@
   - Maintained high contrast for text (white on emerald, foreground on off-white).
   - Used large touch targets (14-16px height for primary buttons) to accommodate one-handed mobile use.
   - Consistent RTL-ready layout structures.
+
+## 2026-06-13 - ARIA-Compliant Autocomplete & Focus Highlights
+**Learning:** Location inputs with suggestions (e.g. Booking) require standard WAI-ARIA `combobox` role associations (`aria-autocomplete`, `aria-expanded`, `aria-activedescendant`) to correctly guide screen readers. Additionally, implementing loop-around cycling (`ArrowUp`/`ArrowDown`) and `tabIndex={-1}` for suggestions ensures clean keyboard focus pacing, while `group-focus-within:text-gold` on input icons offers precise visual feedback.
+
+**Action:** Standardize suggestion dropdowns with listbox options and keyboard shortcuts across other form components where appropriate.
+
+## 2026-06-12 - Accessible Helper Text Association
+**Learning:** In the 'Noori' design system, helper text (rendered with `LabelSm`) must be explicitly linked to inputs via `aria-describedby` to ensure screen readers announce security protocols or requirements.
+
+**Action:** Always verify `id` and `aria-describedby` linkage when adding contextual hints to forms.
+
+## 2024-05-24 - Accessibility Landmarks & Landmark Association
+**Learning:** For global accessibility features like "Skip to main content" to function correctly, every major route's primary content container MUST have a stable `id="main-content"`. Additionally, when using Radix-based UI primitives like our `Button`, always use the `asChild` prop when nesting navigation components (like Next.js `Link`) to prevent invalid semantic HTML (nested interactive elements).
+
+**Action:** Ensure all new pages include a `<main id="main-content">` landmark. Standardize `Link`/`Button` nesting using `asChild`.

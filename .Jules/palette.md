@@ -9,6 +9,11 @@
   - Used large touch targets (14-16px height for primary buttons) to accommodate one-handed mobile use.
   - Consistent RTL-ready layout structures.
 
+## 2026-06-13 - ARIA-Compliant Autocomplete & Focus Highlights
+**Learning:** Location inputs with suggestions (e.g. Booking) require standard WAI-ARIA `combobox` role associations (`aria-autocomplete`, `aria-expanded`, `aria-activedescendant`) to correctly guide screen readers. Additionally, implementing loop-around cycling (`ArrowUp`/`ArrowDown`) and `tabIndex={-1}` for suggestions ensures clean keyboard focus pacing, while `group-focus-within:text-gold` on input icons offers precise visual feedback.
+
+**Action:** Standardize suggestion dropdowns with listbox options and keyboard shortcuts across other form components where appropriate.
+
 ## 2026-06-12 - Accessible Helper Text Association
 **Learning:** In the 'Noori' design system, helper text (rendered with `LabelSm`) must be explicitly linked to inputs via `aria-describedby` to ensure screen readers announce security protocols or requirements.
 

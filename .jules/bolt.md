@@ -66,3 +66,9 @@
 **Learning:** Sequential await calls for independent database queries in high-frequency endpoints like `getLiveMapData` introduce unnecessary latency. In a mocked environment with 50ms query delay, sequential execution takes ~100ms while parallel execution takes ~50ms.
 
 **Action:** Use `Promise.all` to parallelize independent Prisma queries in tracking and dashboard services to reduce API response time by up to 50%.
+
+## 2026-06-17 - React Component Render and Memory Allocation Optimization
+
+**Learning:** Defining static arrays (or complex static nested objects/elements) inside React component rendering paths causes redundant memory allocations and garbage collection overhead on every render cycle. This is especially impactful in elements like the global `Header` that re-render frequently during scroll events.
+
+**Action:** Hoist completely static arrays outside the component definition, or wrap dynamic localized arrays that depend on hook inputs (like the `t` translator function) in `useMemo` with proper dependency arrays.

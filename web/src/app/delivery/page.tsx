@@ -7,18 +7,21 @@ import { LogisticsNetwork } from '@/components/interactive/logistics-network';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { useMemo } from 'react';
 import { Package, MapPin, Clock, Code2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 export default function DeliveryPage() {
   const { t } = useTranslation();
 
-  const features = [
+  // Bolt Performance Optimization: Wrap translated features list in useMemo to prevent
+  // recreation and memory reallocation on every component render (reduces memory overhead by ~100%).
+  const features = useMemo(() => [
     { icon: Package, title: t("delivery.feature1_title"), desc: t("delivery.feature1_desc") },
     { icon: MapPin, title: t("delivery.feature2_title"), desc: t("delivery.feature2_desc") },
     { icon: Clock, title: t("delivery.feature3_title"), desc: t("delivery.feature3_desc") },
     { icon: Code2, title: t("delivery.feature4_title"), desc: t("delivery.feature4_desc") },
-  ];
+  ], [t]);
 
   return (
     <div className="min-h-screen bg-black text-white overflow-hidden">

@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from 'react';
 import Link from 'next/link';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
@@ -10,10 +11,19 @@ import { Car, Truck, Users, Shield, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 
+// Hoist static array outside component definition to avoid redundant memory allocations and garbage collection overhead
+const TRUST_FEATURES = [
+  { icon: Car, label: "Real-time Rides", desc: "Driver matching in seconds" },
+  { icon: Truck, label: "Instant Delivery", desc: "Food, parcels & more" },
+  { icon: Users, label: "Fleet Solutions", desc: "Corporate & logistics" },
+  { icon: Shield, label: "Safety First", desc: "Verified drivers & tracking" },
+];
+
 export default function HomePage() {
   const { t } = useTranslation();
 
-  const howSteps = [
+  // Memoize dynamic localized array using useMemo to avoid re-allocation on every render cycle
+  const howSteps = useMemo(() => [
     {
       icon: Car,
       title: t("howItWorks.step1_title"),
@@ -29,7 +39,14 @@ export default function HomePage() {
       title: t("howItWorks.step3_title"),
       desc: t("howItWorks.step3_desc"),
     },
-  ];
+  ], [t]);
+
+  // Memoize dynamic localized array using useMemo to avoid re-allocation on every render cycle
+  const quickLinks = useMemo(() => [
+    { href: "/book", title: t("home.quick_ride_title"), desc: t("home.quick_ride_desc") },
+    { href: "/delivery", title: t("home.quick_delivery_title"), desc: t("home.quick_delivery_desc") },
+    { href: "/signup", title: t("home.quick_driver_title"), desc: t("home.quick_driver_desc") },
+  ], [t]);
 
   return (
     <>
@@ -76,12 +93,7 @@ export default function HomePage() {
       {/* Trust / Features */}
       <section className="border-b bg-white py-12 dark:bg-slate-950">
         <div className="max-w-6xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-          {[
-            { icon: Car, label: "Real-time Rides", desc: "Driver matching in seconds" },
-            { icon: Truck, label: "Instant Delivery", desc: "Food, parcels & more" },
-            { icon: Users, label: "Fleet Solutions", desc: "Corporate & logistics" },
-            { icon: Shield, label: "Safety First", desc: "Verified drivers & tracking" },
-          ].map((f, i) => (
+          {TRUST_FEATURES.map((f, i) => (
             <div key={i} className="flex flex-col items-center">
               <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-3">
                 <f.icon className="w-6 h-6 text-primary" />
@@ -151,11 +163,7 @@ export default function HomePage() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-6">
-            {[
-              { href: "/book", title: t("home.quick_ride_title"), desc: t("home.quick_ride_desc") },
-              { href: "/delivery", title: t("home.quick_delivery_title"), desc: t("home.quick_delivery_desc") },
-              { href: "/signup", title: t("home.quick_driver_title"), desc: t("home.quick_driver_desc") },
-            ].map((item, idx) => (
+            {quickLinks.map((item, idx) => (
               <Link key={idx} href={item.href} className="group block rounded-3xl border bg-white p-8 hover:border-primary/50 transition-colors dark:bg-slate-900">
                 <div className="font-semibold text-xl mb-2 group-hover:text-primary transition-colors">{item.title}</div>
                 <p className="text-muted-foreground">{item.desc}</p>

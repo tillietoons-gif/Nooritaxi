@@ -8,14 +8,15 @@ import { PatternOverlay } from "@/components/ui/pattern-overlay"
 import { Button } from "@/components/ui/button"
 import { Briefcase, MapPin, Globe } from "lucide-react"
 
-export default function CareersPage() {
-  const jobs = [
-    { title: "Senior Logistics Engineer", location: "Kabul / Remote", type: "Full-time" },
-    { title: "Product Designer (UI/UX)", location: "Kabul", type: "Full-time" },
-    { title: "Operations Manager", location: "Herat", type: "Full-time" },
-    { title: "Customer Success Lead", location: "Kabul", type: "Full-time" },
-  ]
+// Hoist static jobs array outside component definition to prevent redundant memory allocations on every render cycle
+const JOBS = [
+  { title: "Senior Logistics Engineer", location: "Kabul / Remote", type: "Full-time" },
+  { title: "Product Designer (UI/UX)", location: "Kabul", type: "Full-time" },
+  { title: "Operations Manager", location: "Herat", type: "Full-time" },
+  { title: "Customer Success Lead", location: "Kabul", type: "Full-time" },
+];
 
+export default function CareersPage() {
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
@@ -42,7 +43,7 @@ export default function CareersPage() {
             </div>
 
             <div className="grid grid-cols-1 gap-6">
-              {jobs.map((job, i) => (
+              {JOBS.map((job, i) => (
                 <motion.div
                   key={i}
                   initial={{ opacity: 0, y: 20 }}

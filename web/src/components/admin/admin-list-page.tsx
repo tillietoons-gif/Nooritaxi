@@ -1,12 +1,13 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { GlassSurface } from "@/components/ui/glass-surface"
+import { LabelMd } from "@/components/ui/typography"
 import { authedFetch } from "@/lib/auth"
 import { AdminPageHeader } from "@/components/admin/admin-page-header"
 import { useTranslation } from "react-i18next"
@@ -55,7 +56,30 @@ export function AdminListPage<T>({
   const [search, setSearch] = useState("")
   const [error, setError] = useState<string | null>(null)
 
+  const searchInputRef = useRef<HTMLInputElement>(null)
+
   const defaultSearchPlaceholder = searchPlaceholder || t("admin.search_placeholder", "Search...")
+
+  // Global "/" shortcut to focus search input
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "/" && document.activeElement) {
+        const tagName = document.activeElement.tagName.toLowerCase()
+        const isContentEditable = document.activeElement.hasAttribute("contenteditable")
+        if (
+          tagName !== "input" &&
+          tagName !== "textarea" &&
+          tagName !== "select" &&
+          !isContentEditable
+        ) {
+          e.preventDefault()
+          searchInputRef.current?.focus()
+        }
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [])
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -112,13 +136,17 @@ export function AdminListPage<T>({
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
           <GlassSurface variant="premium" className="flex flex-col gap-3 p-4 md:flex-row md:items-end">
             <div className="flex-1 relative">
-              <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1 block">{t("admin.search_query", "Search Query")}</label>
-              <div className="relative">
+              <LabelMd htmlFor="admin-list-search-query" className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1 block">
+                {t("admin.search_query", "Search Query")}
+              </LabelMd>
+              <div className="relative flex items-center">
                 <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
+                  id="admin-list-search-query"
+                  ref={searchInputRef}
                   placeholder={defaultSearchPlaceholder}
                   value={q}
-                  className="bg-background/80 backdrop-blur-sm border-primary/20 focus-visible:ring-primary ps-9"
+                  className="bg-background/80 backdrop-blur-sm border-primary/20 focus-visible:ring-primary ps-9 pe-10"
                   onChange={(e) => setQ(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
@@ -127,6 +155,9 @@ export function AdminListPage<T>({
                     }
                   }}
                 />
+                <kbd className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100 sm:flex">
+                  /
+                </kbd>
               </div>
             </div>
             {statusOptions ? (

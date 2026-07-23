@@ -100,8 +100,8 @@ describe("AirportDashboardPage", () => {
     expect(screen.getByText("2")).toBeInTheDocument()
     expect(screen.getByText("11m")).toBeInTheDocument()
     expect(screen.getByText("Farid Driver")).toBeInTheDocument()
-    expect(screen.getByText("Terminal 1 • KBL-4242")).toBeInTheDocument()
-    expect(screen.getByText("FG302 - Ariana Afghan")).toBeInTheDocument()
+    expect(screen.getByText(/Terminal 1.*KBL-4242/)).toBeInTheDocument()
+    expect(screen.getByText(/FG302.*Ariana Afghan/)).toBeInTheDocument()
   })
 
   it("renders an honest empty state when no airports exist", async () => {

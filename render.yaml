@@ -1,25 +1,61 @@
+# Render Blueprint — Noori backend (NestJS + Prisma + PostgreSQL)
+#
+# This deploys ONLY the backend API. Connect this repository in the Render
+# dashboard (New -> Blueprint -> select this repo/branch) and Render will:
+#   1. provision the managed Postgres database below,
+#   2. build the backend (install deps, generate Prisma client, compile),
+#   3. run migrations and start the server, exposing /api/healthz.
+#
+# To also deploy the web frontend later, uncomment the `noori-web` service
+# block at the bottom and push again.
+
 services:
   - type: web
     name: noori-backend
     runtime: node
-    buildCommand: cd backend && npm install && npm run build
-    startCommand: cd backend && npx prisma migrate deploy && node dist/src/main
+    plan: free
+    buildCommand: cd backend && npm install && npx prisma generate && npm run build
+    # Retry migrations a few times in case the managed Postgres is still
+    # starting up on first deploy, then start the server.
+    startCommand: cd backend && for i in 1 2 3 4 5; do npx prisma migrate deploy && break; sleep 5; done && node dist/src/main
     healthCheckPath: /api/healthz
     envVars:
       - key: NODE_VERSION
-        value: 20
+        value: "20"
+      # Wired automatically to the managed Postgres database defined below.
       - key: DATABASE_URL
-        sync: false
+        fromDatabase:
+          name: noori-db
+          property: connectionString
+      # Render generates a secure random secret on first deploy.
       - key: JWT_SECRET
-        sync: false
+        generateValue: true
+      # Comma-separated list of allowed browser origins. Leave empty for now;
+      # the app only allows local-dev origins + the origins listed here.
+      # Set this to your frontend URL(s), e.g. https://app.example.com
+      - key: CORS_ORIGIN
+        value: ""
+      # Push/SMS providers are disabled until you supply credentials.
+      - key: PUSH_PROVIDER
+        value: "none"
+      - key: SMS_PROVIDER
+        value: "none"
 
-  - type: web
-    name: noori-web
-    runtime: node
-    buildCommand: cd web && npm install && npm run build && cp -r web/.next/static web/.next/standalone/.next/static && cp -r web/public web/.next/standalone/public
-    startCommand: node web/.next/standalone/server.js
-    envVars:
-      - key: NODE_VERSION
-        value: 20
-      - key: NEXT_PUBLIC_API_URL
-        value: https://noori-backend.onrender.com/api
+databases:
+  - name: noori-db
+    databaseName: noori
+    plan: free
+    postgresMajorVersion: "16"
+
+# Web frontend (disabled — deploy separately if needed):
+#   - type: web
+#     name: noori-web
+#     runtime: node
+#     plan: free
+#     buildCommand: cd web && npm install && npm run build && cp -r web/.next/static web/.next/standalone/.next/static && cp -r web/public web/.next/standalone/public
+#     startCommand: node web/.next/standalone/server.js
+#     envVars:
+#       - key: NODE_VERSION
+#         value: "20"
+#       - key: NEXT_PUBLIC_API_URL
+#         value: https://noori-backend.onrender.com/api

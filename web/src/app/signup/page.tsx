@@ -252,7 +252,7 @@ export default function SignupPage() {
               <div className="space-y-2">
                 <LabelMd htmlFor="name" className="text-xs font-black">{t("signup.name_label", "Legal Identity")}</LabelMd>
                 <div className="relative group">
-                  <User className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40 transition-colors group-focus-within:text-primary" />
+                  <User className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40 transition-colors group-focus-within:text-gold" />
                   <Input
                     id="name"
                     autoComplete="name"
@@ -270,7 +270,7 @@ export default function SignupPage() {
               <div className="space-y-2">
                 <LabelMd htmlFor="phone" className="text-xs font-black">{t("signup.phone_label", "Communication Node")}</LabelMd>
                 <div className="relative group">
-                  <Phone className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40 transition-colors group-focus-within:text-primary" />
+                  <Phone className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40 transition-colors group-focus-within:text-gold" />
                   <Input
                     id="phone"
                     type="tel"
@@ -290,7 +290,7 @@ export default function SignupPage() {
             <div className="space-y-2">
               <LabelMd htmlFor="password" className="text-xs font-black">{t("signup.password_label", "Security Protocol")}</LabelMd>
               <div className="relative group">
-                <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40 transition-colors group-focus-within:text-primary" />
+                <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40 transition-colors group-focus-within:text-gold" />
                 <Input
                   id="password"
                   autoComplete="new-password"
@@ -302,7 +302,7 @@ export default function SignupPage() {
                   minLength={8}
                   required
                   aria-invalid={!!message}
-                  aria-describedby={message ? "signup-message" : "password-hint"}
+                  aria-describedby={message ? "signup-message password-hint" : "password-hint"}
                 />
                 <button
                   type="button"
@@ -315,6 +315,8 @@ export default function SignupPage() {
               </div>
               <LabelSm
                 id="password-hint"
+                aria-live="polite"
+                aria-atomic="true"
                 className={cn(
                   "mt-1 flex items-center gap-1.5 transition-colors duration-300",
                   password.length >= 8 ? "text-primary font-black" : ""
@@ -330,7 +332,7 @@ export default function SignupPage() {
                 <div className="space-y-2">
                   <LabelMd htmlFor="restaurantName" className="text-xs font-black">{t("signup.store_name", "Store Name")}</LabelMd>
                   <div className="relative group">
-                    <Store className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40 transition-colors group-focus-within:text-primary" />
+                    <Store className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40 transition-colors group-focus-within:text-gold" />
                     <Input
                       id="restaurantName"
                       className="h-14 pl-12 rounded-2xl glass border-none focus-visible:ring-primary/30 font-bold"
@@ -347,7 +349,7 @@ export default function SignupPage() {
                 <div className="space-y-2">
                   <LabelMd htmlFor="restaurantPhone" className="text-xs font-black">{t("signup.store_phone", "Store Phone")}</LabelMd>
                   <div className="relative group">
-                    <Phone className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40 transition-colors group-focus-within:text-primary" />
+                    <Phone className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40 transition-colors group-focus-within:text-gold" />
                     <Input
                       id="restaurantPhone"
                       type="tel"

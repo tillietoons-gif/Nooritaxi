@@ -15,7 +15,9 @@ services:
     runtime: node
     plan: free
     buildCommand: cd backend && npm install && npx prisma generate && npm run build
-    startCommand: cd backend && npx prisma migrate deploy && node dist/src/main
+    # Retry migrations a few times in case the managed Postgres is still
+    # starting up on first deploy, then start the server.
+    startCommand: cd backend && for i in 1 2 3 4 5; do npx prisma migrate deploy && break; sleep 5; done && node dist/src/main
     healthCheckPath: /api/healthz
     envVars:
       - key: NODE_VERSION

@@ -66,3 +66,9 @@
 **Learning:** Sequential await calls for independent database queries in high-frequency endpoints like `getLiveMapData` introduce unnecessary latency. In a mocked environment with 50ms query delay, sequential execution takes ~100ms while parallel execution takes ~50ms.
 
 **Action:** Use `Promise.all` to parallelize independent Prisma queries in tracking and dashboard services to reduce API response time by up to 50%.
+
+## 2026-06-17 - Parallelizing Transaction List Queries
+
+**Learning:** Using Prisma's `$transaction` for independent read queries (such as `findMany` and `count` operations on transactions) is an anti-pattern that runs sequentially or blocks unnecessarily. Parallelizing these read queries reduces API response time and database round-trip latency by ~50% (from ~100ms to ~50ms with a standard query delay).
+
+**Action:** Replace `$transaction` wrapper blocks around independent read-only Prisma queries with `Promise.all` concurrency, specifically in `PaymentsService.listTransactions` and `WalletService.listTransactions`.

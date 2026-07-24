@@ -1,36 +1,60 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Noori Web and Admin Console
 
-## Getting Started
+This directory contains the Next.js customer website and admin console. It is the only application in this repository intended for deployment on Vercel. The NestJS API and PostgreSQL database must be deployed separately.
 
-First, run the development server:
+## Local development
 
 ```bash
+cd web
+npm ci
+cp .env.example .env.local
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The default local API endpoint is `http://localhost:3001/api`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Vercel deployment
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The repository-root [`vercel.json`](../vercel.json) is configured for this monorepo. It installs and builds from `web/` using the committed `web/package-lock.json`; do not set an Output Directory manually.
 
-## Learn More
+1. Deploy the backend and database first, at a public HTTPS URL.
+2. In the backend deployment, set `CORS_ORIGIN` to the Vercel production domain. Add preview domains too if previews must access the API. Use a comma-separated list, for example:
 
-To learn more about Next.js, take a look at the following resources:
+   ```text
+   https://noori.example.com,https://noori-git-main-your-team.vercel.app
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+3. In Vercel, import this repository. Leave **Root Directory** as the repository root so Vercel uses the root `vercel.json`.
+4. In **Project Settings → Environment Variables**, add the following values for Production. Add appropriate values for Preview if preview deployments need backend access.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+   | Variable | Required | Example |
+   | --- | --- | --- |
+   | `NEXT_PUBLIC_API_URL` | Yes | `https://api.noori.example.com/api` |
+   | `NEXT_PUBLIC_SOCKET_URL` | Yes | `https://api.noori.example.com` |
+   | `NEXT_PUBLIC_FIREBASE_VAPID_KEY` | Only when browser push is enabled | Firebase web push public key |
 
-## Deploy on Vercel
+   `NEXT_PUBLIC_*` variables are deliberately public browser configuration. Do not put database URLs, JWT secrets, SMS credentials, or Firebase server credentials in Vercel.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+5. Deploy. Vercel runs:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+   ```bash
+   npm --prefix web ci
+   npm --prefix web run build
+   ```
+
+6. Verify the deployed site, login, a customer API call, an admin API call, Socket.IO connectivity, and browser CORS behavior.
+
+### Important notes
+
+- `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_SOCKET_URL` are embedded in the client bundle at build time. Redeploy after changing either variable.
+- The configured API URL must use HTTPS in production and must include the `/api` suffix. The socket URL must be the API origin without `/api`.
+- Vercel does not run the NestJS server, Prisma migrations, PostgreSQL, Socket.IO infrastructure, or durable KYC file storage. Keep those services on a backend-capable platform.
+- Vercel preview URLs change per deployment. For predictable preview API access, use a stable preview domain or update backend CORS accordingly.
+
+## Checks
+
+```bash
+cd web
+npm test
+npm run build
+```

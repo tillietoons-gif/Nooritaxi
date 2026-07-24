@@ -137,7 +137,7 @@ export default function AirportAdminPage() {
                     {queue.map((entry) => (
                       <div key={entry.id} className="rounded-lg border border-primary/10 p-3">
                         <p className="font-bold">{entry.driver?.user?.name ?? entry.driver?.user?.phone ?? "Unknown driver"}</p>
-                        <p className="text-sm text-muted-foreground">{entry.zone?.name ?? "Queue"} - {entry.vehicle?.plateNumber ?? "No vehicle"}</p>
+                        <p className="text-sm text-muted-foreground">{entry.zone?.name ?? "Queue"} • {entry.vehicle?.plateNumber ?? "No vehicle"}</p>
                       </div>
                     ))}
                     {queue.length === 0 ? <p className="text-center text-muted-foreground">{selectedAirport.name} ({selectedAirport.iataCode}) has no waiting drivers.</p> : null}

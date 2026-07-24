@@ -29,6 +29,10 @@ const defaultPermissions = [
   
   { module: 'finance', action: 'view', name: 'finance.view', description: 'View settlements and revenue' },
   { module: 'finance', action: 'export', name: 'finance.export', description: 'Export financial reports' },
+
+  { module: 'fleets', action: 'view', name: 'fleets.view', description: 'View fleets, fleet drivers, vehicles, and fleet analytics' },
+  { module: 'fleets', action: 'edit', name: 'fleets.edit', description: 'Create and manage fleets, fleet drivers, and vehicles' },
+  { module: 'fleets', action: 'payouts', name: 'fleets.payouts', description: 'Create and manage fleet payout requests' },
   
   { module: 'reports', action: 'view', name: 'reports.view', description: 'View analytics and reports' },
   { module: 'reports', action: 'export', name: 'reports.export', description: 'Export analytics data' },
@@ -90,7 +94,15 @@ const defaultRoles = [
     description: 'Manage wallets, transactions, settlements, and payouts.',
     isSystem: true,
     permissions: [
-      'dashboard.view', 'wallets.view', 'wallets.adjust', 'finance.view', 'finance.export', 'reports.view', 'subscriptions.view'
+      'dashboard.view', 'wallets.view', 'wallets.adjust', 'finance.view', 'finance.export', 'fleets.view', 'fleets.payouts', 'reports.view', 'subscriptions.view'
+    ]
+  },
+  {
+    name: 'Fleet Admin',
+    description: 'Manage fleets, fleet drivers, fleet vehicles, and fleet operations.',
+    isSystem: true,
+    permissions: [
+      'dashboard.view', 'fleets.view', 'fleets.edit', 'drivers.view', 'drivers.edit', 'reports.view'
     ]
   },
   {

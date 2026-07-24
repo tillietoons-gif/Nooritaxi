@@ -96,7 +96,7 @@ function LoginPageContent() {
             <div className="space-y-2">
               <LabelMd htmlFor="phone" className="text-xs font-black">Mobile Identifier</LabelMd>
               <div className="relative group">
-                <Phone className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40 transition-colors group-focus-within:text-primary" />
+                <Phone className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40 transition-colors group-focus-within:text-gold" />
                 <Input
                   id="phone"
                   type="tel"
@@ -118,7 +118,7 @@ function LoginPageContent() {
                 <Link href="#" className="text-[10px] font-black uppercase text-primary/60 hover:text-primary transition-colors">Forgot Password?</Link>
               </div>
               <div className="relative group">
-                <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40 transition-colors group-focus-within:text-primary" />
+                <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/40 transition-colors group-focus-within:text-gold" />
                 <Input
                   id="password"
                   autoComplete="current-password"

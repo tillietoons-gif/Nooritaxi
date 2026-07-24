@@ -200,9 +200,9 @@ export default function BookingPage() {
               <Card className="border-none shadow-sm"><CardContent className="p-6 space-y-6">
                   <HeadingMd>Book a Ride</HeadingMd>
                   <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="relative">
+                    <div className="relative group">
                       <Label htmlFor="pickup" className="sr-only">Pickup Location</Label>
-                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
+                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary transition-colors group-focus-within:text-gold" />
                       <Input id="pickup" value={pickupLocation} onChange={(event) => updatePickupLocation(event.target.value)} placeholder="Pickup" className="pl-10 h-12 bg-muted/30 border-none" />
                       {pickupSuggestions.length > 0 ? (
                         <div className="absolute z-20 mt-2 w-full overflow-hidden rounded-lg border bg-background shadow-lg">
@@ -215,9 +215,9 @@ export default function BookingPage() {
                         </div>
                       ) : null}
                     </div>
-                    <div className="relative">
+                    <div className="relative group">
                       <Label htmlFor="destination" className="sr-only">Destination Location</Label>
-                      <Navigation className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-accent-foreground" />
+                      <Navigation className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-accent-foreground transition-colors group-focus-within:text-gold" />
                       <Input id="destination" value={dropoffLocation} onChange={(event) => updateDropoffLocation(event.target.value)} placeholder="Destination" className="pl-10 h-12 bg-muted/30 border-none" />
                       {dropoffSuggestions.length > 0 ? (
                         <div className="absolute z-20 mt-2 w-full overflow-hidden rounded-lg border bg-background shadow-lg">

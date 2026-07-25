@@ -66,3 +66,9 @@
 **Learning:** Sequential await calls for independent database queries in high-frequency endpoints like `getLiveMapData` introduce unnecessary latency. In a mocked environment with 50ms query delay, sequential execution takes ~100ms while parallel execution takes ~50ms.
 
 **Action:** Use `Promise.all` to parallelize independent Prisma queries in tracking and dashboard services to reduce API response time by up to 50%.
+
+## 2026-06-17 - Batching Row-by-Row Database Updates in Background Cron Jobs
+
+**Learning:** Loading thousands of database records into Node memory and performing sequential individual updates per record scale linearly at $O(N)$ and cause heavy connection pool queue delays, heavy network payloads, and Node.js heap memory churn.
+
+**Action:** Formulate mutually exclusive batch criteria (using cumulative nested `NOT` structures) and execute parallelized bulk `updateMany` operations to perform updates completely inside the database engine. This reduces database round-trips from $O(N)$ to $O(C)$ (where $C$ is the number of configs, typically 4), yielding latency reductions of over ~95% in large-scale driver evaluation runs.

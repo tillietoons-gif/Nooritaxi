@@ -18,3 +18,8 @@
 **Learning:** For global accessibility features like "Skip to main content" to function correctly, every major route's primary content container MUST have a stable `id="main-content"`. Additionally, when using Radix-based UI primitives like our `Button`, always use the `asChild` prop when nesting navigation components (like Next.js `Link`) to prevent invalid semantic HTML (nested interactive elements).
 
 **Action:** Ensure all new pages include a `<main id="main-content">` landmark. Standardize `Link`/`Button` nesting using `asChild`.
+
+## 2026-06-13 - Ambiguous Labels and Live Character Trackers
+**Learning:** When adding dynamic micro-interactions such as real-time character count trackers, ensure the input or textarea utilizes proper `aria-describedby` reference linkage. Additionally, when writing Vitest/Testing Library tests for forms containing similar text label matches (e.g., "Email" input and "Email support" anchor links), use highly specific query selectors like `getByPlaceholderText` or target options like `{ selector: 'input' }` on `getByLabelText` to avoid ambiguous query match exceptions.
+
+**Action:** Associate live regions and counters exactly using linked descriptive IDs. Use placeholder or tag-specific selectors in unit test assertions to remain resilient against ambiguous DOM text labels.

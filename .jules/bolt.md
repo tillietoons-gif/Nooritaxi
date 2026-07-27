@@ -66,3 +66,9 @@
 **Learning:** Sequential await calls for independent database queries in high-frequency endpoints like `getLiveMapData` introduce unnecessary latency. In a mocked environment with 50ms query delay, sequential execution takes ~100ms while parallel execution takes ~50ms.
 
 **Action:** Use `Promise.all` to parallelize independent Prisma queries in tracking and dashboard services to reduce API response time by up to 50%.
+
+## 2026-06-17 - Atomic Nested Relations and Includes in Loyalty Service
+
+**Learning:** Sequential queries within explicit Prisma transaction blocks (like `$transaction`) for simple relational writes create redundant database round-trips and transaction state-machine overhead. Transitioning sequential operations to Prisma's native nested writes and query `include` reduces API round-trips from 2 to 1, achieving a ~50% latency reduction in critical path writes.
+
+**Action:** Optimize transactional updates by utilizing nested relation writes inside standard operations (like `upsert` with `transactions: { create: ... }`) and fetch related results concurrently via `include` instead of subsequent sequential queries.

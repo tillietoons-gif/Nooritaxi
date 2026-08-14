@@ -50,6 +50,8 @@ export default function BookingPage() {
   const [dropoffPlace, setDropoffPlace] = useState<BookingPlace | null>(null)
   const [pickupSuggestions, setPickupSuggestions] = useState<BookingPlace[]>([])
   const [dropoffSuggestions, setDropoffSuggestions] = useState<BookingPlace[]>([])
+  const [activePickupIndex, setActivePickupIndex] = useState(-1)
+  const [activeDropoffIndex, setActiveDropoffIndex] = useState(-1)
   const [mapPlaces, setMapPlaces] = useState<BookingPlace[]>([])
   const [estimate, setEstimate] = useState<Estimate | null>(null)
   const [isEstimating, setIsEstimating] = useState(false)
@@ -57,6 +59,14 @@ export default function BookingPage() {
   const [status, setStatus] = useState("")
   const [error, setError] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  useEffect(() => {
+    setActivePickupIndex(-1)
+  }, [pickupSuggestions])
+
+  useEffect(() => {
+    setActiveDropoffIndex(-1)
+  }, [dropoffSuggestions])
 
   useEffect(() => {
     authedFetch("/places?limit=25")
@@ -139,12 +149,66 @@ export default function BookingPage() {
     setPickupPlace(place)
     setPickupLocation(place.name)
     setPickupSuggestions([])
+    setActivePickupIndex(-1)
   }
 
   function selectDropoff(place: BookingPlace) {
     setDropoffPlace(place)
     setDropoffLocation(place.name)
     setDropoffSuggestions([])
+    setActiveDropoffIndex(-1)
+  }
+
+  function handlePickupKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (pickupSuggestions.length === 0) return
+
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault()
+        setActivePickupIndex((prev) => (prev + 1) % pickupSuggestions.length)
+        break
+      case "ArrowUp":
+        e.preventDefault()
+        setActivePickupIndex((prev) => (prev <= 0 ? pickupSuggestions.length - 1 : prev - 1))
+        break
+      case "Enter":
+        if (activePickupIndex >= 0 && activePickupIndex < pickupSuggestions.length) {
+          e.preventDefault()
+          selectPickup(pickupSuggestions[activePickupIndex])
+        }
+        break
+      case "Escape":
+        e.preventDefault()
+        setPickupSuggestions([])
+        setActivePickupIndex(-1)
+        break
+    }
+  }
+
+  function handleDropoffKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (dropoffSuggestions.length === 0) return
+
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault()
+        setActiveDropoffIndex((prev) => (prev + 1) % dropoffSuggestions.length)
+        break
+      case "ArrowUp":
+        e.preventDefault()
+        setActiveDropoffIndex((prev) => (prev <= 0 ? dropoffSuggestions.length - 1 : prev - 1))
+        break
+      case "Enter":
+        if (activeDropoffIndex >= 0 && activeDropoffIndex < dropoffSuggestions.length) {
+          e.preventDefault()
+          selectDropoff(dropoffSuggestions[activeDropoffIndex])
+        }
+        break
+      case "Escape":
+        e.preventDefault()
+        setDropoffSuggestions([])
+        setActiveDropoffIndex(-1)
+        break
+    }
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -200,14 +264,41 @@ export default function BookingPage() {
               <Card className="border-none shadow-sm"><CardContent className="p-6 space-y-6">
                   <HeadingMd>Book a Ride</HeadingMd>
                   <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="relative">
+                    <div className="relative group">
                       <Label htmlFor="pickup" className="sr-only">Pickup Location</Label>
-                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
-                      <Input id="pickup" value={pickupLocation} onChange={(event) => updatePickupLocation(event.target.value)} placeholder="Pickup" className="pl-10 h-12 bg-muted/30 border-none" />
+                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary transition-colors group-focus-within:text-gold" />
+                      <Input
+                        id="pickup"
+                        value={pickupLocation}
+                        onChange={(event) => updatePickupLocation(event.target.value)}
+                        onKeyDown={handlePickupKeyDown}
+                        placeholder="Pickup"
+                        className="pl-10 h-12 bg-muted/30 border-none"
+                        role="combobox"
+                        aria-autocomplete="list"
+                        aria-expanded={pickupSuggestions.length > 0}
+                        aria-controls={pickupSuggestions.length > 0 ? "pickup-suggestions" : undefined}
+                        aria-activedescendant={activePickupIndex !== -1 ? `pickup-option-${activePickupIndex}` : undefined}
+                      />
                       {pickupSuggestions.length > 0 ? (
-                        <div className="absolute z-20 mt-2 w-full overflow-hidden rounded-lg border bg-background shadow-lg">
-                          {pickupSuggestions.map((place) => (
-                            <button key={place.id} type="button" className="block w-full px-3 py-2 text-left hover:bg-muted" onClick={() => selectPickup(place)}>
+                        <div
+                          id="pickup-suggestions"
+                          role="listbox"
+                          className="absolute z-20 mt-2 w-full overflow-hidden rounded-lg border bg-background shadow-lg"
+                        >
+                          {pickupSuggestions.map((place, index) => (
+                            <button
+                              id={`pickup-option-${index}`}
+                              key={place.id}
+                              type="button"
+                              role="option"
+                              aria-selected={activePickupIndex === index}
+                              tabIndex={-1}
+                              className={`block w-full px-3 py-2 text-left hover:bg-muted ${
+                                activePickupIndex === index ? "bg-muted text-primary font-semibold" : ""
+                              }`}
+                              onClick={() => selectPickup(place)}
+                            >
                               <span className="block text-sm font-medium">{place.name}</span>
                               <span className="block truncate text-xs text-muted-foreground">{place.address}</span>
                             </button>
@@ -215,14 +306,41 @@ export default function BookingPage() {
                         </div>
                       ) : null}
                     </div>
-                    <div className="relative">
+                    <div className="relative group">
                       <Label htmlFor="destination" className="sr-only">Destination Location</Label>
-                      <Navigation className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-accent-foreground" />
-                      <Input id="destination" value={dropoffLocation} onChange={(event) => updateDropoffLocation(event.target.value)} placeholder="Destination" className="pl-10 h-12 bg-muted/30 border-none" />
+                      <Navigation className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-accent-foreground transition-colors group-focus-within:text-gold" />
+                      <Input
+                        id="destination"
+                        value={dropoffLocation}
+                        onChange={(event) => updateDropoffLocation(event.target.value)}
+                        onKeyDown={handleDropoffKeyDown}
+                        placeholder="Destination"
+                        className="pl-10 h-12 bg-muted/30 border-none"
+                        role="combobox"
+                        aria-autocomplete="list"
+                        aria-expanded={dropoffSuggestions.length > 0}
+                        aria-controls={dropoffSuggestions.length > 0 ? "destination-suggestions" : undefined}
+                        aria-activedescendant={activeDropoffIndex !== -1 ? `destination-option-${activeDropoffIndex}` : undefined}
+                      />
                       {dropoffSuggestions.length > 0 ? (
-                        <div className="absolute z-20 mt-2 w-full overflow-hidden rounded-lg border bg-background shadow-lg">
-                          {dropoffSuggestions.map((place) => (
-                            <button key={place.id} type="button" className="block w-full px-3 py-2 text-left hover:bg-muted" onClick={() => selectDropoff(place)}>
+                        <div
+                          id="destination-suggestions"
+                          role="listbox"
+                          className="absolute z-20 mt-2 w-full overflow-hidden rounded-lg border bg-background shadow-lg"
+                        >
+                          {dropoffSuggestions.map((place, index) => (
+                            <button
+                              id={`destination-option-${index}`}
+                              key={place.id}
+                              type="button"
+                              role="option"
+                              aria-selected={activeDropoffIndex === index}
+                              tabIndex={-1}
+                              className={`block w-full px-3 py-2 text-left hover:bg-muted ${
+                                activeDropoffIndex === index ? "bg-muted text-primary font-semibold" : ""
+                              }`}
+                              onClick={() => selectDropoff(place)}
+                            >
                               <span className="block text-sm font-medium">{place.name}</span>
                               <span className="block truncate text-xs text-muted-foreground">{place.address}</span>
                             </button>
